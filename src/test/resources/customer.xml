@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : customer.xml
+    Created on : 18. Mai 2016, 15:33
+    Author     : tjaszok
+    Description:
+        Purpose of the document follows.
+-->
+
+<ns0:customer  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+               xmlns:ns0='http://cimt.de'
+               xsi:schemaLocation='http://cimt.de customer.xsd'>
+    <ns0:name>Thomas</ns0:name>
+    <ns0:address>
+        <ns0:street>Hattinger Str. 700</ns0:street>
+        <ns0:city>Bochum</ns0:city>
+    </ns0:address>
+
+</ns0:customer>

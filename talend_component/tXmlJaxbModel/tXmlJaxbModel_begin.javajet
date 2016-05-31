@@ -1,0 +1,38 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();	
+    String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__"));
+    String nameSpace = ElementParameterParser.getValue(node, "__NAMESPACE__"));
+    String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
+%>
+	{
+		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
+		String modelCachDir = <%=modelCacheDir%>;
+		if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
+			 java.io.File dir = new java.io.File(modelCacheDir);
+			 if (dir.exists() == false) {
+			 	  dir.mkdirs();
+			 }
+			 if (dir.exists() == false) {
+				  throw new Exception("Model cache dir cannot be created and does not exists!");
+			 }
+			 options.targetDir = dir.getAbsolutePath();
+		}
+		String xsdFile = <%=xsdFile%>;
+		if (xsdFile != null && xsdFile.trim().isEmpty() == false) {
+			 java.io.File file = new java.io.File(xsdFile);
+			 if (file.exists() == false) {
+			 	  throw new Exception("XSD file: " + xsdFile + " does not exists!");
+			 }
+			 options.addGrammar(file);
+		}
+		
+   }
