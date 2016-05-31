@@ -6,8 +6,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlTransient;
@@ -102,19 +100,23 @@ public abstract class TXMLObject implements Serializable, Cloneable{
     }
 
     public boolean set(String attr, Object value){
-        System.err.println("set "+attr);
-        ExtPropertyAccessor pa=CACHE.get(this.getClass()).get(attr.toUpperCase());
-        if(pa==null)
+    	if (attr == null || attr.trim().isEmpty()) {
+    		throw new IllegalArgumentException("attribute name cannot be null or empty!");
+    	}
+    	// attr = attr.toUpperCase();
+        System.err.println("set " + attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+        if (pa == null) {
             return false;
-        
+        }
         Object currentValue=pa.getPropertyValue(this);
  
         /**
          * jaxb never generates setter for collections, so set must be get and add....
          */
-        if(Collection.class.isAssignableFrom( pa.getPropertyType() )){
+        if(Collection.class.isAssignableFrom( pa.getPropertyType() )) {
             ((Collection) currentValue).clear();
-            if(value!=null){
+            if(value!=null) {
                 if(Collection.class.isAssignableFrom(value.getClass())){
                     ((Collection) currentValue).addAll( ((Collection) value) );
                 } else {
@@ -123,20 +125,45 @@ public abstract class TXMLObject implements Serializable, Cloneable{
             }
             return true;
         }
-        CACHE.get(this.getClass()).get(attr.toUpperCase()).setPropertyValue(this, value);
+        CACHE
+        	.get(this.getClass())
+        	.get(attr)
+        	.setPropertyValue(this, value);
         return true;
     }
     
-    public Class<?> getType(String attr){
-        return CACHE.get(this.getClass()).get(attr).getPropertyType();
+    public Class<?> getType(String attr) {
+    	if (attr == null || attr.trim().isEmpty()) {
+    		throw new IllegalArgumentException("attribute name cannot be null or empty!");
+    	}
+    	// attr = attr.toUpperCase();
+        return CACHE
+        		.get(this.getClass())
+        		.get(attr)
+        		.getPropertyType();
     }
 
-    public Object get(String attr){
-        return CACHE.get(this.getClass()).get(attr).getPropertyValue(this);
+    public Object get(String attr) {
+    	if (attr == null || attr.trim().isEmpty()) {
+    		throw new IllegalArgumentException("attribute name cannot be null or empty!");
+    	}
+    	// attr = attr.toUpperCase();
+        return CACHE
+        		.get(this.getClass())
+        		.get(attr)
+        		.getPropertyValue(this);
     }
     
-    public boolean addOrSet(String attr, Object value){
-        ExtPropertyAccessor pa=CACHE.get(this.getClass()).get(attr);//.getPropertyValue(this);
+    public boolean addOrSet(String attr, Object value) {
+    	// TODO check value can be null or not?
+    	if (attr == null || attr.trim().isEmpty()) {
+    		throw new IllegalArgumentException("attribute name cannot be null or empty!");
+    	}
+    	// attr = attr.toUpperCase();
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);//.getPropertyValue(this);
+        if (pa == null) {
+        	throw new IllegalArgumentException("class " + this.getClass().getName() + " does not have the attribute: " + attr);
+        }
         Object currentValue=pa.getPropertyValue(this);
         if(pa.getPropertyType().isArray()){
             int len=Array.getLength(currentValue);

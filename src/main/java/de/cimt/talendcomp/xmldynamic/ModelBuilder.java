@@ -88,7 +88,7 @@ import org.apache.log4j.Level;
  * @author Daniel Koch (daniel.koch@cimt-ag.de)
  * 
  */
-final class ModelBuilder {
+public final class ModelBuilder {
 
 	private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
 	private static final ErrorReceiver ERR = new ErrorReceiver() {
@@ -380,6 +380,7 @@ final class ModelBuilder {
 	 */
 	private void generate() throws Exception {
 		Model model = load();
+		// TODO use here the Base64 class to avoid using private classes
 		String cs = new sun.misc.BASE64Encoder().encode(digest.digest());
 		Outline ouln = model.generateCode(opt, ERR);
 		if (ouln == null) {
@@ -394,14 +395,21 @@ final class ModelBuilder {
 		if (opt.targetDir == null) {
 			opt.targetDir = createTemporaryFolder();
 		}
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Output folder for generated classes: " + opt.targetDir.getAbsolutePath());
+		}
 		if (opt.targetDir.exists() == false) {
 			opt.targetDir.mkdirs();
 		}
+		if (opt.targetDir.exists() == false) {
+			throw new Exception("Cannot create/use target folder: " + opt.targetDir);
+		}
 
+		LOG.debug("Generate classes:");
 		model.codeModel.build(new FileCodeWriter(opt.targetDir));
 		for (NClass nclazz : model.beans().keySet()) {
 			CClassInfo ci = model.beans().get(nclazz);
+			LOG.debug(nclazz.fullName());
 //			System.err.println("nclazz=" + nclazz);
 //			System.err.println("ci    =" + ci.getElementName());
 
