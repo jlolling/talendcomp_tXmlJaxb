@@ -5,7 +5,7 @@ import org.colllib.introspect.PropertyAccessor;
 
 /**
  *
- * @author dkoch
+ * @author daniel.koch@cimt-ag.de
  */
 public class ExtPropertyAccessor extends PropertyAccessor {
 

@@ -9,9 +9,15 @@ import org.apache.log4j.Logger;
 import junit.framework.TestCase;
 import routines.system.RunStat;
 
+/**
+ * Basis for a Talend test job.
+ * It contains most of the necessary stuff what a talend job consists of.
+ * @author jan.lolling@cimt-ag.de
+ *
+ */
 public class TalendFakeJob extends TestCase {
 
-	static Logger log = Logger.getLogger(TalendFakeJob.class);
+	protected static Logger log = Logger.getLogger(TalendFakeJob.class);
 
 	public TalendFakeJob() {
 		BasicConfigurator.configure();
