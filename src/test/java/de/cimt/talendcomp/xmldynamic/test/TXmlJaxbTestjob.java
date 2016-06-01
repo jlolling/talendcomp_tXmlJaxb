@@ -46,6 +46,22 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		String actual = (String) object.get("name");
 		assertEquals(expected, actual);
 	}
+	
+	@Test
+	public void testLoadWrongCustomer() throws Exception {
+		currentComponent = "tXmlJaxbOutput";
+		String className = "de.cimt.Customer";
+		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
+		String expected = "Lukas";
+		String unexpected = "Jan";
+		
+		if (object.set("name", expected) == false) {
+			throw new Exception("attribute does not exists.");
+		}
+		globalMap.put("tXmlJaxbOutput_1", object);
+		String actual = (String) object.get("name");
+		assertNotSame(unexpected, actual);
+	}
 
 	@Test
 	public void testLoadAdressClass() throws Exception {
