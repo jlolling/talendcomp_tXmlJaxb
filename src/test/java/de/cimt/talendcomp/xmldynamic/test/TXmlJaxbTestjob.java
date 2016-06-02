@@ -28,7 +28,14 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			opts.targetDir.mkdirs();
 			opts.addGrammar(new File(xsdFile.getAbsolutePath()));
 			System.out.println("Generate model...");
+//          testen ob das jar file älter als das xsd file
+
+//          wenn älter muss der generate gestartet werden und das jar file neu erstellt werden
 			ModelBuilder.generate(opts, new JCodeModel());
+//			ModelBuilder.buildJar(opts, String jarFilePath);
+
+//          ansonsten die Klassen aus dem Jar file laden			
+//			ModelBuilder.loadClasses(String jarFilePath);
 		}
 		classesLoaded = true;
 	}
