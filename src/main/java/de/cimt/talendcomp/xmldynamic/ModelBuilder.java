@@ -427,6 +427,12 @@ public final class ModelBuilder {
 			return;
 		}
 		JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
+		if (jc == null) {
+			LOG.error("Can not retrieve JavaCompiler: ");
+			LOG.error("java.home: " + System.getProperty("java.home"));
+			LOG.error("java.class.path: " + System.getProperty("java.class.path"));
+			throw new IllegalStateException("Can not retrieve JavaCompiler");
+		}
 		StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
 		if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
 			throw new Exception(Messages.COMPILATION_FAILED);
