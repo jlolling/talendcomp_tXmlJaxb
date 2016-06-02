@@ -13,8 +13,8 @@ import java.util.jar.Manifest;
 public class JarUtil {
 	
 	private String classFilesDirPath = null;
+	private String classFilesBasePath = null;
 	private String jarFilePath = null;
-	
 	
 	public String getClassFilesDir() {
 		return classFilesDirPath;
@@ -25,6 +25,14 @@ public class JarUtil {
 			throw new IllegalArgumentException("classFilesDir cannot be null or empty");
 		}
 		this.classFilesDirPath = classFilesDir.trim();
+	}
+	
+	public String getClassFilesBasePath() {
+		return classFilesBasePath;
+	}
+
+	public void setClassFilesBasePath(String classFilesBasePath) {
+		this.classFilesBasePath = classFilesBasePath;
 	}
 	
 	public String getJarFilePath() {
@@ -73,7 +81,7 @@ public class JarUtil {
 		JarOutputStream target = null;
 		try {
 			target = new JarOutputStream(new FileOutputStream(jarFile), manifest);
-			add(new File(classFilesDirPath), target);
+			add(new File(classFilesDirPath), new File(classFilesBasePath), target);
 		} finally {
 			if (target != null) {
 				target.close();
@@ -81,7 +89,7 @@ public class JarUtil {
 		}
 	}
 	
-	private void add(File sourceDir, JarOutputStream target) throws IOException {
+	private void add(File sourceDir, File baseDir, JarOutputStream target) throws IOException {
 		BufferedInputStream in = null;
 		try {
 			if (sourceDir.isDirectory()) {
@@ -90,18 +98,21 @@ public class JarUtil {
 					if (name.endsWith("/") == false) {
 						name += "/";
 					}
-					JarEntry entry = new JarEntry(name);
+					
+					String relative = baseDir.toURI().relativize(new File(name).toURI()).getPath();
+					JarEntry entry = new JarEntry(relative);
 					entry.setTime(sourceDir.lastModified());
 					target.putNextEntry(entry);
 					target.closeEntry();
 				}
 				for (File nestedFile : sourceDir.listFiles()) {
-					add(nestedFile, target);
+					add(nestedFile, baseDir, target);
 				}
 				return;
 			}
-
-			JarEntry entry = new JarEntry(sourceDir.getPath().replace("\\", "/"));
+			
+			String relative = baseDir.toURI().relativize(sourceDir.toURI()).getPath();
+			JarEntry entry = new JarEntry(relative);
 			entry.setTime(sourceDir.lastModified());
 			target.putNextEntry(entry);
 			in = new BufferedInputStream(new FileInputStream(sourceDir));
