@@ -9,13 +9,13 @@
     CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
     INode node = (INode)codeGenArgument.getArgument();
     String cid = node.getUniqueName();	
-    String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__"));
+    String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__");
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
-    String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__"));
+    String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
 %>
 	{
 		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
-		String modelCachDir = <%=modelCacheDir%>;
+		String modelCacheDir = <%=modelCacheDir%>;
 		if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
 			 java.io.File dir = new java.io.File(modelCacheDir);
 			 if (dir.exists() == false) {
@@ -24,7 +24,7 @@
 			 if (dir.exists() == false) {
 				  throw new Exception("Model cache dir cannot be created and does not exists!");
 			 }
-			 options.targetDir = dir.getAbsolutePath();
+			 options.targetDir = dir;
 		}
 		String xsdFile = <%=xsdFile%>;
 		if (xsdFile != null && xsdFile.trim().isEmpty() == false) {

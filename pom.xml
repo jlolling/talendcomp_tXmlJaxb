@@ -26,23 +26,17 @@
             </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
+				<artifactId>maven-shade-plugin</artifactId>
 				<executions>
 					<execution>
 						<phase>package</phase>
 						<goals>
-							<goal>jar</goal>
+							<goal>shade</goal>
 						</goals>
-						<configuration>
-							<outputDirectory>talend_component/tXmlJaxbModel</outputDirectory>
-							<overWriteReleases>true</overWriteReleases>
-							<overWriteSnapshots>true</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-        </plugins>
+       </plugins>
     </build>
     <dependencies>
         <dependency>
