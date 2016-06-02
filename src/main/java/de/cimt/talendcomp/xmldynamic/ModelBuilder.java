@@ -75,6 +75,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.xml.namespace.QName;
 import org.apache.log4j.Level;
@@ -404,34 +405,32 @@ public final class ModelBuilder {
 		if (opt.targetDir.exists() == false) {
 			throw new Exception("Cannot create/use target folder: " + opt.targetDir);
 		}
-
 		LOG.debug("Generate classes:");
 		model.codeModel.build(new FileCodeWriter(opt.targetDir));
 		for (NClass nclazz : model.beans().keySet()) {
-			CClassInfo ci = model.beans().get(nclazz);
+//			CClassInfo ci = model.beans().get(nclazz);
 			LOG.debug(nclazz.fullName());
 //			System.err.println("nclazz=" + nclazz);
 //			System.err.println("ci    =" + ci.getElementName());
 
 			// System.err.println("ci ="+ci.getElementName() );
 		}
-		for (QName qn : model.createTopLevelBindings().keySet()) {
-			CClassInfo ci = model.createTopLevelBindings().get(qn);
-//			System.err.println("qn=" + qn);
-//			System.err.println("ci    =" + ci.getElementName());
-
-			// System.err.println("ci ="+ci.getElementName() );
+		/*
+		Map<QName,CClassInfo> topLevelBindings = model.createTopLevelBindings();
+		for (QName qn : topLevelBindings.keySet()) {
+			CClassInfo ci = topLevelBindings.get(qn);
 		}
-		model.createTopLevelBindings();
+		*/
 		if (!opt.compileSource) {
 			return;
 		}
 		JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
 		if (jc == null) {
-			LOG.error("Can not retrieve JavaCompiler: ");
-			LOG.error("java.home: " + System.getProperty("java.home"));
-			LOG.error("java.class.path: " + System.getProperty("java.class.path"));
-			throw new IllegalStateException("Can not retrieve JavaCompiler");
+			String message = "Cannot access the javac compiler. Take care you use a JDK instead of a JRE.\n" +
+					"java.home: " + System.getProperty("java.home") + "\n" +
+					"java.class.path: " + System.getProperty("java.class.path");
+			LOG.error(message);
+			throw new IllegalStateException("Cannot access the javac compiler. Take care you use a JDK instead of a JRE.");
 		}
 		StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
 		if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
@@ -443,9 +442,7 @@ public final class ModelBuilder {
 		}
 		Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
 		method.setAccessible(true);
-		method.invoke(((URLClassLoader) ClassLoader.getSystemClassLoader()),
-				new Object[] { opt.targetDir.toURI().toURL() });
-
+		method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[] { opt.targetDir.toURI().toURL() });
 	}
 
 	/**
