@@ -10,8 +10,8 @@
     INode node = (INode)codeGenArgument.getArgument();
     String cid = node.getUniqueName();	
     String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__"));
-    String nameSpace = ElementParameterParser.getValue(node, "__NAMESPACE__"));
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
+    String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__"));
 %>
 	{
 		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
@@ -34,5 +34,6 @@
 			 }
 			 options.addGrammar(file);
 		}
+		// build the model
 		
    }
