@@ -2,8 +2,10 @@ package de.cimt.talendcomp.xmldynamic.test;
 
 import java.io.File;
 
+
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import com.sun.codemodel.JCodeModel;
 

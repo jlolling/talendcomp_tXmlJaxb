@@ -15,7 +15,7 @@ import routines.system.RunStat;
  * @author jan.lolling@cimt-ag.de
  *
  */
-public class TalendFakeJob extends TestCase {
+public class TalendFakeJob {
 
 	protected static Logger log = Logger.getLogger(TalendFakeJob.class);
 
