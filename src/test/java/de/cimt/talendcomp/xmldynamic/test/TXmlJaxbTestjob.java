@@ -36,7 +36,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			
 			// TODO
 			//testen ob das jar file älter als das xsd file
-			if(xsdFile.lastModified() > jarFile.lastModified()){
+			if (xsdFile.lastModified() > jarFile.lastModified()) {
 				//wenn älter muss der generate gestartet werden und das jar file neu erstellt werden
 				//ModelBuilder.buildJar(opts, String jarFilePath);
 			} else {
