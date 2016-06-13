@@ -13,6 +13,7 @@ import de.cimt.talendcomp.test.TalendFakeJob;
 import de.cimt.talendcomp.xmldynamic.ModelBuilder;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
+import de.cimt.talendcomp.xmldynamic.JarUtil;
 
 public class TXmlJaxbTestjob extends TalendFakeJob {
 	
@@ -24,8 +25,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			String classRootPath = "./target/generated-sources/modelbuilder/";
 			File classRootPathFile = new File(classRootPath);
 			String xsdFilepath = "./src/test/resources/customer.xsd";
-			// TODO
-			String jarFilepath = "";
+			String jarFilepath = "C:/Users/lames/workspace/talend_component_tXmlJaxb/src/test/resources/customer.xsd.jar";
 			File xsdFile = new File(xsdFilepath);
 			File jarFile = new File(jarFilepath);
 			XJCOptions opts = new XJCOptions();
@@ -39,10 +39,12 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			if (xsdFile.lastModified() > jarFile.lastModified()) {
 				//wenn älter muss der generate gestartet werden und das jar file neu erstellt werden
 				//ModelBuilder.buildJar(opts, String jarFilePath);
-			} else {
-				//ansonsten die Klassen aus dem Jar file laden			
-				//ModelBuilder.loadClasses(String jarFilePath);
-			}
+				JarUtil buildJar = new JarUtil();
+				buildJar.setClassFilesBasePath("C:/Users/lames/workspace/talend_component_tXmlJaxb/src/main/java/");
+				buildJar.setClassFilesDir("C:/Users/lames/workspace/talend_component_tXmlJaxb/src/main/java/");
+				buildJar.setJarFilePath(jarFilepath);
+				buildJar.create();
+			} 
 			ModelBuilder.generate(opts, new JCodeModel());
 		}
 		classesLoaded = true;
