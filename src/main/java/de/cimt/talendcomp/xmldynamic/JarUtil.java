@@ -100,10 +100,12 @@ public class JarUtil {
 					}
 					
 					String relative = baseDir.toURI().relativize(new File(name).toURI()).getPath();
-					JarEntry entry = new JarEntry(relative);
-					entry.setTime(sourceDir.lastModified());
-					target.putNextEntry(entry);
-					target.closeEntry();
+					if (relative != null && relative.isEmpty() == false) {
+						JarEntry entry = new JarEntry(relative);
+						entry.setTime(sourceDir.lastModified());
+						target.putNextEntry(entry);
+						target.closeEntry();
+					}
 				}
 				for (File nestedFile : sourceDir.listFiles()) {
 					add(nestedFile, baseDir, target);
