@@ -20,23 +20,15 @@ public class JarUtil {
 		return classFilesDirPath;
 	}
 	
-	public void setClassFilesDir(String classFilesDir) {
+	public void setClassFilesRootDir(String classFilesDir) {
 		if (classFilesDir == null || classFilesDir.trim().isEmpty()) {
 			throw new IllegalArgumentException("classFilesDir cannot be null or empty");
 		}
 		this.classFilesDirPath = classFilesDir.trim();
-	}
-	
-	public String getClassFilesBasePath() {
-		return classFilesBasePath;
-	}
-
-	public void setClassFilesBasePath(String classFilesBasePath) {
-		this.classFilesBasePath = classFilesBasePath;
+		this.classFilesBasePath = classFilesDirPath;
 	}
 	
 	public String getJarFilePath() {
-
 		return jarFilePath;
 	}
 	
@@ -46,14 +38,12 @@ public class JarUtil {
 		}
 		this.jarFilePath = jarFilePath.trim();
 	}
-	
-	
+
 	public void create() throws Exception {
 		if (classFilesDirPath == null) {
 			throw new IllegalStateException("classFilesDir not set");
 		}
 		File classFilesDir = new File(classFilesDirPath);
-		
 		if (classFilesDir.exists()) {
 			if (classFilesDir.canRead() == false) {
 				throw new Exception("Source dir: " + classFilesDir.getAbsolutePath() + " is not readable !");

@@ -40,8 +40,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 				//wenn älter muss der generate gestartet werden und das jar file neu erstellt werden
 				//ModelBuilder.buildJar(opts, String jarFilePath);
 				JarUtil buildJar = new JarUtil();
-				buildJar.setClassFilesBasePath("C:/Users/lames/workspace/talend_component_tXmlJaxb/src/main/java/");
-				buildJar.setClassFilesDir("C:/Users/lames/workspace/talend_component_tXmlJaxb/src/main/java/");
+				buildJar.setClassFilesRootDir("C:/Users/lames/workspace/talend_component_tXmlJaxb/src/main/java/");
 				buildJar.setJarFilePath(jarFilepath);
 				buildJar.create();
 			} 

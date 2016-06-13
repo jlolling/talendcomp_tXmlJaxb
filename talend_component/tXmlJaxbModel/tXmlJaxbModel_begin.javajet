@@ -11,6 +11,7 @@
     String cid = node.getUniqueName();	
     String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__");
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
+    boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
     String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
 %>
 	{
@@ -35,5 +36,13 @@
 			 options.addGrammar(file);
 		}
 		// build the model
-		
+		de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
+<%	if (createJar) { %>
+		de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
+		jarBuilder.setClassFilesRootDir(modelCacheDir);
+		String jarFilePath = <%=jarFilePath%>;
+		jarBuilder.setJarFilePath(jarFilePath);
+		jarBuilder.create();
+		globalMap.put("<%=cid%>_JAR_FILE", jarFilePath);
+<% } %>
    }
