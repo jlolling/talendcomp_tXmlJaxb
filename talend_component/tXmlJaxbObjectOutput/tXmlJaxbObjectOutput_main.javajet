@@ -49,29 +49,27 @@
 		globalMap.put("<%=cid%>_NB_LINE", numberObjects);
 		boolean ok = false;
 		// fill the attributes
-<% if (conn != null) {
-   	for (int i = 0; i < listColumns.size(); i++) {
-			IMetadataColumn mc = listColumns.get(i);
-			Map<String, String> config = configList.get(i);
-			boolean use = "true".equals(config.get("USE"));
-			if (use == false) {
-				continue; // skip over unused columns
-			}
-			String fieldName = config.get("ATTRIBUTE_ALIAS");
-			boolean ignoreMissing = "true".equals(config.get("IGNORE_MISSING"));
-			if (fieldName == null || fieldName.trim().isEmpty() || fieldName.equals("\"\"")) {
-				fieldName = "\"" + mc.getLabel() + "\"";
-			}
-			String pattern = mc.getPattern();
-			String javaClassName = mc.getTalendType().substring(3); %>
+<% for (int i = 0; i < listColumns.size(); i++) {
+		IMetadataColumn mc = listColumns.get(i);
+		Map<String, String> config = configList.get(i);
+		boolean use = "true".equals(config.get("USE"));
+		if (use == false) {
+			continue; // skip over unused columns
+		}
+		String fieldName = config.get("ATTRIBUTE_ALIAS");
+		boolean ignoreMissing = "true".equals(config.get("IGNORE_MISSING"));
+		if (fieldName == null || fieldName.trim().isEmpty() || fieldName.equals("\"\"")) {
+			fieldName = "\"" + mc.getLabel() + "\"";
+		}
+		String pattern = mc.getPattern();
+		String javaClassName = mc.getTalendType().substring(3); %>
 		ok = currentObject.set(<%=fieldName%>, <%=conn.getName()%>.<%=mc.getLabel()%>);
-<%    	if (ignoreMissing == false) { %>
+<%    if (ignoreMissing == false) { %>
 		if (ok == false) {
 			throw new Exception("Attribute: <%=className.replace("\"","")%>.<%=fieldName.replace("\"","")%> does not exist!");
 		}
-<%    	}
-      } // for
-	} // if (conn != null)
+<%    }
+   } // for
    if (isRoot == false) { %>
 		String parentObjectCompentName = "<%=parentObject%>";
 		de.cimt.talendcomp.xmldynamic.TXMLObject parentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get(parentObjectCompentName + "_CURRENT_OBJECT");
