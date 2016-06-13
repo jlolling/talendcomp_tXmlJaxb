@@ -79,6 +79,9 @@ public class JarUtil {
 		}
 	}
 	
+	//TODO
+	// *.java Dateien exkludieren
+	
 	private void add(File sourceDir, File baseDir, JarOutputStream target) throws IOException {
 		BufferedInputStream in = null;
 		try {
