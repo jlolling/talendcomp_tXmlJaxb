@@ -34,7 +34,6 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			opts.addGrammar(new File(xsdFile.getAbsolutePath()));
 			System.out.println("Generate model...");
 			
-			// TODO
 			//testen ob das jar file älter als das xsd file
 			if (xsdFile.lastModified() > jarFile.lastModified()) {
 				//wenn älter muss der generate gestartet werden und das jar file neu erstellt werden

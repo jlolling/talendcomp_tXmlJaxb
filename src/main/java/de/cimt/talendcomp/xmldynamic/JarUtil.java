@@ -79,8 +79,6 @@ public class JarUtil {
 		}
 	}
 	
-	//TODO
-	// *.java Dateien exkludieren
 	
 	private void add(File sourceDir, File baseDir, JarOutputStream target) throws IOException {
 		BufferedInputStream in = null;
@@ -90,6 +88,9 @@ public class JarUtil {
 				if (name.isEmpty() == false) {
 					if (name.endsWith("/") == false) {
 						name += "/";
+					}
+					if (name.endsWith(".java")) {
+						System.out.println(name);
 					}
 					
 					String relative = baseDir.toURI().relativize(new File(name).toURI()).getPath();
@@ -107,18 +108,21 @@ public class JarUtil {
 			}
 			
 			String relative = baseDir.toURI().relativize(sourceDir.toURI()).getPath();
-			JarEntry entry = new JarEntry(relative);
-			entry.setTime(sourceDir.lastModified());
-			target.putNextEntry(entry);
-			in = new BufferedInputStream(new FileInputStream(sourceDir));
-
-			byte[] buffer = new byte[1024];
-			while (true) {
-				int count = in.read(buffer);
-				if (count == -1) {
-					break;
+			
+			if (relative.endsWith(".java") == false) {
+				JarEntry entry = new JarEntry(relative);
+				entry.setTime(sourceDir.lastModified());
+				target.putNextEntry(entry);
+				in = new BufferedInputStream(new FileInputStream(sourceDir));
+	
+				byte[] buffer = new byte[1024];
+				while (true) {
+					int count = in.read(buffer);
+					if (count == -1) {
+						break;
+					}
+					target.write(buffer, 0, count);
 				}
-				target.write(buffer, 0, count);
 			}
 			target.closeEntry();
 		} finally {
