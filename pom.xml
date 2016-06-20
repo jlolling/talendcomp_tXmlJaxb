@@ -3,7 +3,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.cimt.talendcomp</groupId>
     <artifactId>de.cimt.talendcomp.xmldynamic</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>de.cimt.talendcomp.xmldynamic</name>
     <build>
         <plugins>
@@ -69,4 +68,5 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <version>1.0</version>
 </project>

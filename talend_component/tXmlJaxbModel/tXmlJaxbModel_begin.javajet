@@ -18,14 +18,9 @@
 		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
 		String modelCacheDir = <%=modelCacheDir%>;
 		if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
-			 java.io.File dir = new java.io.File(modelCacheDir);
-			 if (dir.exists() == false) {
-			 	  dir.mkdirs();
-			 }
-			 if (dir.exists() == false) {
-				  throw new Exception("Model cache dir cannot be created and does not exists!");
-			 }
-			 options.targetDir = dir;
+			 options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
+		} else {
+			throw new Exception("Model Cache Dir cannot be null or empty");
 		}
 		String xsdFile = <%=xsdFile%>;
 		if (xsdFile != null && xsdFile.trim().isEmpty() == false) {

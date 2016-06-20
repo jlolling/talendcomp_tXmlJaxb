@@ -1,17 +1,30 @@
 package de.cimt.talendcomp.xmldynamic;
 
-import com.sun.codemodel.JClass;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.kohsuke.rngom.ast.builder.SchemaBuilder;
 import org.kohsuke.rngom.ast.util.CheckingSchemaBuilder;
@@ -37,6 +50,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.writer.FileCodeWriter;
 import com.sun.tools.xjc.AbortException;
@@ -70,15 +84,6 @@ import com.sun.xml.xsom.XSSchemaSet;
 import com.sun.xml.xsom.parser.JAXPParser;
 import com.sun.xml.xsom.parser.XMLParser;
 import com.sun.xml.xsom.parser.XSOMParser;
-import java.io.File;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import javax.xml.namespace.QName;
-import org.apache.log4j.Level;
 
 /**
  * Builds a {@link Model} object.
@@ -409,7 +414,7 @@ public final class ModelBuilder {
 		model.codeModel.build(new FileCodeWriter(opt.targetDir));
 		for (NClass nclazz : model.beans().keySet()) {
 //			CClassInfo ci = model.beans().get(nclazz);
-			LOG.debug(nclazz.fullName());
+//			LOG.debug(nclazz.fullName());
 //			System.err.println("nclazz=" + nclazz);
 //			System.err.println("ci    =" + ci.getElementName());
 
@@ -876,4 +881,37 @@ public final class ModelBuilder {
 		return tf;
 	}
 
+	public static File setupModelDir(String dirPath) throws Exception {
+		File modelDir = new File(dirPath);
+		if (modelDir.exists()) {
+			if (modelDir.isFile()) {
+				if (modelDir.delete()) {
+					throw new Exception("At the location of the model dir a file already exists: " + modelDir.getAbsolutePath() + " and this cannot be deleted!");
+				}
+			}
+			final Path directory = Paths.get(dirPath);
+			Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+			   @Override
+			   public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+			       Files.delete(file);
+			       return FileVisitResult.CONTINUE;
+			   }
+
+			   @Override
+			   public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				   if (dir.equals(directory) == false) {
+				       Files.delete(dir);
+				   }
+			       return FileVisitResult.CONTINUE;
+			   }
+			});	
+		} else {
+			modelDir.mkdirs();
+		}
+		if (modelDir.exists() == false) {
+			throw new Exception("Cannot create model base dir: " + modelDir.getAbsolutePath());
+		}
+		return modelDir;
+	}
+	
 }
