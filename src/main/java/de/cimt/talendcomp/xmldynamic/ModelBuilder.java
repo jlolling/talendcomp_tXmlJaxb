@@ -26,6 +26,7 @@ import javax.xml.namespace.QName;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.colllib.datastruct.Pair;
 import org.kohsuke.rngom.ast.builder.SchemaBuilder;
 import org.kohsuke.rngom.ast.util.CheckingSchemaBuilder;
 import org.kohsuke.rngom.digested.DPattern;
@@ -48,6 +49,7 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLFilter;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 import com.sun.codemodel.JClass;
@@ -123,6 +125,7 @@ public final class ModelBuilder {
 	private final ErrorReceiverFilter errorReceiver;
 	private final JCodeModel codeModel;
 	private final MessageDigest digest;
+	private final List<Pair <String, String>> typeBinding = new ArrayList<Pair <String, String>>();
 	private final XMLFilterImpl checksumFilter = new XMLFilterImpl() {
 
 		private void update(String... values) {
@@ -292,7 +295,51 @@ public final class ModelBuilder {
 			return null;
 		}
 		try {
-			switch (opt.getSchemaLanguage()) {
+			Language schemaLanguage = opt.getSchemaLanguage();
+			if (schemaLanguage == Language.WSDL || schemaLanguage == Language.XMLSCHEMA) {
+				typeBinding.clear();
+
+					JAXPParser parser = new JAXPParser(XmlFactory.createParserFactory(opt.disableXmlSecurity));
+					for (InputSource in : opt.getGrammars()) {
+						try {
+							parser.parse(in, new DefaultHandler(){
+								
+								String namespace = null;
+								
+								@Override
+								public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+									// TODO Auto-generated method stub
+									if(localName.equalsIgnoreCase("schema")){
+										for (int i = 0, max = attributes.getLength(); i < max; i++) {
+											if (attributes.getLocalName(i).equalsIgnoreCase("targetNamespace")) {
+												namespace = attributes.getValue(i);
+											}
+										}
+									}
+									
+									if(localName.equalsIgnoreCase("complexType")){
+										for (int i = 0, max = attributes.getLength(); i < max; i++) {
+											if (attributes.getLocalName(i).equalsIgnoreCase("name")) {
+												typeBinding.add(new Pair<String,String>(namespace, attributes.getValue(i)));
+											}
+										}
+									}
+									
+									super.startElement(uri, localName, qName, attributes);
+									
+								}
+								
+							}, ERR, opt.entityResolver);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					System.out.println(typeBinding);
+					System.exit(1);
+			}
+			switch (schemaLanguage) {
 			case DTD:
 				// TODO: make sure that bindFiles,size()<=1
 				InputSource bindFile = null;
