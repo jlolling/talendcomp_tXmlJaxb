@@ -102,6 +102,65 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 		this._xmlID = _xmlID;
 	}
 
+	public boolean isType(){
+		return !isElement();
+	}
+	public boolean isElement(){
+		
+		return (getClass().getAnnotation(javax.xml.bind.annotation.XmlRootElement.class)!=null || getClass().getAnnotation(javax.xml.bind.annotation.XmlElement.class)!=null);
+		
+	}
+	
+	
+	
+	
+	public void afterUnmarshal(Unmarshaller um, Object parent) {
+		if (parent == null) {
+			return;
+		}
+		try {
+			this.set_XmlParent((TXMLObject) parent);
+		} catch (Throwable t) {
+		} // can only be classcast exception and then there is nothing to do
+	}
+
+	public Class<?> getType(String attr) {
+		if (attr == null || attr.trim().isEmpty()) {
+			throw new IllegalArgumentException("attribute name cannot be null or empty!");
+		}
+		// attr = attr.toUpperCase();
+		return CACHE.get(this.getClass()).get(attr).getPropertyType();
+	}
+
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public boolean set(String attr, Object value) {
 		if (attr == null || attr.trim().isEmpty()) {
 			throw new IllegalArgumentException("attribute name cannot be null or empty!");
@@ -130,14 +189,6 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 		}
 		CACHE.get(this.getClass()).get(attr).setPropertyValue(this, value);
 		return true;
-	}
-
-	public Class<?> getType(String attr) {
-		if (attr == null || attr.trim().isEmpty()) {
-			throw new IllegalArgumentException("attribute name cannot be null or empty!");
-		}
-		// attr = attr.toUpperCase();
-		return CACHE.get(this.getClass()).get(attr).getPropertyType();
 	}
 
 	public Object get(String attr) {
@@ -175,17 +226,11 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 		return set(attr, value);
 	}
 
-	public void afterUnmarshal(Unmarshaller um, Object parent) {
-		if (parent == null) {
-			return;
-		}
-		try {
-			this.set_XmlParent((TXMLObject) parent);
-		} catch (Throwable t) {
-		} // can only be classcast exception and then there is nothing to do
-	}
-
-	public Set<String> getNames() {
+	/**
+	 * Returns a list of all attributes from current class
+	 * @return
+	 */
+	public Set<String> getAttributeNames() {
 		return CACHE.get(this.getClass()).keySet();
 	}
 
