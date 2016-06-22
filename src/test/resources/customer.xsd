@@ -14,7 +14,7 @@
    </xsd:complexType>
 
    <xsd:element name="customer">
-      <xsd:complexType>
+      <xsd:complexType>ü8poü
          <xsd:sequence>
             <xsd:element name="id" type="idvalues" minOccurs="0"/>
             <xsd:element name="name" type="xsd:string" minOccurs="0"/>
@@ -33,4 +33,57 @@
    </xsd:simpleType>
 
 
+<xsd:schema
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:xjac="http://java.sun.com/xml/ns/jaxb/xjc"
+   xmlns:xasc="http://java.sun.com/xml/ns/jaxb"
+   xmlns="http://cimt.de"
+   targetNamespace="http://cimt.de"
+   elementFormDefault="qualified">
+
+   <xsd:complexType name="address">
+      <xsd:sequence>
+         <xsd:element name="street" type="xsd:string" minOccurs="0"/>
+         <xsd:element name="city" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence>
+   </xsd:complexType>
+
+   <xsd:element name="customer">
+      <xsd:complexType>
+         <xsd:sequence>
+             <xsd:element name="id" type="xsd:string" minOccurs="0"/>
+             <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+             <xsd:element name="address" type="address" minOccurs="0"/>
+             <xsd:element name="poaddress" type="address" minOccurs="0"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   
+
+<xsd:schema
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:xjac="http://java.sun.com/xml/ns/jaxb/xjc"
+   xmlns:xasc="http://java.sun.com/xml/ns/jaxb"
+   xmlns="http://cimt.de"
+   targetNamespace="http://cimt.de"
+   elementFormDefault="qualified">
+
+   <xsd:complexType name="address">
+      <xsd:sequence>
+         <xsd:element name="street" type="xsd:string" minOccurs="0"/>
+         <xsd:element name="city" type="xsd:string" minOccurs="0"/>
+      </xsd:sequence>
+   </xsd:complexType>
+
+   <xsd:element name="customer">
+      <xsd:complexType>
+         <xsd:sequence>
+             <xsd:element name="id" type="xsd:string" minOccurs="0"/>
+             <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+             <xsd:element name="address" type="address" minOccurs="0"/>
+             <xsd:element name="poaddress" type="address" minOccurs="0"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   
 </xsd:schema>

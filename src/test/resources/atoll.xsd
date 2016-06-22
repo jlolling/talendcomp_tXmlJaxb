@@ -21,8 +21,8 @@
 			<complexType name="Antenna">
 				<sequence>
 					<element name="basekey" type="xsd:string"/>				
-					<element name="heightAGL" type="xsd:string" minOccurs="0"/>
-					<element name="azimuth" type="xsd:string" minOccurs="0"/>
+					<element name="heightAGL" type="xsd:decimal" minOccurs="0"/>
+					<element name="azimuth" type="xsd:decimal" minOccurs="0"/>
 				</sequence>
 			</complexType>				
 			
@@ -356,7 +356,7 @@
 				</sequence>
 			</complexType>	
   
-                        <complexType name="ListOfRadioRepeaters">
+    		<complexType name="ListOfRadioRepeaters">
 				<sequence>
 					<element name="radioRepeater" type="impl:RadioRepeater"  minOccurs="0" maxOccurs="unbounded"/>		
 				</sequence>
