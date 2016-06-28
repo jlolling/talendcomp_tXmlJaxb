@@ -26,7 +26,7 @@
     	  
     	t2=<xsl:value-of select="$t2"></xsl:value-of>
   	    	
-<!--         <xsl:apply-templates />        -->
+        <xsl:apply-templates />       
     </xsl:template>
     
     <xsl:template match="node()">
