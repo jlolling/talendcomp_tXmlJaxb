@@ -14,7 +14,7 @@
    </xsd:complexType>
 
    <xsd:element name="customer">
-      <xsd:complexType>ü8poü
+      <xsd:complexType>
          <xsd:sequence>
             <xsd:element name="id" type="idvalues" minOccurs="0"/>
             <xsd:element name="name" type="xsd:string" minOccurs="0"/>
@@ -31,3 +31,4 @@
 	   	<xsd:enumeration value="C"/>
 	   </xsd:restriction>
    </xsd:simpleType>
+</xsd:schema>
