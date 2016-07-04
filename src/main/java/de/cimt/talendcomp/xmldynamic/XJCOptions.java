@@ -9,12 +9,13 @@ import com.sun.tools.xjc.Options;
 public class XJCOptions extends Options {
     public boolean extendClasspath=true;
     public boolean compileSource  =true;
+    public boolean createGraph    =true;
     public String  targetName     ="gen_" + System.currentTimeMillis() + ".jar";
 
     public XJCOptions() {
         super();
         pluginURIs.add( InlineSchemaPlugin.PNS.getNamespaceURI() );
-        activePlugins.add( new InlineSchemaPlugin() );
+//        activePlugins.add( new InlineSchemaPlugin() );
         strictCheck=false;
         noFileHeader=true;
         compatibilityMode=2;
@@ -22,7 +23,4 @@ public class XJCOptions extends Options {
         verbose=true;
     }
 
-    
-    
-    
 }

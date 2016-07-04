@@ -22,8 +22,12 @@ public class Messages {
     }
     public static final String COMPILATION_FAILED = "COMPILATION.FAILED";
     public static final String COMPATIBILITY_REQUIRED = "COMPATIBILITY.REQUIRED";
+    
+    public static final String SHAKE_MULTIPLEROOTS = "COMPATIBILITY.REQUIRED";
 
 
+    
+    
 
     public static final String UNKNOWN_LOCATION = "xjc.ConsoleErrorReporter.UnknownLocation";
     public static final String LINE_X_OF_Y = "xjc.ConsoleErrorReporter.LineXOfY";

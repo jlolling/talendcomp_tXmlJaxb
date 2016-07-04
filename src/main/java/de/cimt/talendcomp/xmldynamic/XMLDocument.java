@@ -14,8 +14,7 @@ import org.colllib.util.CollectionUtil;
 
 public abstract class XMLDocument {
 
-	private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger
-			.getLogger("de.cimt.talendcomp.xmldynamic");
+	private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger("de.cimt.talendcomp.xmldynamic");
 
 	final Set<TXMLObject> context = new HashSet<TXMLObject>();
 
@@ -64,7 +63,6 @@ public abstract class XMLDocument {
 	public TXMLObject createObject(Class<TXMLObject> type) {
 		try {
 			TXMLObject obj = type.newInstance();
-			obj.set_XmlDocument(this);
 			return obj;
 		} catch (InstantiationException ex) {
 			LOG.log(Level.FATAL, null, ex);
@@ -100,7 +98,6 @@ public abstract class XMLDocument {
 	 * @param obj
 	 */
 	public void addObject(TXMLObject obj) {
-		obj.set_XmlDocument(this);
 		context.add(obj);
 	};
 

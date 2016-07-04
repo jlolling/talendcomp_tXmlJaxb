@@ -38,7 +38,7 @@ import org.colllib.util.TypeUtil;
 
 /**
  *
- * Angepaï¿½te aus Colllib um die bestehenden Funktionen zu erweitern
+ * Angepasste aus Colllib um die bestehenden Funktionen zu erweitern
  */
 class ReflectUtil {
 
@@ -63,7 +63,7 @@ class ReflectUtil {
         }
 
         boolean fp = numb.longValue() != numb.doubleValue();
-        // konvertierung zu Ganzzahl obwohl Fließkommazahl gegeben
+        // konvertierung zu Ganzzahl obwohl Fliesskommazahl gegeben
         if (fp && !(type.equals(BigDecimal.class) || type.equals(Double.class) || type.equals(Float.class))) {
             return (Number) convert(Math.round(numb.doubleValue()), type);
         }
