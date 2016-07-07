@@ -1,8 +1,13 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 
 public class Util {
 	
@@ -66,4 +71,14 @@ public class Util {
         }
     }
 
+    public static JAXBContext createJAXBContext() throws JAXBException {
+        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        List<Class<TXMLObject>> classes = new ArrayList<Class<TXMLObject>>();
+       
+        while (iterator.hasNext()) {
+            classes.addAll( iterator.next().getClasses() );
+        }
+ 
+        return JAXBContext.newInstance(classes.toArray(new Class[classes.size()]));
+    }
 }

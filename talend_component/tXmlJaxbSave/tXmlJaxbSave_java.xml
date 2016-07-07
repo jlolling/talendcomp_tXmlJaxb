@@ -77,7 +77,6 @@
 		>
 		</PARAMETER>
 
-<!-- 
 		<PARAMETER
 			NUM_ROW="60"
 			FIELD="CHECK" 
@@ -88,16 +87,25 @@
 		</PARAMETER>
 
 		<PARAMETER
-			NUM_ROW="60"
+			NUM_ROW="70"
 			FIELD="CHECK" 
-			NAME="IGNORE_EMPTY" 
+			NAME="FRAGMENTED" 
 			REQUIRED="true" 
 		> 
 			<DEFAULT>false</DEFAULT>
 		</PARAMETER>
--->
+
 		<PARAMETER
-			NUM_ROW="70"
+			NUM_ROW="80"
+			FIELD="TEXT" 
+			NAME="ENCODING" 
+			REQUIRED="true" 
+		> 
+			<DEFAULT>"UTF-8"</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER
+			NUM_ROW="90"
 			FIELD="CHECK" 
 			NAME="STD_OUTPUT" 
 			REQUIRED="true" 

@@ -4,6 +4,7 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -297,4 +300,20 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         return bindings;
     }
 
+    public String toXML() throws JAXBException {
+        return toXML(false);
+    }
+    
+    public String toXML(boolean formatted) throws JAXBException {
+        final Marshaller marshaller = Util.createJAXBContext().createMarshaller();
+        if (formatted) {
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        }
+        StringWriter sw = new StringWriter();
+       
+        marshaller.marshal(this, sw);
+       
+        return sw.toString();
+    }
+    
 }
