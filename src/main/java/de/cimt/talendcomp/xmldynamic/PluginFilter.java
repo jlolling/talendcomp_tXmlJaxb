@@ -82,7 +82,8 @@ abstract class PluginFilter extends XMLFilterImpl {
 
         return prefered;
     }
-    @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
     public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
         if (uri.length() > 0 && !uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) {
             super.startElement(uri, localName, qName, atts);

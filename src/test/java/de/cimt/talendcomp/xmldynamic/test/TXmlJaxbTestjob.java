@@ -1,7 +1,8 @@
 package de.cimt.talendcomp.xmldynamic.test;
 
 import java.io.File;
-
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import com.sun.codemodel.JCodeModel;
 import de.cimt.talendcomp.test.TalendFakeJob;
 import de.cimt.talendcomp.xmldynamic.ModelBuilder;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
+import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
 import de.cimt.talendcomp.xmldynamic.JarUtil;
 
@@ -25,12 +27,13 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			String classRootPath = "./target/generated-sources/modelbuilder/";
 			File classRootPathFile = new File(classRootPath);
 			String xsdFilepath = "./src/test/resources/customer.xsd";
-			String jarFilepath = "C:/Users/lames/workspace/talend_component_tXmlJaxb/src/test/resources/customer.xsd.jar";
+			String jarFilepath = "./target/test/resources/customer.xsd.jar";
 			File xsdFile = new File(xsdFilepath);
 			File jarFile = new File(jarFilepath);
 			XJCOptions opts = new XJCOptions();
 			opts.targetDir = new File(classRootPathFile, xsdFile.getName());
 			opts.targetDir.mkdirs();
+			opts.extendClasspath = true;
 			opts.addGrammar(new File(xsdFile.getAbsolutePath()));
 			System.out.println("Generate model...");
 			
@@ -39,11 +42,12 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 				//wenn älter muss der generate gestartet werden und das jar file neu erstellt werden
 				//ModelBuilder.buildJar(opts, String jarFilePath);
 				JarUtil buildJar = new JarUtil();
-				buildJar.setClassFilesRootDir("C:/Users/lames/workspace/talend_component_tXmlJaxb/src/main/java/");
+				buildJar.setClassFilesRootDir(classRootPath);
 				buildJar.setJarFilePath(jarFilepath);
 				buildJar.create();
 			} 
 			ModelBuilder.generate(opts, new JCodeModel());
+			Util.printElements();
 		}
 		classesLoaded = true;
 	}
@@ -51,7 +55,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 	@Test
 	public void testLoadCustomerClass() throws Exception {
 		currentComponent = "tXmlJaxbOutput";
-		String className = "de.cimt.Customer";
+		String className = "de.cimt.customer.Customer";
 		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 		String expected = "Lukas";
 		if (object.set("name", expected) == false) {
@@ -65,7 +69,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 	@Test
 	public void testLoadWrongCustomer() throws Exception {
 		currentComponent = "tXmlJaxbOutput";
-		String className = "de.cimt.Customer";
+		String className = "de.cimt.customer.Customer";
 		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 		String expected = "Lukas";
 		String unexpected = "Jan";
@@ -81,7 +85,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 	@Test
 	public void testLoadAdressClass() throws Exception {
 		testLoadCustomerClass();
-		String className = "de.cimt.Address";
+		String className = "de.cimt.customer.Customer$Address";
 		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 		String expected = "Berlin";
 		object.set("city", expected);
@@ -92,6 +96,18 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		String parentComponent = "tXmlJaxbOutput_1";
 		TXMLObject parent = (TXMLObject) globalMap.get(parentComponent);
 		parent.addOrSet(parentAttributeName, object);
+	}
+	
+	@Test
+	public void testBuildSQLInClauseFromString() {
+		String expected = "in ('a','b','c')";
+		List<String> values = new ArrayList<String>();
+		values.add("a");
+		values.add("b");
+		values.add("c");
+		String actual = Util.buildSQLInClause(values);
+		System.out.println(actual);
+		assertTrue("SQL code wrong", expected.equals(actual.trim()));
 	}
 
 }

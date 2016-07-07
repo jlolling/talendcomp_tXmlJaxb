@@ -15,16 +15,21 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.xml.XMLConstants;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.colllib.datastruct.Pair;
 import org.kohsuke.rngom.ast.builder.SchemaBuilder;
 import org.kohsuke.rngom.ast.util.CheckingSchemaBuilder;
 import org.kohsuke.rngom.digested.DPattern;
@@ -50,22 +55,17 @@ import org.xml.sax.helpers.XMLFilterImpl;
 
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.fmt.JTextFile;
 import com.sun.codemodel.writer.FileCodeWriter;
 import com.sun.tools.xjc.AbortException;
 import com.sun.tools.xjc.ErrorReceiver;
 import com.sun.tools.xjc.Language;
-import com.sun.tools.xjc.ModelLoader;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.model.Model;
-import com.sun.tools.xjc.model.nav.NClass;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.reader.Const;
 import com.sun.tools.xjc.reader.ExtensionBindingChecker;
 import com.sun.tools.xjc.reader.dtd.TDTDReader;
-import com.sun.tools.xjc.reader.gbind.Expression;
-import com.sun.tools.xjc.reader.gbind.Graph;
 import com.sun.tools.xjc.reader.internalizer.DOMForest;
 import com.sun.tools.xjc.reader.internalizer.DOMForestScanner;
 import com.sun.tools.xjc.reader.internalizer.InternalizationLogic;
@@ -74,7 +74,6 @@ import com.sun.tools.xjc.reader.internalizer.VersionChecker;
 import com.sun.tools.xjc.reader.relaxng.RELAXNGCompiler;
 import com.sun.tools.xjc.reader.relaxng.RELAXNGInternalizationLogic;
 import com.sun.tools.xjc.reader.xmlschema.BGMBuilder;
-import com.sun.tools.xjc.reader.xmlschema.ExpressionBuilder;
 import com.sun.tools.xjc.reader.xmlschema.bindinfo.AnnotationParserFactoryImpl;
 import com.sun.tools.xjc.reader.xmlschema.parser.CustomizationContextChecker;
 import com.sun.tools.xjc.reader.xmlschema.parser.IncorrectNamespaceURIChecker;
@@ -82,19 +81,10 @@ import com.sun.tools.xjc.reader.xmlschema.parser.SchemaConstraintChecker;
 import com.sun.tools.xjc.reader.xmlschema.parser.XMLSchemaInternalizationLogic;
 import com.sun.tools.xjc.util.ErrorReceiverFilter;
 import com.sun.xml.bind.v2.util.XmlFactory;
-import com.sun.xml.xsom.XSComplexType;
-import com.sun.xml.xsom.XSParticle;
 import com.sun.xml.xsom.XSSchemaSet;
 import com.sun.xml.xsom.parser.JAXPParser;
 import com.sun.xml.xsom.parser.XMLParser;
 import com.sun.xml.xsom.parser.XSOMParser;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.ServiceLoader;
-import java.util.Set;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import org.colllib.datastruct.Pair;
 
 /**
  * Builds a {@link Model} object.
@@ -233,16 +223,6 @@ public final class ModelBuilder {
         this.errorReceiver = new ErrorReceiverFilter(ERR);
     }
     
-    public void printContext(){
-        ServiceLoader sl;
-        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
-        while(iterator.hasNext()){
-            for(Class<TXMLObject> clazz : iterator.next().getClasses()){
-                
-            }
-        }
-    }
-
     private Model load() {
         Model grammar;
         if (!sanityCheck()) {
@@ -352,10 +332,11 @@ public final class ModelBuilder {
      *
      * @throws Exception
      */
-    private void generate() throws Exception {
+    public void generate() throws Exception {
         Model model = load();
         // TODO use here the Base64 class to avoid using private classes
-        String cs = new sun.misc.BASE64Encoder().encode(digest.digest());
+        @SuppressWarnings("restriction")
+		String cs = new sun.misc.BASE64Encoder().encode(digest.digest());
         Outline ouln = model.generateCode(opt, ERR);
         if (ouln == null) {
             throw new Exception("failed to compile a schema");
@@ -384,20 +365,13 @@ public final class ModelBuilder {
         LOG.debug("Generate classes:");
         model.codeModel.build(new FileCodeWriter(opt.targetDir));
         
-        for (NClass nclazz : model.beans().keySet()) {
-//			CClassInfo ci = model.beans().get(nclazz);
-//			LOG.debug(nclazz.fullName());
-//			System.err.println("nclazz=" + nclazz);
-//			System.err.println("ci    =" + ci.getElementName());
-
-            // System.err.println("ci ="+ci.getElementName() );
-        }
         /*
 		Map<QName,CClassInfo> topLevelBindings = model.createTopLevelBindings();
 		for (QName qn : topLevelBindings.keySet()) {
 			CClassInfo ci = topLevelBindings.get(qn);
 		}
          */
+        
         if (!opt.compileSource) {
             return;
         }
@@ -622,6 +596,7 @@ public final class ModelBuilder {
         if (xs == null) {
             return null;
         }
+/*
         if(opt.createGraph){
                   Iterator<XSComplexType> it = xs.iterateComplexTypes();
                     while (it.hasNext()) {
@@ -638,6 +613,7 @@ public final class ModelBuilder {
                     }
             
         }
+*/
         return BGMBuilder.build(xs, codeModel, errorReceiver, opt);
     }
 

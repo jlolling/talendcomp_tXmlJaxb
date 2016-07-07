@@ -1,0 +1,19 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+	" 
+%>
+<% 
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode) codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+   boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
+%>
+<% if (autoRelations) { %>
+	java.util.Map<Object, de.cimt.talendcomp.xmldynamic.TXMLObject> keyMap_<%=cid%> = new java.util.HashMap<Object, de.cimt.talendcomp.xmldynamic.TXMLObject>();
+	globalMap.put("keyMap_<%=cid%>", keyMap_<%=cid%>);
+	java.util.Map<Object, java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>> foreignKeyMap_<%=cid%> = new java.util.HashMap<Object, java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>>();
+	globalMap.put("foreignKeyMap_<%=cid%>", foreignKeyMap_<%=cid%>);
+<% } %>

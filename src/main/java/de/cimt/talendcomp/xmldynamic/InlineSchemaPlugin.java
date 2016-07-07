@@ -59,7 +59,7 @@ public class InlineSchemaPlugin extends Plugin {
 
             final String ctx = "GenXS" + UUID.randomUUID().toString().replaceAll("[:\\.-]+", "");
 
-            System.err.println("ctx=" + ctx);
+//            System.err.println("ctx=" + ctx);
 
             JDefinedClass clazz = model.codeModel._class("de.cimt.talendcomp.xmldynamic." + ctx);
             clazz._implements(model.codeModel.ref(TXMLBinding.class));

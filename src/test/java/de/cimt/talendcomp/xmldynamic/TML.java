@@ -29,7 +29,20 @@ public class TML {
 		opts.targetDir.mkdirs();
 		opts.addGrammar(new File("./src/test/resources/customer.xsd"));
 		System.out.println("Generate model...");
-		ModelBuilder.generate(opts, new JCodeModel());
+		//ModelBuilder.generate(opts, new JCodeModel());
+		
+		ModelBuilder mb=new ModelBuilder(opts, new JCodeModel());
+		mb.generate();
+		
+		
+		opts = new XJCOptions();
+		opts.targetDir = new File("./target/generated-sources/modelbuilder/");
+		ModelBuilder.setupModelDir(opts.targetDir.getAbsolutePath());
+		opts.targetDir.mkdirs();
+		opts.addGrammar(new File("./src/test/resources/atollWS.wsdl"));
+		System.out.println("Generate model...");
+		mb = new ModelBuilder(opts, new JCodeModel());
+		mb.generate();
 		// Output single value
 		System.out.println("Create Address object...");
 		TXMLObject address = (TXMLObject) Class.forName("de.cimt.Address").newInstance();

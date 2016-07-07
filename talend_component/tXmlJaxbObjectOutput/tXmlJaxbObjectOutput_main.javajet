@@ -34,8 +34,9 @@
 	List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
    String className = ElementParameterParser.getValue(node, "__CLASS_NAME__");
    boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
+   boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
    String parentObject = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
-   String parentAttribute = ElementParameterParser.getValue(node, "__PARENT_OBJECT_ATTRIBUTE__");
+   String parentKeyField = ElementParameterParser.getValue(node, "__PARENT_KEY_COLUMN__");
 %>
 	{
 		// now create the new object
@@ -49,7 +50,8 @@
 		globalMap.put("<%=cid%>_NB_LINE", numberObjects);
 		boolean ok = false;
 		// fill the attributes
-<% for (int i = 0; i < listColumns.size(); i++) {
+<% String keyFieldName = null;
+   for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
 		Map<String, String> config = configList.get(i);
 		boolean use = "true".equals(config.get("USE"));
@@ -61,8 +63,10 @@
 		if (fieldName == null || fieldName.trim().isEmpty() || fieldName.equals("\"\"")) {
 			fieldName = "\"" + mc.getLabel() + "\"";
 		}
-		String pattern = mc.getPattern();
-		String javaClassName = mc.getTalendType().substring(3); %>
+		if (mc.isKey()) {
+			keyFieldName = mc.getLabel();
+		}
+		%>
 		ok = currentObject.set(<%=fieldName%>, <%=conn.getName()%>.<%=mc.getLabel()%>);
 <%    if (ignoreMissing == false) { %>
 		if (ok == false) {
@@ -70,15 +74,34 @@
 		}
 <%    }
    } // for
-   if (isRoot == false) { %>
+   if (isRoot == false) {
+   	INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
+   	boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
+   	if (autoRelations) { %>
+		// memorize object with key
+<%			if (keyFieldName == null) { %>
+		throw new Exception("No key field set. Auto relation function cannot work! Please set a field in the schema as key.");
+<%			} %>
+		// memorize key with current object
+		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
+<%    } 
+   	if (autoRelations == false || parentIsRoot) { %>
+   	// add current object to parent
 		String parentObjectCompentName = "<%=parentObject%>";
 		de.cimt.talendcomp.xmldynamic.TXMLObject parentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get(parentObjectCompentName + "_CURRENT_OBJECT");
 		if (parentObject == null) {
 			throw new Exception("Parent object: " + parentObjectCompentName + " does not exist!");
 		}
-		String parentAttribute = <%=parentAttribute%>;
-		if (parentObject.addOrSet(parentAttribute, currentObject) == false) {
-			throw new Exception("Parent Attribute: " + parentObject.getClass().getName() + "." + parentAttribute + " does not exist!");
+		if (parentObject.addOrSet(currentObject) == false) {
+			throw new Exception("Cannot add this child object to the parent: " + parentObject.getClass().getName() + " because there is no matching member!");
 		}
-<% } // if (isRoot %>
+<% 	} else { // if (autoRelations == false || parentIsRoot) %>
+		java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listObjectsForParent = (java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>) foreignKeyMap_<%=cid%>.get(<%=conn.getName()%>.<%=parentKeyField%>);
+		if (listObjectsForParent == null) {
+			listObjectsForParent = new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>();
+			foreignKeyMap_<%=cid%>.put(<%=conn.getName()%>.<%=parentKeyField%>, listObjectsForParent);
+		}
+		listObjectsForParent.add(currentObject);
+<% 	} // if (autoRelations == false || parentIsRoot)
+	} %>
 	}

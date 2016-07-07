@@ -15,15 +15,21 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Collects all types and their usage to find complextypes that are used more than 1 time
- * @author dkoch
+ * Collects all types and their usage to find complex types that are used more than 1 time
+ * @author daniel.koch@cimt-ag.de
  */
 class TypeReadHandler extends DefaultHandler {
 
     private final List<Pair<String, String>> complexTypes = new ArrayList<Pair<String, String>>();
-    private final Map<Pair<String, String>, AtomicInteger> usageCount = new HashMap<Pair<String, String>, AtomicInteger>() {
+	private final Map<Pair<String, String>, AtomicInteger> usageCount = new HashMap<Pair<String, String>, AtomicInteger>() {
 
-        @Override
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		@SuppressWarnings("unchecked")
+		@Override
         public AtomicInteger get(Object key) {
             AtomicInteger val = super.get(key);
             if (val == null) {
@@ -45,7 +51,7 @@ class TypeReadHandler extends DefaultHandler {
      * @param type the pair from uri and name of type
      * @return
      */
-    private Pair<String, String> solve(String type) {
+	private Pair<String, String> solve(String type) {
         int pos = type.indexOf(":");
         return (pos < 0)
                 ? new Pair<String, String>(tns, type)

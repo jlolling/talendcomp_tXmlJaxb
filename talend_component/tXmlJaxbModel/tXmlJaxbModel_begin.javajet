@@ -32,6 +32,7 @@
 		}
 		// build the model
 		de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
+		de.cimt.talendcomp.xmldynamic.Util.printContexts();
 <%	if (createJar) { %>
 		de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
 		jarBuilder.setClassFilesRootDir(modelCacheDir);

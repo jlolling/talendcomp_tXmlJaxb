@@ -1,13 +1,7 @@
 package de.cimt.talendcomp.xmldynamic;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import javax.xml.XMLConstants;
-import org.colllib.datastruct.Pair;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 /**

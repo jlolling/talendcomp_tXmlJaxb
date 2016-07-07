@@ -23,8 +23,9 @@ import org.colllib.transformer.Transformer;
 import org.colllib.util.CollectionUtil;
 
 /**
- *
- * @author daniel.koch@cimt-ag.de
+ * This class represents the base class for the generated jax-b classes
+ * It will be used in the Talend components to set or add the values from the flows.
+ * @author daniel.koch@cimt-ag.de, jan.lolling@cimt-ag.de
  */
 public abstract class TXMLObject implements Serializable, Cloneable {
 
@@ -89,7 +90,17 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     }
     // <editor-fold defaultstate="collapsed" desc="methods that are not really required methods">                          
 
-    public boolean set(String attr, Object value) {
+    public boolean addOrSet(TXMLObject childObject) {
+    	String attrName = findFirstPropertyByType(childObject.getClass());
+    	if (attrName == null) {
+    		return false;
+    	} else {
+    		return addOrSet(attrName, childObject);
+    	}
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public boolean set(String attr, Object value) {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
@@ -98,24 +109,24 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (pa == null) {
             return false;
         }
-        Object currentValue = pa.getPropertyValue(this);
 
         /**
          * jaxb never generates setter for collections, so set must be get and
          * add....
          */
         if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
+            Object currentValue = pa.getPropertyValue(this);
             ((Collection) currentValue).clear();
             if (value != null) {
                 if (Collection.class.isAssignableFrom(value.getClass())) {
                     ((Collection) currentValue).addAll(((Collection) value));
                 } else {
-                    ((Collection) currentValue).add(value);
+                    ((Collection) currentValue).add(ReflectUtil.convert(value, pa.getPropertyType()));
                 }
             }
             return true;
         }
-        CACHE.get(this.getClass()).get(attr).setPropertyValue(this, value);
+        pa.setPropertyValue(this, ReflectUtil.convert(value, pa.getPropertyType()));
         return true;
     }
 
@@ -135,7 +146,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         return CACHE.get(this.getClass()).get(attr).getPropertyValue(this);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean addOrSet(String attr, Object value) {
         // TODO check value can be null or not?
         if (attr == null || attr.trim().isEmpty()) {
@@ -177,17 +188,26 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         return CACHE.get(this.getClass()).keySet();
     }
 
-    public String findFirstPropertyByType(Class type) {
+    public String findFirstPropertyByType(Class<? extends TXMLObject> clazz) {
         for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
-            if (pa.getPropertyType().equals(type)) {
+            if (pa.getPropertyType().equals(clazz)) {
                 return pa.getName();
             }
         }
         return null;
     }
 
+    public String findFirstPropertyByType(String className) {
+        for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
+            if (pa.getPropertyType().getName().equals(className)) {
+                return pa.getName();
+            }
+        }
+        return null;
+    }
     
-    public static TXMLObject shakeIt(List<TXMLObject> gll) throws Exception {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public static TXMLObject shakeIt(List<TXMLObject> gll) throws Exception {
         /**
          * 1. create map of relations from tuple class, id to object
          */
@@ -257,11 +277,11 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 
             }
         }
-
         return root;
     }
 
-    private static Map<Class<TXMLObject>, PropertyDescriptor> introspect(Class<TXMLObject> vadderclass) throws Exception {
+    @SuppressWarnings("unchecked")
+	private static Map<Class<TXMLObject>, PropertyDescriptor> introspect(Class<TXMLObject> vadderclass) throws Exception {
         Map<Class<TXMLObject>, PropertyDescriptor> bindings = new HashMap<Class<TXMLObject>, PropertyDescriptor>();
 
         BeanInfo bi = Introspector.getBeanInfo(vadderclass);
@@ -274,7 +294,6 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 
             }
         }
-
         return bindings;
     }
 

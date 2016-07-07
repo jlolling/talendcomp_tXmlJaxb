@@ -17,7 +17,7 @@ import javax.xml.namespace.QName;
  * 
  */
 public interface TXMLBinding {
-    public Class<TXMLObject>[] getClasses();
+    public List<Class<TXMLObject>> getClasses();
     public Class<TXMLObject>[] getElements();
     public Class<TXMLObject>[] getTypes();
     public String[] getNamespaces();
@@ -27,12 +27,15 @@ public interface TXMLBinding {
 
 abstract class InternalTXMLBindingHelper implements TXMLBinding {
     @Override
-    public Class<TXMLObject>[] getClasses(){
+    public List<Class<TXMLObject>> getClasses(){
         List<Class<TXMLObject>> classes=new ArrayList<Class<TXMLObject>>();
         classes.addAll( Arrays.asList(this.getElements()) );
         classes.addAll( Arrays.asList(this.getTypes()) );
-        
-        return (Class<TXMLObject>[]) classes.toArray( );
+//        System.err.println( classes.size() );
+//        System.err.println( classes.getClass() );
+//        System.err.println( classes.getClass().getGenericInterfaces() );
+//        Class<TXMLObject>[] newInstance = (Class<TXMLObject>[]) Array.newInstance( classes.getClass().getComponentType(), classes.size());
+		return  classes;//.toArray( newInstance );
     }
     
     public boolean matchesNamespace(QName qn){

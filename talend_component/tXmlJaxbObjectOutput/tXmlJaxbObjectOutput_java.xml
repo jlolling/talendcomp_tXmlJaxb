@@ -55,20 +55,37 @@
 		<PARAMETER 
 			NAME="PARENT_OBJECT_COMPONENT" 
 			FIELD="COMPONENT_LIST" 
-			NUM_ROW="30"
+			NUM_ROW="20"
 			FILTER="REGEXP:^(tXmlJaxbObjectOutput)(.)*"
 			REQUIRED="true"
 			SHOW_IF="IS_ROOT == 'false'"
 		/>
 
 		<PARAMETER 
-			NAME="PARENT_OBJECT_ATTRIBUTE" 
-			FIELD="TEXT" 
+			NAME="AUTOMATIC_PARENT_CHILD_RELATIONS" 
+			FIELD="CHECK" 
+			NUM_ROW="30"
+			REQUIRED="true"
+		>
+			<DEFAULT>true</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
+			NAME="PARENT_KEY_COLUMN" 
+			FIELD="PREV_COLUMN_LIST"
 			REQUIRED="true" 
 			NUM_ROW="30"
-			SHOW_IF="IS_ROOT == 'false'"
+			SHOW_IF="(AUTOMATIC_PARENT_CHILD_RELATIONS == 'true') and (IS_ROOT == 'false')"
 		>
-			<DEFAULT>"customers"</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
+			NAME="FAIL_IF_PARENT_DOES_NOT_EXISTS" 
+			FIELD="CHECK" 
+			NUM_ROW="30"
+			REQUIRED="true"
+		>
+			<DEFAULT>true</DEFAULT>
 		</PARAMETER>
 
 		<PARAMETER 
@@ -99,13 +116,14 @@
 
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="de.cimt.talendcomp.xmldynamic-1.0.jar" REQUIRED="true" />
+			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-1.1.jar" REQUIRED="true" />
 		</IMPORTS>		
 	</CODEGENERATION>
 	
 	<RETURNS>
 		<RETURN AVAILABILITY="AFTER" NAME="NB_LINE" TYPE="id_Integer" />
-		<RETURN AVAILABILITY="AFTER" NAME="CURRENT_NODE" TYPE="id_Object" />
+		<RETURN AVAILABILITY="FLOW" NAME="CURRENT_OBJECT" TYPE="id_Object" />
+		<RETURN AVAILABILITY="AFTER" NAME="KEYS_AS_SQL_IN_CLAUSE" TYPE="id_String" />
 	</RETURNS>
 	
 </COMPONENT>

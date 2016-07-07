@@ -308,7 +308,6 @@ class ReflectUtil {
 
         try {
             for (PropertyDescriptor pd : java.beans.Introspector.getBeanInfo(tClass, tClass.getSuperclass()).getPropertyDescriptors()) {
-                System.err.println("DisplayName="+pd.getName());
                 if (pd.getReadMethod() != null) {
                     mcoll.get(pd.getName().toUpperCase()).setReadMethod(pd.getReadMethod());
                     mcoll.get(pd.getName().toUpperCase()).setWriteMethod(pd.getWriteMethod());
