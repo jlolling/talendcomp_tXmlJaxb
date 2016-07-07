@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.cimt.talendcomp</groupId>
-  <artifactId>de.cimt.talendcomp.xmldynamic</artifactId>
+  <artifactId>cimt-talendcomp-xmldynamic</artifactId>
   <name>de.cimt.talendcomp.xmldynamic</name>
-  <version>1.0</version>
+  <version>1.1</version>
   <build>
     <plugins>
       <plugin>
@@ -48,6 +48,12 @@
           <groupId>org.hamcrest</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>de.cimt.talendcomp.test</groupId>
+      <artifactId>talend-fake-job</artifactId>
+      <version>0.9</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <properties>
