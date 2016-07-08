@@ -51,12 +51,14 @@ class TypeReadHandler extends DefaultHandler {
      * @param type the pair from uri and name of type
      * @return
      */
-	private Pair<String, String> solve(String type) {
+    /*
+    private Pair<String, String> solve(String type) {
         int pos = type.indexOf(":");
         return (pos < 0)
                 ? new Pair<String, String>(tns, type)
                 : new Pair<String, String>(prefixmapping.get(type.substring(0, pos)), type.substring(pos + 1));
     }
+     */    
     
     @Override
     public void endPrefixMapping(String prefix) throws SAXException {

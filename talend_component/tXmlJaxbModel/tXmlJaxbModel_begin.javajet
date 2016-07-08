@@ -13,6 +13,7 @@
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
     boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
     String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
+    boolean printAbstractClasses = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_ABSTRACT_CLASSES__"));
 %>
 	{
 		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
@@ -32,7 +33,7 @@
 		}
 		// build the model
 		de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
-		de.cimt.talendcomp.xmldynamic.Util.printContexts();
+		de.cimt.talendcomp.xmldynamic.Util.printContexts(<%=printAbstractClasses%>);
 <%	if (createJar) { %>
 		de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
 		jarBuilder.setClassFilesRootDir(modelCacheDir);

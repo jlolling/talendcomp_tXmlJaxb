@@ -80,10 +80,11 @@
    	if (autoRelations) { %>
 		// memorize object with key
 <%			if (keyFieldName == null) { %>
-		throw new Exception("No key field set. Auto relation function cannot work! Please set a field in the schema as key.");
-<%			} %>
+		if (true) throw new Exception("No key field set. Auto-relation function cannot work! Please set a field in the schema as key.");
+<%			} else { %>
 		// memorize key with current object
 		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
+<%			} %>
 <%    } 
    	if (autoRelations == false || parentIsRoot) { %>
    	// add current object to parent

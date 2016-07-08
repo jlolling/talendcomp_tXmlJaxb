@@ -2,7 +2,6 @@ package de.cimt.talendcomp.xmldynamic;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -53,19 +52,23 @@ public class Util {
      public static void printContexts(boolean includeAbstract) {
         final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
         StringBuilder builder=new StringBuilder();
+    	builder.append("\nContexts start ###################################\n");
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getClasses()) {
-                if(!includeAbstract && ( (clazz.getModifiers() | Modifier.ABSTRACT) == 1))
+                if (includeAbstract == false && ((clazz.getModifiers() | Modifier.ABSTRACT) == 1)) {
                     continue;
-                
+                }
                 builder.append(clazz.getName());
                 List<ExtPropertyAccessor> listProperties = ReflectUtil.introspect(clazz, TXMLObject.class);
                 for (ExtPropertyAccessor prop : listProperties) {
                 	builder.append("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
+                	builder.append("\n");
                 }
+            	builder.append("\n----------------------------\n");
             }
         }
-        System.err.println(builder.toString());
+    	builder.append("\nContexts end ###################################\n");
+        System.out.println(builder.toString());
     }
 
     public static void printElements() {
@@ -77,20 +80,19 @@ public class Util {
                 List<ExtPropertyAccessor> listProperties = ReflectUtil.introspect(clazz, TXMLObject.class);
                 for (ExtPropertyAccessor prop : listProperties) {
                     builder.append("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
+                	builder.append("\n----------------------------\n");
                 }
             }
         }
-        System.err.println( builder.toString() );
+        System.out.println(builder.toString());
     }
 
     public static JAXBContext createJAXBContext() throws JAXBException {
         final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
         List<Class<TXMLObject>> classes = new ArrayList<Class<TXMLObject>>();
-       
         while (iterator.hasNext()) {
             classes.addAll( iterator.next().getClasses() );
         }
- 
         return JAXBContext.newInstance(classes.toArray(new Class[classes.size()]));
     }
 }
