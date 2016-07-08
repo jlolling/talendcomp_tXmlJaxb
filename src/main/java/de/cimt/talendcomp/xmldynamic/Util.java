@@ -1,5 +1,6 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -45,30 +46,41 @@ public class Util {
 		return sb.toString();
 	}
 	
-    public static void printContexts() {
+     public static void printContexts() {
+         printContexts(true);
+     }
+     
+     public static void printContexts(boolean includeAbstract) {
         final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        StringBuilder builder=new StringBuilder();
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getClasses()) {
-                System.err.println(clazz.getName());
+                if(!includeAbstract && ( (clazz.getModifiers() | Modifier.ABSTRACT) == 1))
+                    continue;
+                
+                builder.append(clazz.getName());
                 List<ExtPropertyAccessor> listProperties = ReflectUtil.introspect(clazz, TXMLObject.class);
                 for (ExtPropertyAccessor prop : listProperties) {
-                	System.err.println("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
+                	builder.append("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
                 }
             }
         }
+        System.err.println(builder.toString());
     }
 
     public static void printElements() {
         final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        StringBuilder builder=new StringBuilder();
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getElements()) {
-                System.err.println(clazz.getName());
+                builder.append(clazz.getName());
                 List<ExtPropertyAccessor> listProperties = ReflectUtil.introspect(clazz, TXMLObject.class);
                 for (ExtPropertyAccessor prop : listProperties) {
-                	System.err.println("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
+                    builder.append("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
                 }
             }
         }
+        System.err.println( builder.toString() );
     }
 
     public static JAXBContext createJAXBContext() throws JAXBException {

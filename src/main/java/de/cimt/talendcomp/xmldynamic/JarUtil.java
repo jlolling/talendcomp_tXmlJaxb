@@ -68,6 +68,12 @@ public class JarUtil {
 		}
 		Manifest manifest = new Manifest();
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+                /**
+                 * todo: add additional properties
+                 *  - date
+                 *  - grammars
+                 *  ...
+                 */
 		JarOutputStream target = null;
 		try {
 			target = new JarOutputStream(new FileOutputStream(jarFile), manifest);

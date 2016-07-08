@@ -10,6 +10,11 @@ public class XJCOptions extends Options {
     public boolean extendClasspath=true;
     public boolean compileSource  =true;
     public boolean createGraph    =true;
+    
+    /**
+     * used to activate printimng of manipulated grammars befor generating codemodel
+     */
+    public boolean printGrammar   =false;
     public String  targetName     ="gen_" + System.currentTimeMillis() + ".jar";
 
     public XJCOptions() {

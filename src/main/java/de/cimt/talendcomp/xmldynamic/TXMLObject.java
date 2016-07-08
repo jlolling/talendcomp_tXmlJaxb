@@ -35,9 +35,6 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
     @XmlTransient
-    XMLDocument _xmlDocument;
-
-    @XmlTransient
     private static final GenCache<Class<?>, Map<String, ExtPropertyAccessor>> CACHE = new GenCache<Class<?>, Map<String, ExtPropertyAccessor>>(
             new GenCache.LookupProvider<Class<?>, Map<String, ExtPropertyAccessor>>() {
         @Override
@@ -91,8 +88,6 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     public void set_XmlID(Object _xmlID) {
         this._xmlID = _xmlID;
     }
-    // <editor-fold defaultstate="collapsed" desc="methods that are not really required methods">                          
-
     public boolean addOrSet(TXMLObject childObject) {
     	String attrName = findFirstPropertyByType(childObject.getClass());
     	if (attrName == null) {
@@ -175,7 +170,6 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         }
         return set(attr, value);
     }
-            // </editor-fold> 
 
     public void afterUnmarshal(Unmarshaller um, Object parent) {
         if (parent == null) {
@@ -210,7 +204,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public static TXMLObject shakeIt(List<TXMLObject> gll) throws Exception {
+    public static TXMLObject shakeIt(List<TXMLObject> gll) throws Exception {
         /**
          * 1. create map of relations from tuple class, id to object
          */
@@ -284,7 +278,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     }
 
     @SuppressWarnings("unchecked")
-	private static Map<Class<TXMLObject>, PropertyDescriptor> introspect(Class<TXMLObject> vadderclass) throws Exception {
+    private static Map<Class<TXMLObject>, PropertyDescriptor> introspect(Class<TXMLObject> vadderclass) throws Exception {
         Map<Class<TXMLObject>, PropertyDescriptor> bindings = new HashMap<Class<TXMLObject>, PropertyDescriptor>();
 
         BeanInfo bi = Introspector.getBeanInfo(vadderclass);

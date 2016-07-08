@@ -2,7 +2,6 @@ package de.cimt.talendcomp.xmldynamic;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -30,15 +29,6 @@ import javax.xml.parsers.SAXParserFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.colllib.datastruct.Pair;
-import org.kohsuke.rngom.ast.builder.SchemaBuilder;
-import org.kohsuke.rngom.ast.util.CheckingSchemaBuilder;
-import org.kohsuke.rngom.digested.DPattern;
-import org.kohsuke.rngom.digested.DSchemaBuilderImpl;
-import org.kohsuke.rngom.parse.IllegalSchemaException;
-import org.kohsuke.rngom.parse.Parseable;
-import org.kohsuke.rngom.parse.compact.CompactParseable;
-import org.kohsuke.rngom.parse.xml.SAXParseable;
-import org.kohsuke.rngom.xml.sax.XMLReaderCreator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -49,8 +39,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLFilter;
-import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 import com.sun.codemodel.JClass;
@@ -65,14 +53,11 @@ import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.reader.Const;
 import com.sun.tools.xjc.reader.ExtensionBindingChecker;
-import com.sun.tools.xjc.reader.dtd.TDTDReader;
 import com.sun.tools.xjc.reader.internalizer.DOMForest;
 import com.sun.tools.xjc.reader.internalizer.DOMForestScanner;
 import com.sun.tools.xjc.reader.internalizer.InternalizationLogic;
 import com.sun.tools.xjc.reader.internalizer.SCDBasedBindingSet;
 import com.sun.tools.xjc.reader.internalizer.VersionChecker;
-import com.sun.tools.xjc.reader.relaxng.RELAXNGCompiler;
-import com.sun.tools.xjc.reader.relaxng.RELAXNGInternalizationLogic;
 import com.sun.tools.xjc.reader.xmlschema.BGMBuilder;
 import com.sun.tools.xjc.reader.xmlschema.bindinfo.AnnotationParserFactoryImpl;
 import com.sun.tools.xjc.reader.xmlschema.parser.CustomizationContextChecker;
@@ -249,34 +234,6 @@ public final class ModelBuilder {
         }
         try {
             switch (opt.getSchemaLanguage()) {
-                case DTD:
-                    // TODO: make sure that bindFiles,size()<=1
-                    InputSource bindFile = null;
-                    if (opt.getBindFiles().length > 0) {
-                        bindFile = opt.getBindFiles()[0];
-                    }
-                    // if there is no binding file, make a dummy one.
-                    if (bindFile == null) {
-                        // if no binding information is specified, provide a default
-                        bindFile = new InputSource(
-                                new StringReader("<?xml version='1.0'?><xml-java-binding-schema><options package='"
-                                        + (opt.defaultPackage == null ? "generated" : opt.defaultPackage)
-                                        + "'/></xml-java-binding-schema>"));
-                    }
-                    checkTooManySchemaErrors();
-                    grammar = loadDTD(opt.getGrammars()[0], bindFile);
-                    break;
-
-                case RELAXNG:
-                    checkTooManySchemaErrors();
-                    grammar = loadRELAXNG();
-                    break;
-
-                case RELAXNG_COMPACT:
-                    checkTooManySchemaErrors();
-                    grammar = loadRELAXNGCompact();
-                    break;
-
                 case WSDL:
                     grammar = annotateXMLSchema(loadWSDL());
                     break;
@@ -336,7 +293,7 @@ public final class ModelBuilder {
         Model model = load();
         // TODO use here the Base64 class to avoid using private classes
         @SuppressWarnings("restriction")
-		String cs = new sun.misc.BASE64Encoder().encode(digest.digest());
+        String cs = Base64.encodeToBase64String( digest.digest() );
         Outline ouln = model.generateCode(opt, ERR);
         if (ouln == null) {
             throw new Exception("failed to compile a schema");
@@ -429,9 +386,12 @@ public final class ModelBuilder {
     private class XMLSchemaParser implements XMLParser {
 
         private final XMLParser baseParser;
+        private final boolean printGrammar;
 
-        private XMLSchemaParser(XMLParser baseParser) {
+        private XMLSchemaParser(XMLParser baseParser, boolean printGrammar) {
             this.baseParser = baseParser;
+            this.printGrammar = printGrammar;
+            
         }
 
         @Override
@@ -439,11 +399,13 @@ public final class ModelBuilder {
                 EntityResolver entityResolver) throws SAXException, IOException {
 
             // set up the chain of handlers.
-            handler = wrapBy(
-                    new ExtensionBindingChecker(XMLConstants.W3C_XML_SCHEMA_NS_URI, opt, errorReceiver),
-                    handler);
-// TODO: reactivate to see manipulated grammars:
-//handler = wrapBy(new PrintingFilter(), handler);
+            handler = wrapBy( new ExtensionBindingChecker(XMLConstants.W3C_XML_SCHEMA_NS_URI, opt, errorReceiver), handler);
+            
+            // use options to activate feature and see manipulated grammars:
+            if( printGrammar ){
+                handler = wrapBy(new PrintingFilter(), handler);
+            }
+            
             handler = wrapBy(new IncorrectNamespaceURIChecker(errorReceiver), handler);
             handler = wrapBy(new CustomizationContextChecker(errorReceiver), handler);
             handler = wrapBy(checksumFilter, handler);
@@ -461,24 +423,6 @@ public final class ModelBuilder {
             filter.setContentHandler(handler);
             return filter;
         }
-    }
-
-    private void checkTooManySchemaErrors() {
-        if (opt.getGrammars().length != 1) {
-            errorReceiver.error(null, Messages.format(Messages.ERR_TOO_MANY_SCHEMA));
-        }
-    }
-
-    /**
-     * Parses a DTD file into an annotated grammar.
-     *
-     * @param source DTD file
-     * @param bindFile External binding file.
-     */
-    private Model loadDTD(InputSource source, InputSource bindFile) {
-
-        // parse the schema as a DTD.
-        return TDTDReader.parse(source, bindFile, errorReceiver, opt);
     }
 
     /**
@@ -626,7 +570,7 @@ public final class ModelBuilder {
      */
     public XSOMParser createXSOMParser(XMLParser parser) {
         // set up other parameters to XSOMParser
-        XSOMParser reader = new XSOMParser(new XMLSchemaParser(parser));
+        XSOMParser reader = new XSOMParser(new XMLSchemaParser(parser, opt.printGrammar) );
         reader.setAnnotationParser(new AnnotationParserFactoryImpl(opt));
         reader.setErrorHandler(errorReceiver);
         reader.setEntityResolver(opt.entityResolver);
@@ -740,76 +684,6 @@ public final class ModelBuilder {
             scdBasedBindingSet.apply(result, errorReceiver);
         }
         return result;
-    }
-
-    /**
-     * Parses a RELAX NG grammar into an annotated grammar.
-     */
-    private Model loadRELAXNG() throws SAXException {
-
-        // build DOM forest
-        final DOMForest forest = buildDOMForest(new RELAXNGInternalizationLogic());
-
-        // use JAXP masquerading to validate the input document.
-        // DOMForest -> ExtensionBindingChecker -> RNGOM
-        XMLReaderCreator xrc = new XMLReaderCreator() {
-
-            @Override
-            public XMLReader createXMLReader() {
-
-                // foreset parser cannot change the receivers while it's
-                // working,
-                // so we need to have one XMLFilter that works as a buffer
-                XMLFilter buffer = new XMLFilterImpl() {
-                    @Override
-                    public void parse(InputSource source) throws IOException, SAXException {
-                        forest.createParser().parse(source, this, this, this);
-                    }
-                };
-
-                XMLFilter f = new ExtensionBindingChecker(Const.RELAXNG_URI, opt, errorReceiver);
-                f.setParent(buffer);
-
-                f.setEntityResolver(opt.entityResolver);
-
-                return f;
-            }
-        };
-
-        Parseable p = new SAXParseable(opt.getGrammars()[0], errorReceiver, xrc);
-
-        return loadRELAXNG(p);
-
-    }
-
-    /**
-     * Loads RELAX NG compact syntax
-     */
-    private Model loadRELAXNGCompact() {
-        if (opt.getBindFiles().length > 0) {
-            errorReceiver.error(
-                    new SAXParseException(Messages.format(Messages.ERR_BINDING_FILE_NOT_SUPPORTED_FOR_RNC), null));
-        }
-        // TODO: entity resolver?
-        Parseable p = new CompactParseable(opt.getGrammars()[0], errorReceiver);
-
-        return loadRELAXNG(p);
-
-    }
-
-    /**
-     * Common part between the XML syntax and the compact syntax.
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private Model loadRELAXNG(Parseable p) {
-        SchemaBuilder sb = new CheckingSchemaBuilder(new DSchemaBuilderImpl(), errorReceiver);
-
-        try {
-            return RELAXNGCompiler.build((DPattern) p.parse(sb), codeModel, opt);
-        } catch (IllegalSchemaException e) {
-            errorReceiver.error(e.getMessage(), e);
-            return null;
-        }
     }
 
     public static List<File> listFiles(File root, boolean recursive, String extension) {
