@@ -292,7 +292,6 @@ public final class ModelBuilder {
     public void generate() throws Exception {
         Model model = load();
         // TODO use here the Base64 class to avoid using private classes
-        @SuppressWarnings("restriction")
         String cs = Base64.encodeToBase64String( digest.digest() );
         Outline ouln = model.generateCode(opt, ERR);
         if (ouln == null) {

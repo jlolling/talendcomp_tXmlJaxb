@@ -47,7 +47,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 				buildJar.create();
 			} 
 			ModelBuilder.generate(opts, new JCodeModel());
-			Util.printElements();
+			Util.printContexts();
 		}
 		classesLoaded = true;
 	}

@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.colllib.caches.GenCache;
 import org.colllib.datastruct.AutoInitMap;
 import org.colllib.datastruct.Pair;
@@ -283,7 +285,7 @@ class ReflectUtil {
         }
 
         /**
-         * pr�fen nach doppelter eintr�gen und zuweisen fehlender methoden und
+         * prüfen nach doppelter eintragen und zuweisen fehlender methoden und
          * felder aus basisklasse
          */
         Map<String, ExtPropertyAccessor> res = new HashMap<String, ExtPropertyAccessor>();
@@ -426,6 +428,21 @@ class ReflectUtil {
         } catch (ClassCastException cce) {
             return fallback;
         }
+    }
+    
+    /**
+     * checks when ever a class is a root class in the XML document
+     * @param clazz
+     * @return true if it is a root
+     */
+    public static boolean isRootClass(Class<? extends TXMLObject> clazz) {
+    	Annotation[] annoArray = clazz.getAnnotations();
+    	for (Annotation ann : annoArray) {
+    		if (ann instanceof XmlRootElement) {
+    			return true;
+    		}
+    	}
+    	return false;
     }
 
 }
