@@ -2,8 +2,12 @@ package de.cimt.talendcomp.xmldynamic.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -73,11 +77,15 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		String className = "de.cimt.customer.Customer";
 		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 		Date expected = new Date();
-		if (object.set("age", expected) == false) {
+		Calendar cal = GregorianCalendar.getInstance();
+		cal.setTime(expected);
+		XMLGregorianCalendar calIn = javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar) cal);
+		if (object.set("age", calIn) == false) {
 			throw new Exception("attribute does not exists.");
 		}
 		globalMap.put("tXmlJaxbOutput_1", object);
-		Date actual = (Date) object.get("age");
+		XMLGregorianCalendar xmlCalOut = (XMLGregorianCalendar) object.get("age");
+		Date actual = xmlCalOut.toGregorianCalendar().getTime();
 		assertEquals(expected, actual);
 	}
 
