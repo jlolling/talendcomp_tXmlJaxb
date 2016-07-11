@@ -21,6 +21,7 @@
             <xsd:element name="name" type="xsd:string" minOccurs="0"/>
             <xsd:element name="address" type="address" minOccurs="0"/>
             <xsd:element name="poaddress" type="address" minOccurs="0"/>
+            <xsd:element name="age" type="xsd:date" minOccurs="0"/>
          </xsd:sequence>
       </xsd:complexType>
    </xsd:element>

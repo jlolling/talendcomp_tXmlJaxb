@@ -2,6 +2,7 @@ package de.cimt.talendcomp.xmldynamic.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
@@ -66,6 +67,20 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		assertEquals(expected, actual);
 	}
 	
+	@Test
+	public void testSetDate() throws Exception {
+		currentComponent = "tXmlJaxbOutput";
+		String className = "de.cimt.customer.Customer";
+		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
+		Date expected = new Date();
+		if (object.set("age", expected) == false) {
+			throw new Exception("attribute does not exists.");
+		}
+		globalMap.put("tXmlJaxbOutput_1", object);
+		Date actual = (Date) object.get("age");
+		assertEquals(expected, actual);
+	}
+
 	@Test
 	public void testLoadWrongCustomer() throws Exception {
 		currentComponent = "tXmlJaxbOutput";
