@@ -8,6 +8,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.colllib.caches.GenCache;
 import org.colllib.datastruct.Pair;
@@ -140,8 +142,12 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-        // attr = attr.toUpperCase();
-        return CACHE.get(this.getClass()).get(attr).getPropertyValue(this);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+        Class<?> targetClass = pa.getPropertyType();
+        if (targetClass.isAssignableFrom(XMLGregorianCalendar.class)) {
+        	targetClass = Date.class; // we expect actually nobody will work with XMLGregorianCalendar!
+        }
+        return ReflectUtil.convert(pa.getPropertyValue(this), targetClass);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

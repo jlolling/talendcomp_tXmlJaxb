@@ -15,8 +15,11 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +29,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.colllib.caches.GenCache;
 import org.colllib.datastruct.AutoInitMap;
@@ -105,6 +110,19 @@ class ReflectUtil {
     public static <T> T convert(Object v, Class<?> vClass, Class<T> tClass) {
         if (v == null) {
             return null;
+        }
+        if (vClass.isAssignableFrom(java.util.Date.class) && tClass.isAssignableFrom(XMLGregorianCalendar.class)) {
+    		Calendar cal = GregorianCalendar.getInstance();
+    		Date dateValue = (Date) v;
+    		cal.setTime(dateValue);
+    		try {
+				return (T) javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar) cal);
+			} catch (DatatypeConfigurationException e) {
+				throw new RuntimeException(e);
+			}
+        } else if (XMLGregorianCalendar.class.isAssignableFrom(vClass) && Date.class.isAssignableFrom(tClass)) {
+        	XMLGregorianCalendar xmlCal = (XMLGregorianCalendar) v;
+        	return (T) xmlCal.toGregorianCalendar().getTime();
         }
         try {
             return TypeUtil.convert(v, vClass, tClass);

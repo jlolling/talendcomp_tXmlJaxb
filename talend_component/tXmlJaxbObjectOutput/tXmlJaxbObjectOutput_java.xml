@@ -116,7 +116,7 @@
 
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-1.1.jar" REQUIRED="true" />
+			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-1.2.jar" REQUIRED="true" />
 		</IMPORTS>		
 	</CODEGENERATION>
 	

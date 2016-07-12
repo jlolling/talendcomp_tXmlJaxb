@@ -1,26 +1,25 @@
 package de.cimt.talendcomp.xmldynamic.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import com.sun.codemodel.JCodeModel;
 
 import de.cimt.talendcomp.test.TalendFakeJob;
+import de.cimt.talendcomp.xmldynamic.JarUtil;
 import de.cimt.talendcomp.xmldynamic.ModelBuilder;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
-import de.cimt.talendcomp.xmldynamic.JarUtil;
 
 public class TXmlJaxbTestjob extends TalendFakeJob {
 	
@@ -77,15 +76,11 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		String className = "de.cimt.customer.Customer";
 		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 		Date expected = new Date();
-		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(expected);
-		XMLGregorianCalendar calIn = javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar) cal);
-		if (object.set("age", calIn) == false) {
+		if (object.set("age", expected) == false) {
 			throw new Exception("attribute does not exists.");
 		}
 		globalMap.put("tXmlJaxbOutput_1", object);
-		XMLGregorianCalendar xmlCalOut = (XMLGregorianCalendar) object.get("age");
-		Date actual = xmlCalOut.toGregorianCalendar().getTime();
+		Date actual = (Date) object.get("age");
 		assertEquals(expected, actual);
 	}
 
