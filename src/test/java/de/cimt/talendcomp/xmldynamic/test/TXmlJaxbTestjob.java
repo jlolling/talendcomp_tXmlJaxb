@@ -104,16 +104,20 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 	public void testLoadAdressClass() throws Exception {
 		testLoadCustomerClass();
 		String className = "de.cimt.customer.Customer$Address";
-		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
-		String expected = "Berlin";
-		object.set("city", expected);
-		globalMap.put("tXmlJaxbOutput_2", object);
-		String actual = (String) object.get("city");
-		assertEquals(expected, actual);
-		String parentAttributeName = "address";
 		String parentComponent = "tXmlJaxbOutput_1";
 		TXMLObject parent = (TXMLObject) globalMap.get(parentComponent);
-		parent.addOrSet(parentAttributeName, object);
+		String parentAttributeName = "address";
+		for (int i = 0; i < 5; i++) {
+			TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
+			String expected = "Berlin" + i;
+			object.set("city", expected);
+			globalMap.put("tXmlJaxbOutput_2", object);
+			String actual = (String) object.get("city");
+			assertEquals(expected, actual);
+			parent.addOrSet(parentAttributeName, object);
+			parent.addOrSet("title", "t" + i);
+		}
+		System.out.println(parent.toXML(true));
 	}
 	
 	@Test

@@ -6,6 +6,15 @@
    targetNamespace="http://cimt.de/customer/"
    elementFormDefault="qualified">
 
+   <xsd:element name="company">
+	   <xsd:complexType>
+	      <xsd:sequence>
+	         <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+	         <xsd:element name="customer" type="customer" minOccurs="0" maxOccurs="unbounded"/>
+	      </xsd:sequence>
+	   </xsd:complexType>
+   </xsd:element>
+
    <xsd:complexType name="address">
       <xsd:sequence>
          <xsd:element name="id" type="xsd:int" minOccurs="1" maxOccurs="1"/>
@@ -19,13 +28,23 @@
          <xsd:sequence>
             <xsd:element name="id" type="idvalues" minOccurs="0"/>
             <xsd:element name="name" type="xsd:string" minOccurs="0"/>
-            <xsd:element name="address" type="address" minOccurs="0"/>
-            <xsd:element name="poaddress" type="address" minOccurs="0"/>
+            <xsd:element name="address" type="address" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="poaddress" type="address" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="age" type="xsd:date" minOccurs="0"/>
+            <xsd:element ref="pseudonymes" />
+            <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
          </xsd:sequence>
       </xsd:complexType>
    </xsd:element>
    
+   <xsd:element name="pseudonymes">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="alias" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+
    <xsd:simpleType name="idvalues">
 	   <xsd:restriction base="xsd:string">
 	   	<xsd:enumeration value="A"/>

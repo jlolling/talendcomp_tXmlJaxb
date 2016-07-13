@@ -41,9 +41,9 @@ abstract class PluginFilter extends XMLFilterImpl {
 
     public String getPrefixForUrl(String url) {
         for (Entry<String, String> pair : prefixmapping.entrySet()) {
-            if (pair.getValue().equalsIgnoreCase(url))
+            if (pair.getValue().equalsIgnoreCase(url)) {
                 return pair.getKey();
-
+            }
         }
         return null;
     }
@@ -68,14 +68,14 @@ abstract class PluginFilter extends XMLFilterImpl {
     }
 
     public String composePrefix(String url, String prefered) {
-        if (url!=null && prefixmapping.containsValue(url))
+        if (url != null && prefixmapping.containsValue(url))
             return getPrefixForUrl(url);
 
-        if (prefixmapping.containsKey(prefered)){
+        if (prefixmapping.containsKey(prefered)) {
             int count = 0;
-            while (prefixmapping.containsKey(prefered + count))
+            while (prefixmapping.containsKey(prefered + count)) {
                 count++;
-            
+            }
             prefered=prefered + count;
         }
         prefixmapping.put(prefered, url);
@@ -90,11 +90,11 @@ abstract class PluginFilter extends XMLFilterImpl {
             return;
         }
         
-        if(localName==null || localName.length()==0){
-            localName=qName.substring( qName.indexOf(":")+1);
+        if (localName == null || localName.length() == 0) {
+            localName = qName.substring( qName.indexOf(":") + 1);
         }
 
-        if ((uri.length()==0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("schema")) {
+        if ((uri.length() == 0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("schema")) {
             /**
              * manipulate xml content for schema declarations
              * - ensure namespace prefixmapping for JAXB and XJC is present
@@ -105,13 +105,15 @@ abstract class PluginFilter extends XMLFilterImpl {
 
             String jaxbPrefix = getPrefixForUrl(JAXB.getNamespaceURI());
             if (jaxbPrefix == null) {
-                jaxbPrefix = composePrefix(JAXB.getNamespaceURI(),
+                jaxbPrefix = composePrefix(
+                		JAXB.getNamespaceURI(),
                         JAXB.getPrefix());
                 startPrefixMapping(jaxbPrefix, JAXB.getNamespaceURI());
             }
             String xjcPrefix = getPrefixForUrl(XJC.getNamespaceURI());
             if (xjcPrefix == null) {
-                xjcPrefix = composePrefix(XJC.getNamespaceURI(),
+                xjcPrefix = composePrefix(
+                		XJC.getNamespaceURI(),
                         XJC.getPrefix());
                 startPrefixMapping(xjcPrefix, XJC.getNamespaceURI());
             }
@@ -124,10 +126,10 @@ abstract class PluginFilter extends XMLFilterImpl {
                         && atts.getURI(i).equals(JAXB.getNamespaceURI())) {
                     hasJaxbBindingPrefixes = true;
                     String value = atts.getValue(i);
-                    if (!value.contains(xjcPrefix)) {
+                    if (value.contains(xjcPrefix) == false) {
                         value += " " + xjcPrefix;
                     }
-                    if (!value.contains(InlineSchemaPlugin.PNS.getPrefix())) {
+                    if (value.contains(InlineSchemaPlugin.PNS.getPrefix()) == false) {
                         value += " " + InlineSchemaPlugin.PNS.getPrefix();
                     }
                     impl.addAttribute(
@@ -144,17 +146,18 @@ abstract class PluginFilter extends XMLFilterImpl {
                             atts.getType(i),
                             atts.getValue(i));
                 }
-                if(atts.getLocalName(i)=="targetNamespace")
+                if (atts.getLocalName(i) == "targetNamespace") {
                     tns=atts.getValue(i);
+                }
             }
-            if (!hasJaxbBindingPrefixes) {
+            if (hasJaxbBindingPrefixes == false) {
                 impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes",
                         "extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
             }
             super.startElement(uri, localName, qName, impl);
             // </editor-fold> 
        
-        } else if ((uri.length()==0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("element")) {
+        } else if ((uri.length() == 0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("element")) {
             /**
              * change xml content for elements using a special type testOverwriteRequired returning true
              */
@@ -162,13 +165,12 @@ abstract class PluginFilter extends XMLFilterImpl {
             String prefix = getPrefixForUrl(uri);
             prefix = prefix == null ? "" : prefix + ":";
             String type = null;
-//            Pair<String, String> fqtype
             AttributesImpl impl = new AttributesImpl();
 
             for (int i = 0, max = atts.getLength(); i < max; i++) {
-                String name=atts.getLocalName(i);
-                if(name==null)
-                    name=atts.getQName(i);
+                String name = atts.getLocalName(i);
+                if(name == null)
+                    name = atts.getQName(i);
                 
                 if (name.equalsIgnoreCase("type") && testManipulationRequired(solve(atts.getValue(i))) ) {
                     type = atts.getValue(i);
@@ -200,10 +202,10 @@ abstract class PluginFilter extends XMLFilterImpl {
             // </editor-fold> 
 
 
-        } else if ((uri.length()==0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("complexType")) {
-            String name=atts.getValue("name");
+        } else if ((uri.length() == 0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("complexType")) {
+            String name = atts.getValue("name");
             AttributesImpl impl = new AttributesImpl(atts);
-            if( testManipulationRequired( new Pair(tns, name) ) && impl.getIndex("abstract")<0 ){
+            if ( testManipulationRequired( new Pair(tns, name) ) && impl.getIndex("abstract") < 0 ) {
                 impl.addAttribute("", "abstract", "abstract", "CDATA", "true");
             }
 
