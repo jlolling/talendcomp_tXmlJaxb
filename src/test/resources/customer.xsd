@@ -10,7 +10,7 @@
 	   <xsd:complexType>
 	      <xsd:sequence>
 	         <xsd:element name="name" type="xsd:string" minOccurs="0"/>
-	         <xsd:element name="customer" type="customer" minOccurs="0" maxOccurs="unbounded"/>
+	         <xsd:element ref="customer" minOccurs="0" maxOccurs="unbounded"/>
 	      </xsd:sequence>
 	   </xsd:complexType>
    </xsd:element>
@@ -19,24 +19,25 @@
       <xsd:sequence>
          <xsd:element name="id" type="xsd:int" minOccurs="1" maxOccurs="1"/>
          <xsd:element name="street" type="xsd:string" minOccurs="0"/>
+         <xsd:element name="number" type="xsd:integer" minOccurs="0" maxOccurs="unbounded"/>
          <xsd:element name="city" type="xsd:string" minOccurs="0"/>
       </xsd:sequence>
    </xsd:complexType>
 
    <xsd:element name="customer">
-      <xsd:complexType>
-         <xsd:sequence>
-            <xsd:element name="id" type="idvalues" minOccurs="0"/>
-            <xsd:element name="fulname" type="xsd:string" minOccurs="0"/>
-            <xsd:element name="address" type="address" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="poaddress" type="address" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="age" type="xsd:date" minOccurs="0"/>
-            <xsd:element ref="pseudonymes" />
-            <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         </xsd:sequence>
-         <xsd:attribute name="firstname" type="xsd:string"/>
-         <xsd:attribute name="lastname" type="xsd:string"/>
-      </xsd:complexType>
+	   <xsd:complexType>
+	      <xsd:sequence>
+	         <xsd:element name="id" type="idvalues" minOccurs="0"/>
+	         <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+	         <xsd:element name="address" type="address" minOccurs="0" maxOccurs="unbounded"/>
+	         <xsd:element name="poaddress" type="address" minOccurs="0" maxOccurs="1"/>
+	         <xsd:element name="age" type="xsd:date" minOccurs="0"/>
+	         <xsd:element ref="pseudonymes" />
+	         <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+	      </xsd:sequence>
+	      <xsd:attribute name="firstname" type="xsd:string"/>
+	      <xsd:attribute name="lastname" type="xsd:string"/>
+	   </xsd:complexType>
    </xsd:element>
    
    <xsd:element name="pseudonymes">

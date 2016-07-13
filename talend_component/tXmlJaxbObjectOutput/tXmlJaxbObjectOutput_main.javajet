@@ -37,18 +37,27 @@
    boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
    String parentObject = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
    String parentKeyField = ElementParameterParser.getValue(node, "__PARENT_KEY_COLUMN__");
+   boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));
 %>
-	{
+<%	if (createObjectAtBegin == false && isRoot == false) { %>
+	try {
 		// now create the new object
 		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) Class.forName(<%=className%>).newInstance();
 		globalMap.put("<%=cid%>_CURRENT_OBJECT", currentObject);
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Instantiation of object " + <%=className%> + " failed: " + e.getMessage());
+		throw e;
+	}
+<%	} // if (createObjectAtBegin == false && isRoot == false) %>
+	try {
+		// get back the current object
+		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get("<%=cid%>_CURRENT_OBJECT");
 		Integer numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE");
 		if (numberObjects == null) {
 			numberObjects = 0;
 		}
 		numberObjects = numberObjects + 1;
 		globalMap.put("<%=cid%>_NB_LINE", numberObjects);
-		boolean ok = false;
 		// fill the attributes
 <% String keyFieldName = null;
    for (int i = 0; i < listColumns.size(); i++) {
@@ -67,27 +76,32 @@
 			keyFieldName = mc.getLabel();
 		}
 		%>
-		ok = currentObject.set(<%=fieldName%>, <%=conn.getName()%>.<%=mc.getLabel()%>);
+		if (currentObject.addOrSet(<%=fieldName%>, <%=conn.getName()%>.<%=mc.getLabel()%>) == false) {
 <%    if (ignoreMissing == false) { %>
-		if (ok == false) {
 			throw new Exception("Attribute: <%=className.replace("\"","")%>.<%=fieldName.replace("\"","")%> does not exist!");
+<%    } else { %>
+			// we ignore the fact the attribute does not exists
+<%    } // if (ignoreMissing == false) %>
 		}
-<%    }
-   } // for
+<% } // for (int i = 0; i < listColumns.size(); i++)
    if (isRoot == false) {
-   	INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
-   	boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
    	if (autoRelations) { %>
 		// memorize object with key
 <%			if (keyFieldName == null) { %>
+		// if there was no key field, we cannot continue!
 		if (true) throw new Exception("No key field set. Auto-relation function cannot work! Please set a field in the schema as key.");
 <%			} else { %>
 		// memorize key with current object
 		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
 <%			} %>
-<%    } 
-   	if (autoRelations == false || parentIsRoot) { %>
-   	// add current object to parent
+<%    } // if (autoRelations)
+   	INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
+   	boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
+   	if (autoRelations == false || parentIsRoot) {
+			if (createObjectAtBegin == false) { %>
+   	// add current object to parent if we do run this flow per parent object (iteration)
+		// but we only can do this if the current object was not created right at the beginning 
+		// otherwise the assignment to the parent will be done in the end part
 		String parentObjectCompentName = "<%=parentObject%>";
 		de.cimt.talendcomp.xmldynamic.TXMLObject parentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get(parentObjectCompentName + "_CURRENT_OBJECT");
 		if (parentObject == null) {
@@ -96,7 +110,9 @@
 		if (parentObject.addOrSet(currentObject) == false) {
 			throw new Exception("Cannot add this child object to the parent: " + parentObject.getClass().getName() + " because there is no matching member!");
 		}
-<% 	} else { // if (autoRelations == false || parentIsRoot) %>
+<%			} // if (createObjectAtBegin == false)
+	 	} else { // if (autoRelations == false || parentIsRoot) %>
+	 	// if we create per flow record a new current object, we have to collect the objects per parent object
 		java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listObjectsForParent = (java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>) foreignKeyMap_<%=cid%>.get(<%=conn.getName()%>.<%=parentKeyField%>);
 		if (listObjectsForParent == null) {
 			listObjectsForParent = new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>();
@@ -104,5 +120,8 @@
 		}
 		listObjectsForParent.add(currentObject);
 <% 	} // if (autoRelations == false || parentIsRoot)
-	} %>
+ 	} // if (isRoot == false) %>
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+		throw e;
 	}

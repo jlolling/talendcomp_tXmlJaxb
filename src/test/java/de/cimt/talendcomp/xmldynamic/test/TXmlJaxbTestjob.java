@@ -107,7 +107,8 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		String parentComponent = "tXmlJaxbOutput_1";
 		TXMLObject parent = (TXMLObject) globalMap.get(parentComponent);
 		String parentAttributeName = "address";
-		for (int i = 0; i < 5; i++) {
+		int expectedCount = 5;
+		for (int i = 0; i < expectedCount; i++) {
 			TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 			String expected = "Berlin" + i;
 			object.set("city", expected);
@@ -118,6 +119,8 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 			parent.addOrSet("title", "t" + i);
 		}
 		System.out.println(parent.toXML(true));
+		int actualCount = parent.size("title");
+		assertEquals(expectedCount, actualCount);
 	}
 	
 	@Test

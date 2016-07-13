@@ -35,22 +35,33 @@
 	<PARAMETERS>
 
 		<PARAMETER 
+			NAME="IS_ROOT" 
+			FIELD="CHECK" 
+			NUM_ROW="10"
+			REQUIRED="true"
+		>
+			<DEFAULT>true</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
 			NAME="CLASS_NAME" 
 			FIELD="TEXT" 
 			REQUIRED="true" 
-			NUM_ROW="10"
+			NUM_ROW="15"
 		>
 			<DEFAULT>"org.example.Customer"</DEFAULT>
 		</PARAMETER>
 
 		<PARAMETER 
-			NAME="IS_ROOT" 
+			NAME="CREATE_OBJECT_ONCE" 
 			FIELD="CHECK" 
-			NUM_ROW="20"
-			REQUIRED="true"
+			REQUIRED="true" 
+			NUM_ROW="17"
+			SHOW_IF="IS_ROOT == 'false'"
 		>
-			<DEFAULT>true</DEFAULT>
+			<DEFAULT>false</DEFAULT>
 		</PARAMETER>
+
 
 		<PARAMETER 
 			NAME="PARENT_OBJECT_COMPONENT" 
@@ -66,6 +77,7 @@
 			FIELD="CHECK" 
 			NUM_ROW="30"
 			REQUIRED="true"
+			SHOW_IF="IS_ROOT == 'false'"
 		>
 			<DEFAULT>true</DEFAULT>
 		</PARAMETER>
@@ -84,8 +96,31 @@
 			FIELD="CHECK" 
 			NUM_ROW="30"
 			REQUIRED="true"
+			SHOW_IF="(AUTOMATIC_PARENT_CHILD_RELATIONS == 'true') and (IS_ROOT == 'false')"
 		>
 			<DEFAULT>true</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
+			FIELD="LABEL"
+			COLOR="0;0;0"
+			NAME="AUTOMATIC_PARENT_CHILD_RELATIONS_NOTE1" 
+			NUM_ROW="31" 
+			REQUIRED="true" 
+			SHOW_IF="(AUTOMATIC_PARENT_CHILD_RELATIONS == 'false') and (IS_ROOT == 'false')"
+		>
+			<DEFAULT>Take care you run this flow within an iteration starting from the parent component.</DEFAULT>
+		</PARAMETER>
+
+		<PARAMETER 
+			FIELD="LABEL"
+			COLOR="0;0;0"
+			NAME="AUTOMATIC_PARENT_CHILD_RELATIONS_NOTE2" 
+			NUM_ROW="31" 
+			REQUIRED="true" 
+			SHOW_IF="(AUTOMATIC_PARENT_CHILD_RELATIONS == 'true') and (IS_ROOT == 'false')"
+		>
+			<DEFAULT>If the parent is the root, this automatic assignment does not use the parent key, because the parent is a singleton.</DEFAULT>
 		</PARAMETER>
 
 		<PARAMETER 

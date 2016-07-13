@@ -150,6 +150,19 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         return ReflectUtil.convert(pa.getPropertyValue(this), targetClass);
     }
 
+    public int size(String attr) {
+        if (attr == null || attr.trim().isEmpty()) {
+            throw new IllegalArgumentException("attribute name cannot be null or empty!");
+        }
+        int size = 0;
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+        if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
+            Object currentValue = pa.getPropertyValue(this);
+            size = ((Collection<?>) currentValue).size();
+        }
+        return size;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean addOrSet(String attr, Object value) {
         // TODO check value can be null or not?
@@ -193,9 +206,20 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 
     public String findFirstPropertyByType(Class<? extends TXMLObject> clazz) {
         for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
-            if (pa.getPropertyType().equals(clazz)) {
-                return pa.getName();
-            }
+        	if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
+        		// because Collection do only references Object
+        		// we rely on the name of the property and compare it with the clazz name
+        		// FIXME: this is not a nice way, because it does not work with choice
+        		String attributeName = pa.getName().toLowerCase();
+        		String className = clazz.getSimpleName().toLowerCase();
+        		if (attributeName.equals(className)) {
+        			return pa.getName();
+        		}
+        	} else {
+                if (pa.getPropertyType().equals(clazz)) {
+                    return pa.getName();
+                }
+        	}
         }
         return null;
     }
