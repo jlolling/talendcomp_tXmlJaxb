@@ -27,15 +27,15 @@
       <xsd:complexType>
          <xsd:sequence>
             <xsd:element name="id" type="idvalues" minOccurs="0"/>
-            <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="fulname" type="xsd:string" minOccurs="0"/>
             <xsd:element name="address" type="address" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="poaddress" type="address" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="age" type="xsd:date" minOccurs="0"/>
             <xsd:element ref="pseudonymes" />
             <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
          </xsd:sequence>
-         <xsd:attribute name="Name" type="xsd:string"/>
-         <xsd:attribute name="Surname" type="xsd:string"/>
+         <xsd:attribute name="firstname" type="xsd:string"/>
+         <xsd:attribute name="lastname" type="xsd:string"/>
       </xsd:complexType>
    </xsd:element>
    
