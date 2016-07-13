@@ -47,7 +47,7 @@ import org.colllib.util.TypeUtil;
  *
  * Angepasste aus Colllib um die bestehenden Funktionen zu erweitern
  */
-class ReflectUtil {
+public class ReflectUtil {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Number convertNumber(String text, Class type) throws ParseException {
@@ -463,4 +463,52 @@ class ReflectUtil {
     	return false;
     }
 
+    public static String camelizeName(String attrName) {
+    	if (attrName == null) {
+    		throw new IllegalArgumentException("attrName cannot be null");
+    	}
+    	if (attrName.contains("_")) {
+    		StringBuilder sb = new StringBuilder();
+    		char[] array = attrName.toCharArray();
+    		boolean lastWasUnderScore = false;
+    		boolean isFirstChar = true;
+    		for (char c : array) {
+    			if (c == '_') {
+    				if (isFirstChar == false) {
+        				lastWasUnderScore = true;
+    				}
+    			} else {
+    				if (lastWasUnderScore) {
+        				sb.append(Character.toUpperCase(c));
+    					lastWasUnderScore = false;
+    				} else {
+        				if (isFirstChar) {
+            				sb.append(Character.toLowerCase(c));
+        				} else {
+            				sb.append(c);
+        				}
+    				}
+    			}
+				isFirstChar = false;
+    		}
+    		return sb.toString();
+    	}
+    	return attrName;
+    }
+    
+    public static String getSimpleClassName(String className) {
+    	if (className == null) {
+    		throw new IllegalArgumentException("className cannot be null");
+    	}
+    	int pos = className.lastIndexOf('$');
+    	if (pos == -1) {
+    		pos = className.lastIndexOf('.');
+    	}
+    	if (pos != -1) {
+    		return className.substring(pos + 1);
+    	} else {
+    		return className;
+    	}
+    }
+    
 }

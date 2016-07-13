@@ -104,12 +104,11 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-        // attr = attr.toUpperCase();
+    	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
         if (pa == null) {
             return false;
         }
-
         /**
          * jaxb never generates setter for collections, so set must be get and
          * add....
@@ -142,6 +141,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
+    	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
         Class<?> targetClass = pa.getPropertyType();
         if (targetClass.isAssignableFrom(XMLGregorianCalendar.class)) {
@@ -154,6 +154,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
+        attr = ReflectUtil.camelizeName(attr);
         int size = 0;
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
         if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
@@ -169,7 +170,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-        // attr = attr.toUpperCase();
+    	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);// .getPropertyValue(this);
         if (pa == null) {
             throw new IllegalArgumentException(
@@ -226,9 +227,20 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 
     public String findFirstPropertyByType(String className) {
         for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
-            if (pa.getPropertyType().getName().equals(className)) {
-                return pa.getName();
-            }
+        	if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
+        		// because Collection do only references Object
+        		// we rely on the name of the property and compare it with the clazz name
+        		// FIXME: this is not a nice way, because it does not work with choice
+        		String attributeName = pa.getName().toLowerCase();
+        		String simpleClassName = ReflectUtil.getSimpleClassName(className);
+        		if (attributeName.equals(simpleClassName)) {
+        			return pa.getName();
+        		}
+        	} else {
+                if (pa.getPropertyType().getName().equals(className)) {
+                    return pa.getName();
+                }
+        	}
         }
         return null;
     }

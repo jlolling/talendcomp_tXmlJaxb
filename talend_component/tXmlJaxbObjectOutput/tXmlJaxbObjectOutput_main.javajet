@@ -84,17 +84,13 @@
 <%    } // if (ignoreMissing == false) %>
 		}
 <% } // for (int i = 0; i < listColumns.size(); i++)
-   if (isRoot == false) {
-   	if (autoRelations) { %>
-		// memorize object with key
-<%			if (keyFieldName == null) { %>
-		// if there was no key field, we cannot continue!
-		if (true) throw new Exception("No key field set. Auto-relation function cannot work! Please set a field in the schema as key.");
-<%			} else { %>
+	if (keyFieldName == null) { %>
+		// No key field defined !
+<%	} else { %>
 		// memorize key with current object
 		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
-<%			} %>
-<%    } // if (autoRelations)
+<%	}
+   if (isRoot == false) {
    	INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
    	boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
    	if (autoRelations == false || parentIsRoot) {

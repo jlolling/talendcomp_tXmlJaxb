@@ -17,6 +17,7 @@ import com.sun.codemodel.JCodeModel;
 import de.cimt.talendcomp.test.TalendFakeJob;
 import de.cimt.talendcomp.xmldynamic.JarUtil;
 import de.cimt.talendcomp.xmldynamic.ModelBuilder;
+import de.cimt.talendcomp.xmldynamic.ReflectUtil;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
@@ -91,15 +92,23 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		TXMLObject object = (TXMLObject) Class.forName(className).newInstance();
 		String expected = "Lukas";
 		String unexpected = "Jan";
-		
-		if (object.set("name", expected) == false) {
+		if (object.set("first_name", expected) == false) {
 			throw new Exception("attribute does not exists.");
 		}
 		globalMap.put("tXmlJaxbOutput_1", object);
-		String actual = (String) object.get("name");
+		String actual = (String) object.get("first_name");
 		assertNotSame(unexpected, actual);
 	}
 
+	@Test
+	public void testCamelizer() {
+		String test = "First_name_";
+		String expected = "firstName";
+		String actual = ReflectUtil.camelizeName(test);
+		System.out.println(actual);
+		assertEquals(expected, actual);
+	}
+	
 	@Test
 	public void testLoadAdressClass() throws Exception {
 		testLoadCustomerClass();
