@@ -34,6 +34,8 @@
             <xsd:element ref="pseudonymes" />
             <xsd:element name="title" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
          </xsd:sequence>
+         <xsd:attribute name="Name" type="xsd:string"/>
+         <xsd:attribute name="Surname" type="xsd:string"/>
       </xsd:complexType>
    </xsd:element>
    
