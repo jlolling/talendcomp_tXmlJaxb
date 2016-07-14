@@ -22,7 +22,10 @@ public class TML {
 		
 		BasicConfigurator.configure();
 
-		// Modell 
+	}
+	
+	public static void play_read() throws Exception {
+
 		XJCOptions opts = new XJCOptions();
 		opts.targetDir = new File("./target/generated-sources/modelbuilder/");
 		ModelBuilder.setupModelDir(opts.targetDir.getAbsolutePath());
@@ -48,20 +51,10 @@ public class TML {
 		TXMLObject address = (TXMLObject) Class.forName("de.cimt.Address").newInstance();
 		address.set("city", "Berlin");
 
-		System.out.println("new instance of JAXBContext...");
-		JAXBContext s = JAXBContext.newInstance("de.cimt");
-		System.out.println("Read customer.xml...");
-		Unmarshaller um = s.createUnmarshaller();
-				
-		TXMLObject customer = (TXMLObject) um.unmarshal(new InputSource(new FileReader("./src/test/resources/customer.xml"))); 
-		System.out.println(customer.getClass().getPackage().getName());
-		customer.addOrSet("address", address);
-		Marshaller m = s.createMarshaller();
-		StringWriter sw = new StringWriter();
-		
-		m.marshal(customer, sw);
-		
-		sw.flush();
-		System.out.println(sw.toString());
 	}
+	
+	public static void play_input() throws Exception {
+		
+	}
+	
 }

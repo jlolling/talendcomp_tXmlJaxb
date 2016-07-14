@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:company xmlns:ns2="http://cimt.de/customer/">
+    <ns2:name>cimt</ns2:name>
+    <ns2:customer>
+        <ns2:id>A</ns2:id>
+        <ns2:name>Heinz</ns2:name>
+        <ns2:address>
+            <ns2:id>2</ns2:id>
+            <ns2:city>Düsseldorf</ns2:city>
+        </ns2:address>
+        <ns2:poaddress>
+            <ns2:id>2</ns2:id>
+            <ns2:_house_number xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:int">22</ns2:_house_number>
+            <ns2:_house_number xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:int">21</ns2:_house_number>
+            <ns2:city>Tegel</ns2:city>
+        </ns2:poaddress>
+        <ns2:age>2016-07-14+02:00</ns2:age>
+    </ns2:customer>
+    <ns2:customer>
+        <ns2:id>B</ns2:id>
+        <ns2:name>Jan</ns2:name>
+        <ns2:age>2016-07-14+02:00</ns2:age>
+        <ns2:title>Dr.</ns2:title>
+        <ns2:title>Mr.</ns2:title>
+    </ns2:customer>
+</ns2:company>

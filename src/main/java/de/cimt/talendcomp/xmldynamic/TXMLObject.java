@@ -35,6 +35,25 @@ import org.colllib.util.CollectionUtil;
 public abstract class TXMLObject implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1L;
+    
+    public static class MissingAttribute {
+    	
+    	private String attrName = null;
+    	
+    	public MissingAttribute(String attrName) {
+    		this.attrName = attrName;
+    	}
+    	
+    	public String getName() {
+    		return attrName;
+    	}
+    	
+    	@Override
+    	public String toString() {
+    		return attrName;
+    	}
+    	
+    }
 
     @XmlTransient
     private static final GenCache<Class<?>, Map<String, ExtPropertyAccessor>> CACHE = new GenCache<Class<?>, Map<String, ExtPropertyAccessor>>(
@@ -143,6 +162,9 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         }
     	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+        if (pa == null) {
+        	return new MissingAttribute(attr);
+        }
         Class<?> targetClass = pa.getPropertyType();
         if (targetClass.isAssignableFrom(XMLGregorianCalendar.class)) {
         	targetClass = Date.class; // we expect actually nobody will work with XMLGregorianCalendar!
@@ -171,7 +193,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
     	attr = ReflectUtil.camelizeName(attr);
-        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);// .getPropertyValue(this);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
         if (pa == null) {
             return false;
         }

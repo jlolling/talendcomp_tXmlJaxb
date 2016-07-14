@@ -5,12 +5,18 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.xml.sax.InputSource;
 
 import com.sun.codemodel.JCodeModel;
 
@@ -21,6 +27,7 @@ import de.cimt.talendcomp.xmldynamic.ReflectUtil;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
+import junit.framework.AssertionFailedError;
 
 public class TXmlJaxbTestjob extends TalendFakeJob {
 	
@@ -31,8 +38,8 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		if (classesLoaded == false) {
 			String classRootPath = "./target/generated-sources/modelbuilder/";
 			File classRootPathFile = new File(classRootPath);
-			String xsdFilepath = "./src/test/resources/customer.xsd";
-			String jarFilepath = "./target/test/resources/customer.xsd.jar";
+			String xsdFilepath = "./src/test/resources/company.xsd";
+			String jarFilepath = "./target/test/resources/company.xsd.jar";
 			File xsdFile = new File(xsdFilepath);
 			File jarFile = new File(jarFilepath);
 			XJCOptions opts = new XJCOptions();
@@ -52,7 +59,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 				buildJar.create();
 			} 
 			ModelBuilder.generate(opts, new JCodeModel());
-			Util.printContexts();
+//			Util.printContexts();
 		}
 		classesLoaded = true;
 	}
@@ -142,6 +149,55 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 		String actual = Util.buildSQLInClause(values);
 		System.out.println(actual);
 		assertTrue("SQL code wrong", expected.equals(actual.trim()));
+	}
+	
+	@Test
+	public void testReadCompany() throws Exception {
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+			    + "<ns2:company xmlns:ns2=\"http://cimt.de/customer/\">\n"
+			    + "    <ns2:name>cimt</ns2:name>\n"
+			    + "    <ns2:customer>\n"
+			    + "        <ns2:id>A</ns2:id>\n"
+			    + "        <ns2:name>Heinz</ns2:name>\n"
+			    + "        <ns2:address>\n"
+			    + "            <ns2:id>2</ns2:id>\n"
+			    + "            <ns2:city>Düsseldorf</ns2:city>\n"
+			    + "        </ns2:address>\n"
+			    + "        <ns2:poaddress>\n"
+			    + "            <ns2:id>2</ns2:id>\n"
+			    + "            <ns2:_house_number xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xsi:type=\"xs:int\">22</ns2:_house_number>\n"
+			    + "            <ns2:_house_number xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xsi:type=\"xs:int\">21</ns2:_house_number>\n"
+			    + "            <ns2:city>Tegel</ns2:city>\n"
+			    + "        </ns2:poaddress>\n"
+			    + "        <ns2:age>2016-07-14+02:00</ns2:age>\n"
+			    + "    </ns2:customer>\n"
+			    + "    <ns2:customer>\n"
+			    + "        <ns2:id>B</ns2:id>\n"
+			    + "        <ns2:name>Jan</ns2:name>\n"
+			    + "        <ns2:age>2016-07-14+02:00</ns2:age>\n"
+			    + "        <ns2:title>Dr.</ns2:title>\n"
+			    + "        <ns2:title>Mr.</ns2:title>\n"
+			    + "    </ns2:customer>\n"
+			    + "</ns2:company>";
+		TXMLObject root = Util.unmarshall(xml);
+		System.out.println(root.getClass().getName());
+		String expected = "cimt";
+		String actual = (String) root.get("name");
+		System.out.println("Check name attribute...");
+		assertEquals(expected, actual);
+		System.out.println("Check skip over array error...");
+		try {
+			Util.getTXMLObjects(root, "customer.address", false, false);
+			assertTrue("Do not have detected overskipped array!", false);
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+		System.out.println("Check customer list attribute size...");
+		List<TXMLObject> results = Util.getTXMLObjects(root, "customer", false, false);
+		int countExpected = 2;
+		int countActual = results.size();
+		assertEquals(countExpected, countActual);
+		
 	}
 
 }

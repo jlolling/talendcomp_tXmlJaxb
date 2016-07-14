@@ -1,5 +1,7 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import java.io.File;
+import java.io.StringReader;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -8,6 +10,7 @@ import java.util.ServiceLoader;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 public class Util {
 
@@ -100,4 +103,133 @@ public class Util {
 		}
 		return JAXBContext.newInstance(classes.toArray(new Class[classes.size()]));
 	}
+	
+	public static List<TXMLObject> getTXMLObjects(TXMLObject parent, String attrPath, boolean ignoreMissing, boolean nullable) throws Exception {
+		if (parent == null) {
+			throw new IllegalArgumentException("parent cannot be null!");
+		}
+		if (attrPath == null || attrPath.trim().isEmpty()) {
+			throw new IllegalArgumentException("attrPath cannot be null or empty!");
+		}
+		List<TXMLObject> result = new ArrayList<TXMLObject>();
+		List<String> attrList = getDirectPathTokens(attrPath);
+		TXMLObject currentObject = parent; 
+		for (int i = 0; i < attrList.size(); i++) {
+			String attr = attrList.get(i);
+			Object value = currentObject.get(attr);
+			if (value instanceof TXMLObject.MissingAttribute) {
+				if (ignoreMissing == false) {
+					throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - the attribute: " + value + " is missing!");
+				}
+			} else if (value instanceof TXMLObject) {
+				// continue 
+				currentObject = (TXMLObject) value;
+				continue; // continue with the next child
+			} else if (value instanceof List) {
+				// check the collection if the elements are TXMLObjects
+				if (i < attrList.size() - 1) {
+					// nothing left in the path but we do not got a TXMLOBject!
+					throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is List at: " + attr + " but we do not at the end of the path! Reduce your path to this attribute and start from this component with an iteration to the next level!");
+				}
+				List<?> list = (List<?>) value;
+				for (Object element : list) {
+					if (element instanceof TXMLObject) {
+						result.add((TXMLObject) element);
+					} else if (element != null) {
+						throw new Exception("In the list of the attribute there is an object which is not an TXMLObject. We found this class: " + element.getClass().getName());
+					}
+				}
+			} else if (value != null) {
+				if (i == attrList.size() - 1) {
+					// nothing left in the path but we do not got a TXMLOBject!
+					throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is no TXMLObject but a value: " + value + ". Reduce your path to address the parent object!");
+				}
+			} else {
+				if (nullable == false) {
+					throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - value is missing but mandatory!");
+				}
+			}
+		}
+		return result;
+	}
+	
+	private static List<String> getDirectPathTokens(String attrPath) {
+		List<String> tokens = new ArrayList<String>();
+		attrPath = attrPath.replace('/', '.'); // allow a bit XMLPath
+		fillDirectPathToken(attrPath, tokens);
+		return tokens;
+	}
+	
+	private static void fillDirectPathToken(String attrPath, List<String> tokens) {
+		int pos = attrPath.indexOf('.');
+		if (pos != -1) {
+			char pc = ' ';
+			while (true) {
+				if (pos > 0) {
+					pc = attrPath.charAt(pos - 1);
+				}
+				if (pc == '@' || pc == '\\') {
+					// skip over a filter condition or escaped dot
+					// find next position
+					int nextPos = attrPath.indexOf('.', pos + 1);
+					if (nextPos > pos) {
+						// take this new position
+						pos = nextPos;
+					} else {
+						pos = -1;
+						break;
+					}
+				} else {
+					break;
+				}
+			}
+			if (pos != -1 && pos < attrPath.length() - 1) {
+				if (pos > 0) {
+					// only use not empty tokens
+					String token = attrPath.substring(0, pos);
+					tokens.add(token);
+				}
+				attrPath = attrPath.substring(pos + 1);
+				fillDirectPathToken(attrPath, tokens);
+			}
+		} else {
+			tokens.add(attrPath);
+		}
+	}
+	
+	public static TXMLObject unmarshall(String xml) throws Exception {
+		if (xml == null || xml.trim().isEmpty()) {
+			throw new IllegalArgumentException("xml input cannot be null or empty!");
+		}
+		JAXBContext s = createJAXBContext();
+		Unmarshaller um = s.createUnmarshaller();
+		StringReader xmlsr = new StringReader(xml);
+		Object root = um.unmarshal(xmlsr);
+		if (root == null) {
+			throw new Exception("XML input does not contain any object!");
+		} else if (root instanceof TXMLObject) {
+			return (TXMLObject) root;
+		} else {
+			throw new Exception("The given xml input does not have an TXMLObject as root! We got a class: " + root.getClass().getName());
+		}
+	}
+
+	public static TXMLObject unmarshall(File xml) throws Exception {
+		if (xml == null) {
+			throw new IllegalArgumentException("xml input cannot be null or empty!");
+		} else if (xml.exists() == false) {
+			throw new Exception("input file: " + xml.getAbsolutePath() + " does not exists!");
+		}
+		JAXBContext s = createJAXBContext();
+		Unmarshaller um = s.createUnmarshaller();
+		Object root = um.unmarshal(xml);
+		if (root == null) {
+			throw new Exception("XML input does not contain any object!");
+		} else if (root instanceof TXMLObject) {
+			return (TXMLObject) root;
+		} else {
+			throw new Exception("The given xml input does not have an TXMLObject as root! We got a class: " + root.getClass().getName());
+		}
+	}
+
 }
