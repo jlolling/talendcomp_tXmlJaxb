@@ -4,7 +4,7 @@
   <groupId>de.cimt.talendcomp</groupId>
   <artifactId>cimt-talendcomp-xmldynamic</artifactId>
   <name>de.cimt.talendcomp.xmldynamic</name>
-  <version>1.2</version>
+  <version>1.3</version>
   <build>
     <plugins>
       <plugin>

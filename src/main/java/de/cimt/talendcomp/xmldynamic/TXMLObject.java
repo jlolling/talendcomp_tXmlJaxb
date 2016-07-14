@@ -173,8 +173,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);// .getPropertyValue(this);
         if (pa == null) {
-            throw new IllegalArgumentException(
-                    "class " + this.getClass().getName() + " does not have the attribute: " + attr);
+            return false;
         }
         Object currentValue = pa.getPropertyValue(this);
         if (pa.getPropertyType().isArray()) {
