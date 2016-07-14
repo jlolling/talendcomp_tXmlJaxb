@@ -1,0 +1,93 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.core.model.utils.NodeUtil
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		java.util.List 
+		java.util.ArrayList 
+    	java.util.Map		
+	" 
+%>
+<% 
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode) codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+   boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
+   boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
+   boolean dieIfParentDoesNotExists = "true".equals(ElementParameterParser.getValue(node, "__FAIL_IF_PARENT_DOES_NOT_EXISTS__"));
+   String parentObject = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
+   String parentKeyField = ElementParameterParser.getValue(node, "__PARENT_KEY_COLUMN__");
+   boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));
+%>
+<%	if (isRoot == false) {
+	  	INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
+  		boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
+		if (createObjectAtBegin) {
+ 			if (autoRelations == false || parentIsRoot) { %>
+	try {
+   	// add current object to parent
+		// only here if the current object was created at the beginning
+		// otherweise the assigment to the parent will be done in the main part
+		String parentObjectCompentName = "<%=parentObject%>";
+		de.cimt.talendcomp.xmldynamic.TXMLObject parentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get(parentObjectCompentName + "_CURRENT_OBJECT");
+		if (parentObject == null) {
+			throw new Exception("Parent object: " + parentObjectCompentName + " does not exist!");
+		}
+		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get("<%=cid%>_CURRENT_OBJECT");
+		if (parentObject.addOrSet(currentObject) == false) {
+			throw new Exception("Cannot add this child object to the parent: " + parentObject.getClass().getName() + " because there is no matching member!");
+		}
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Assignment to parent failed: " + e.getMessage());
+		throw e;
+	}
+<%			} // if (autoRelations == false || parentIsRoot) 
+		} // if (createObjectAtBegin == false)
+	 	if (autoRelations && parentIsRoot == false) { %>
+	// we do this here because the parent is not a root
+	// now let us assign the collected children to the parents
+	try {
+		java.util.Map<Object, de.cimt.talendcomp.xmldynamic.TXMLObject> parentKeyMap_<%=cid%> = (java.util.Map<Object, de.cimt.talendcomp.xmldynamic.TXMLObject>) globalMap.get("keyMap_<%=parentObject%>");
+		if (parentKeyMap_<%=cid%> != null) {
+			for (java.util.Map.Entry<Object, java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>> entry : foreignKeyMap_<%=cid%>.entrySet()) {
+				// now get the parent object and add the listed child objects to it
+				Object parentKey = entry.getKey();
+				java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listChildren = entry.getValue();
+				de.cimt.talendcomp.xmldynamic.TXMLObject parent = parentKeyMap_<%=cid%>.get(parentKey);
+				if (parent != null) {
+					for (de.cimt.talendcomp.xmldynamic.TXMLObject child : listChildren) {
+						if (parent.addOrSet(child) == false) {
+							String message = "Parent object: " + parent + " does not have any member to add child: " + child;
+							globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
+							throw new Exception(message);
+						}
+					}
+<% 		if (dieIfParentDoesNotExists) { %>
+				} else {
+					String message = "No parent object found for parent key=" + parentKey;
+					globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
+					throw new Exception(message);
+<%    	} %>			
+				}
+			}
+		}
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Auto assignment failed: " + e.getMessage());
+		throw e;
+	}
+<% 	} // if (autoRelations && parentIsRoot == false)
+	} // if (isRoot == false) %>
+	// build SQL in clause 
+	// start with collecting the keys
+	java.util.List<Object> listKeys = new java.util.ArrayList<Object>();
+	for (Object key : keyMap_<%=cid%>.keySet()) {
+		listKeys.add(key);
+	}
+	// build SQL code
+	globalMap.put("<%=cid%>_KEYS_AS_SQL_IN_CLAUSE", de.cimt.talendcomp.xmldynamic.Util.buildSQLInClause(listKeys));
+
