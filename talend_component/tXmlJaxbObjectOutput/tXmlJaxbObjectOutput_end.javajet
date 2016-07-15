@@ -2,15 +2,8 @@
 	imports="
 		org.talend.core.model.process.INode 
 		org.talend.core.model.process.ElementParameterParser 
-		org.talend.core.model.metadata.IMetadataTable 
-		org.talend.core.model.metadata.IMetadataColumn 
-		org.talend.core.model.process.IConnection
-		org.talend.core.model.process.IConnectionCategory
 		org.talend.core.model.utils.NodeUtil
 		org.talend.designer.codegen.config.CodeGeneratorArgument
-		java.util.List 
-		java.util.ArrayList 
-    	java.util.Map		
 	" 
 %>
 <% 
@@ -21,7 +14,6 @@
    boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
    boolean dieIfParentDoesNotExists = "true".equals(ElementParameterParser.getValue(node, "__FAIL_IF_PARENT_DOES_NOT_EXISTS__"));
    String parentObject = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
-   String parentKeyField = ElementParameterParser.getValue(node, "__PARENT_KEY_COLUMN__");
    boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));
 %>
 <%	if (isRoot == false) {
@@ -90,4 +82,3 @@
 	}
 	// build SQL code
 	globalMap.put("<%=cid%>_KEYS_AS_SQL_IN_CLAUSE", de.cimt.talendcomp.xmldynamic.Util.buildSQLInClause(listKeys));
-

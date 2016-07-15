@@ -2,14 +2,14 @@
 
 <COMPONENT>
 	<HEADER 
-		AUTHOR="Jan Lolling" 
+		AUTHOR="cimt AG" 
 		COMPATIBILITY="ALL"
 		PLATEFORM="ALL" 
-		RELEASE_DATE="20160527"
+		RELEASE_DATE="20160715"
 		SERIAL="" 
 		STARTABLE="false" 
 		STATUS="BETA" 
-		VERSION="0.1">
+		VERSION="2.0">
 		<SIGNATURE />
 	</HEADER>
 
@@ -151,7 +151,7 @@
 
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-1.3.jar" REQUIRED="true" />
+			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.0.jar" REQUIRED="true" />
 		</IMPORTS>		
 	</CODEGENERATION>
 	

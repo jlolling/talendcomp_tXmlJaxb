@@ -33,7 +33,7 @@ public class TXmlJaxbTestjob extends TalendFakeJob {
 	
 	private boolean classesLoaded = false;
 	
-	@Before
+//	@Before
 	public void testCreateModel() throws Exception {
 		if (classesLoaded == false) {
 			String classRootPath = "./target/generated-sources/modelbuilder/";

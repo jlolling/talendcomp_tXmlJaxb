@@ -172,6 +172,26 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         return ReflectUtil.convert(pa.getPropertyValue(this), targetClass);
     }
 
+    public Object get(String attr, Class<?> targetClass, boolean ignoreMissing, boolean nullable) throws Exception {
+        if (attr == null || attr.trim().isEmpty()) {
+            throw new IllegalArgumentException("attribute name cannot be null or empty!");
+        }
+    	attr = ReflectUtil.camelizeName(attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+        Object value = null;
+        if (pa == null) {
+        	if (ignoreMissing == false) {
+        		throw new Exception("Attribute: " + this.getClass().getName() + "." + attr + " is missing but expected!");
+        	}
+        } else {
+            value = ReflectUtil.convert(pa.getPropertyValue(this), targetClass);
+        }
+        if (nullable && value == null) {
+    		throw new Exception("Attribute: " + this.getClass().getName() + "." + attr + " is null but expected!");
+        }
+        return value;
+    }
+
     public int size(String attr) {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");

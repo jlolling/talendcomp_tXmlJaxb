@@ -3,8 +3,8 @@
 <COMPONENT>
 	<HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
 		SCHEMA_AUTO_PROPAGATE="false"
-	    PLATEFORM="ALL" RELEASE_DATE="20160524"
-		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="0.1">
+	    PLATEFORM="ALL" RELEASE_DATE="20160715"
+		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.0">
 		<SIGNATURE />
 	</HEADER>
 
@@ -73,7 +73,7 @@
 
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-1.3.jar" REQUIRED="true" />
+			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.0.jar" REQUIRED="true" />
 		</IMPORTS>
 	</CODEGENERATION>
 

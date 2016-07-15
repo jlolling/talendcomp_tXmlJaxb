@@ -9,7 +9,6 @@
 	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
 	INode node = (INode) codeGenArgument.getArgument();
 	String cid = node.getUniqueName();
-   boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
    boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
    String className = ElementParameterParser.getValue(node, "__CLASS_NAME__");
    boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));

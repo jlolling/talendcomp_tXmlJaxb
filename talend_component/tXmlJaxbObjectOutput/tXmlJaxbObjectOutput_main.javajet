@@ -52,12 +52,11 @@
 	try {
 		// get back the current object
 		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get("<%=cid%>_CURRENT_OBJECT");
-		Integer numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE");
-		if (numberObjects == null) {
-			numberObjects = 0;
+		Integer <%=cid%>_numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+		if (<%=cid%>_numberObjects == null) {
+			<%=cid%>_numberObjects = 0;
 		}
-		numberObjects = numberObjects + 1;
-		globalMap.put("<%=cid%>_NB_LINE", numberObjects);
+		globalMap.put("<%=cid%>_NB_LINE", <%=cid%>_numberObjects + 1);
 		// fill the attributes
 <% String keyFieldName = null;
    for (int i = 0; i < listColumns.size(); i++) {
