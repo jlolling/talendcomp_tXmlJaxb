@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="basic-ws" 
+                  targetNamespace="http://ws.cimt.de/basic-ws"
+                  xmlns:tns="http://ws.cimt.de/basic-ws" 
+    
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype" 
+                  xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" 
+                  xmlns:csc="http://ws.cimt.de/servicecontainer/"
+                  xmlns:cws="http://ws.cimt.de/service/"
+    >
+    <wsdl:types>
+        
+        <xsd:schema targetNamespace="http://ws.cimt.de/basic-ws" xmlns:csc="http://ws.cimt.de/servicecontainer/">
+            <xsd:import schemaLocation="./service.xsd" namespace="http://ws.cimt.de/service/"/>
+            <xsd:import schemaLocation="./servicecontainer.xsd" namespace="http://ws.cimt.de/servicecontainer/" />
+        </xsd:schema>
+    </wsdl:types>
+    
+    <wsdl:message name="getListOfIdentifierRequest">
+        <wsdl:part name="part1" element="csc:getModified"/>
+    </wsdl:message>
+    <wsdl:message name="getListOfIdentifierResponse">
+        <wsdl:part name="part1" element="csc:listOfIdentifier"/>
+    </wsdl:message>
+    <wsdl:message name="getElementRequest">
+        <wsdl:part name="part1" element="csc:identiferElement"/>
+    </wsdl:message>
+    <wsdl:message name="getElementResponse">
+        <wsdl:part name="part1" element="csc:resultElement"/>
+    </wsdl:message>
+    
+    <wsdl:portType name="basic-wsPortType">
+        <wsdl:operation name="basic-wsOperation">
+            <wsdl:input name="input1" message="tns:getListOfIdentifierRequest"/>
+            <wsdl:output name="output1" message="tns:getListOfIdentifierResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="basic-wsOperation">
+            <wsdl:input name="input2" message="tns:getElementRequest"/>
+            <wsdl:output name="output2" message="tns:getElementResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    
+    <plnk:partnerLinkType name="basic-ws">
+        <!-- A partner link type is automatically generated when a new port type is added. Partner link types are used by BPEL processes. 
+        In a BPEL process, a partner link represents the interaction between the BPEL process and a partner service. Each partner link is associated with a partner link type.
+        A partner link type characterizes the conversational relationship between two services. The partner link type can have one or two roles.-->
+        <plnk:role name="basic-wsPortTypeRole" portType="tns:basic-wsPortType"/>
+    </plnk:partnerLinkType>
+</wsdl:definitions>

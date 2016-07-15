@@ -1,0 +1,25 @@
+<xsd:schema
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:cws="http://ws.cimt.de/service/"
+    xmlns:csc="http://ws.cimt.de/servicecontainer/"
+    targetNamespace="http://ws.cimt.de/service/"
+    elementFormDefault="qualified" >
+    
+    <xsd:import schemaLocation="./servicecontainer.xsd" namespace="http://ws.cimt.de/servicecontainer/"/>
+
+    <xsd:annotation>
+        <xsd:documentation>
+            Description of content and usage may follow
+        </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:element name="Example" type="cws:newComplexType" substitutionGroup="csc:resultElement" />
+    
+    <xsd:complexType name="newComplexType">
+        <xsd:complexContent>
+            <xsd:extension base="csc:resultType">
+                <xsd:sequence/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+</xsd:schema>

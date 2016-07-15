@@ -1,0 +1,37 @@
+<xsd:schema
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:wsc="http://ws.cimt.de/servicecontainer/"
+    targetNamespace="http://ws.cimt.de/servicecontainer/"
+    elementFormDefault="qualified">
+    
+    <xsd:element name="listOfIdentifier">
+        <xsd:complexType >
+            <xsd:sequence>
+                <xsd:element ref="wsc:identiferElement" maxOccurs="unbounded" minOccurs="0"/> 
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="getModified">
+        <xsd:complexType>
+            <xsd:attribute name="from" type="xsd:date"/>
+            <xsd:attribute name="to" type="xsd:date"/>
+        </xsd:complexType>
+    </xsd:element>
+    
+    <xsd:complexType name="identifierType" abstract="true">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:normalizedString">
+                <xsd:attribute name="qname" type="xsd:QName" use="prohibited"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    
+    <xsd:complexType name="resultType" abstract="true">
+        <xsd:attribute name="identifier" type="xsd:normalizedString" />
+    </xsd:complexType>
+    
+    <xsd:element name="identiferElement" type="wsc:identifierType"/>
+    <xsd:element name="resultElement" type="wsc:identifierType"/>
+    
+</xsd:schema>
