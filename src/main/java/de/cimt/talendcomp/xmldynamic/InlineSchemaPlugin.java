@@ -23,17 +23,18 @@ import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.model.Aspect;
 import com.sun.tools.xjc.model.CClassInfo;
-import com.sun.tools.xjc.model.CElementPropertyInfo;
 import com.sun.tools.xjc.model.CPropertyInfo;
 import com.sun.tools.xjc.model.CTypeInfo;
 import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.model.nav.NClass;
 import com.sun.tools.xjc.outline.ClassOutline;
 import com.sun.tools.xjc.outline.Outline;
-import com.sun.xml.xsom.XSDeclaration;
-import com.sun.xml.xsom.impl.AttributeUseImpl;
-import com.sun.xml.xsom.impl.ElementDecl;
-import java.util.ArrayList;
+import com.sun.xml.xsom.XSAttributeUse;
+import com.sun.xml.xsom.XSComponent;
+import com.sun.xml.xsom.XSElementDecl;
+import com.sun.xml.xsom.XSParticle;
+import com.sun.xml.xsom.XSTerm;
+import com.sun.xml.xsom.impl.ParticleImpl;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -90,7 +91,7 @@ public class InlineSchemaPlugin extends Plugin {
             final Set<Map.Entry<NClass, CClassInfo>> entrySet = model.beans().entrySet();
             for (Map.Entry<NClass, CClassInfo> beanset : model.beans().entrySet()) {
                 CClassInfo bean = beanset.getValue();
-  
+
                 if (bean.getElementName() != null) {
                     e.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                     final String ns = bean.getElementName().getNamespaceURI();
@@ -129,23 +130,68 @@ public class InlineSchemaPlugin extends Plugin {
         return Arrays.asList(PNS.getNamespaceURI());
     }
 
+    private void annotateType(XSComponent component, JAnnotationArrayMember parent){
+        if( XSAttributeUse.class.isAssignableFrom(component.getClass()) ){
+            JAnnotationUse annotate = parent.annotate(QNameRef.class);
+            annotate.param("name", ((XSAttributeUse) component).getDecl().getName());
+            annotate.param("uri", ((XSAttributeUse) component).getDecl().getTargetNamespace());
+            annotate.param("attribute", true);
+            return;
+        }
+        if( XSElementDecl.class.isAssignableFrom(component.getClass()) ){
+            JAnnotationUse annotate = parent.annotate(QNameRef.class);
+            annotate.param("name", ((XSElementDecl) component).getName());
+            annotate.param("uri", ((XSElementDecl) component).getTargetNamespace());
+        }
+        
+        
+        if( XSParticle.class.isAssignableFrom(component.getClass()) ){
+            XSTerm term=((XSParticle) component).getTerm();
+            if( term.isElementDecl() ){
+                annotateType(term.asElementDecl(), parent);
+                return; 
+            }
+            
+            if(term.isModelGroupDecl()){
+                term=term.asModelGroupDecl();//.getModelGroup()
+            }
+            if( term.isModelGroup() ){
+                
+                for( XSParticle child : term.asModelGroup().getChildren()){
+                    annotateType(child, parent);
+                }
+            }
+        }
+        
+        
+        
+        
+        return;// new JAnnotationUse[]{};
+    }
+    
     @Override
     public boolean run(Outline otln, Options optns, ErrorHandler eh) throws SAXException {
         for (ClassOutline co : otln.getClasses()) {
+            
+            System.err.println("\n"+co.implClass.fullName());
             for (CPropertyInfo property : co.target.getProperties()) {
 
                 JFieldVar field = co.implClass.fields().get(property.getName(false));
                 if (field == null) {
                     continue;
                 }
+                JAnnotationUse annotate = field.annotate(TXMLTypeHelper.class);
                 if (property.isCollection()) {
-                    JAnnotationUse annotate = field.annotate(TXMLTypeHelper.class);
                     annotate.param("collection", true);
                     final JAnnotationArrayMember paramArray = annotate.paramArray("componentClasses");
                     for (CTypeInfo ti : property.ref()) {
-                        paramArray.param( ti.toType(otln, Aspect.EXPOSED) );
+                        paramArray.param(ti.toType(otln, Aspect.EXPOSED));
+                        annotateType(property.getSchemaComponent(), annotate.paramArray("references"));
                     }
-                }                
+
+                } else {
+                    annotateType(property.getSchemaComponent(), annotate.paramArray("references"));
+                }
             }
         }
         return true;
