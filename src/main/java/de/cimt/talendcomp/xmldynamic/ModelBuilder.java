@@ -123,9 +123,7 @@ public final class ModelBuilder {
         @Override
         public void characters(char[] ch, int start, int length) throws SAXException {
             update(new String(ch, start, length));
-            super.characters(ch, start, length); // To change body of generated
-            // methods, choose Tools |
-            // Templates.
+            super.characters(ch, start, length); 
         }
 
         @Override
@@ -185,8 +183,9 @@ public final class ModelBuilder {
 
     public ModelBuilder(XJCOptions _opt, JCodeModel _codeModel) {
         this.opt = _opt;
-        opt.pluginURIs.add(InlineSchemaPlugin.PNS.getNamespaceURI());
-        opt.activePlugins.add(new InlineSchemaPlugin());
+        opt.pluginURIs.add( InlineSchemaPlugin.PNS.getNamespaceURI() );
+        opt.activePlugins.add( new InlineSchemaPlugin() );
+        
         if (opt.compatibilityMode != 2) {
             LOG.warn(Messages.format(Messages.COMPATIBILITY_REQUIRED, ""));
             opt.compatibilityMode = 2;
@@ -219,6 +218,7 @@ public final class ModelBuilder {
          *  may cause problen in conjunction with option episode
          */
         typeBindings.clear();
+        
         if (opt.getSchemaLanguage() == Language.WSDL || opt.getSchemaLanguage() == Language.XMLSCHEMA) {
             TypeReadHandler trh = new TypeReadHandler();
             try {
@@ -232,6 +232,22 @@ public final class ModelBuilder {
             typeBindings.addAll(trh.getComplexTypes());
 // FIXME:  LOG.debug("list of complex types used more than once: "+ CollectionUtil.transform(typeBindings, TransformerCollection.<Pair<String, String>, String>methodCall("toString") ) );
         }
+        
+        
+        /**
+         * 2. when enableBasicSubstitution is set, activate replacement for xsd:duration, 
+         *    xsd:date, xsd:dateTime and enable plugin xjc-simple
+         */
+        if(opt.enableBasicSubstitution){
+            InputSource bind=new InputSource(ModelBuilder.class.getResourceAsStream("bindings.xml") );
+            URL url=ModelBuilder.class.getResource("bindings.xml");
+            bind.setSystemId( url.toString() );
+            opt.addBindFile( bind );
+        }
+        
+        /**
+         * 
+         */
         try {
             switch (opt.getSchemaLanguage()) {
                 case WSDL:
@@ -385,12 +401,9 @@ public final class ModelBuilder {
     private class XMLSchemaParser implements XMLParser {
 
         private final XMLParser baseParser;
-        private final boolean printGrammar;
 
         private XMLSchemaParser(XMLParser baseParser, boolean printGrammar) {
             this.baseParser = baseParser;
-            this.printGrammar = printGrammar;
-            
         }
 
         @Override
@@ -401,7 +414,7 @@ public final class ModelBuilder {
             handler = wrapBy( new ExtensionBindingChecker(XMLConstants.W3C_XML_SCHEMA_NS_URI, opt, errorReceiver), handler);
             
             // use options to activate feature and see manipulated grammars:
-            if( printGrammar ){
+            if( opt.printGrammar ){
                 handler = wrapBy(new PrintingFilter(), handler);
             }
             
@@ -409,6 +422,9 @@ public final class ModelBuilder {
             handler = wrapBy(new CustomizationContextChecker(errorReceiver), handler);
             handler = wrapBy(checksumFilter, handler);
             handler = wrapBy(pluginFilter, handler);
+            if(opt.createGraph){
+                handler = wrapBy(new GraphFilter(), handler);
+            }
 
             baseParser.parse(source, handler, errorHandler, entityResolver);
         }
