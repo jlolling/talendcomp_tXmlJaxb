@@ -13,6 +13,7 @@ import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -30,6 +31,8 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.colllib.caches.GenCache;
@@ -146,6 +149,42 @@ public class ReflectUtil {
         }
     }
 
+    public static Duration handleDurations(Object v, Class<?> vClass, Class<Duration> tClass) throws Exception  {
+        final DatatypeFactory dtf = DatatypeFactory.newInstance();
+        if(CharSequence.class.isAssignableFrom( vClass )){
+            try{
+                try {
+                    Method m=DatatypeFactory.class.getMethod("newDuration", vClass);
+                    return (Duration) m.invoke( dtf , v);
+                } catch (IllegalArgumentException ex) {
+                    try {
+                        Method m=DatatypeFactory.class.getMethod("newDurationDayTime", vClass);
+                        return (Duration) m.invoke( dtf , v);
+                    } catch (IllegalArgumentException nex) {
+                        try {
+                            Method m=DatatypeFactory.class.getMethod("newDurationYearMonth", vClass);
+                            return (Duration) m.invoke( dtf , v);
+                        } catch (IllegalArgumentException nnex) {
+                        }
+                    }
+                }
+            } catch (NoSuchMethodException ex) {
+            }
+        }
+        Calendar cal=null;
+        if(Date.class.isAssignableFrom( vClass )){
+            cal=GregorianCalendar.getInstance();
+            cal.setTime( (Date) v );
+        } else if (Calendar.class.isAssignableFrom( vClass )){
+            cal=(Calendar) v;
+        }
+        
+        if(cal!=null){
+            return dtf.newDuration(true, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND) );
+        }
+        
+        return null;
+    }
     public static <T> T[] convert(Object[] vs, Class<T> tClass) {
         return convert(vs, vs.getClass().getComponentType(), tClass);
     }
