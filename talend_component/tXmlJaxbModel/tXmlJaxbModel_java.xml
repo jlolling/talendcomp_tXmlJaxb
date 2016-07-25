@@ -1,86 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <COMPONENT>
-	<HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
-		SCHEMA_AUTO_PROPAGATE="false"
-	    PLATEFORM="ALL" RELEASE_DATE="20160715"
-		SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.0">
-		<SIGNATURE />
-	</HEADER>
+    <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
+                SCHEMA_AUTO_PROPAGATE="false"
+                PLATEFORM="ALL" RELEASE_DATE="20160715"
+                SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.0">
+        <SIGNATURE />
+    </HEADER>
 
-	<FAMILIES>
-		<FAMILY>XML</FAMILY>
-	</FAMILIES>
+    <FAMILIES>
+        <FAMILY>XML</FAMILY>
+    </FAMILIES>
 
-	<DOCUMENTATION>
-		<URL />
-	</DOCUMENTATION>
+    <DOCUMENTATION>
+        <URL />
+    </DOCUMENTATION>
 
-	<CONNECTORS>
-		<CONNECTOR CTYPE="FLOW" MIN_INPUT="0" MAX_INPUT="0"
-			MIN_OUTPUT="0" MAX_OUTPUT="0" />
-		<CONNECTOR CTYPE="ITERATE" MAX_OUTPUT="1" MAX_INPUT="1" />
-		<CONNECTOR CTYPE="SUBJOB_OK" MAX_INPUT="1" />
-		<CONNECTOR CTYPE="SUBJOB_ERROR" MAX_INPUT="1" />
-		<CONNECTOR CTYPE="COMPONENT_OK" />
-		<CONNECTOR CTYPE="COMPONENT_ERROR" />
-		<CONNECTOR CTYPE="RUN_IF" />
-	</CONNECTORS>
+    <CONNECTORS>
+        <CONNECTOR CTYPE="FLOW" MIN_INPUT="0" MAX_INPUT="0"
+                           MIN_OUTPUT="0" MAX_OUTPUT="0" />
+        <CONNECTOR CTYPE="ITERATE" MAX_OUTPUT="1" MAX_INPUT="1" />
+        <CONNECTOR CTYPE="SUBJOB_OK" MAX_INPUT="1" />
+        <CONNECTOR CTYPE="SUBJOB_ERROR" MAX_INPUT="1" />
+        <CONNECTOR CTYPE="COMPONENT_OK" />
+        <CONNECTOR CTYPE="COMPONENT_ERROR" />
+        <CONNECTOR CTYPE="RUN_IF" />
+    </CONNECTORS>
 
-	<PARAMETERS>
-		<PARAMETER 
-			NAME="XSD_FILE" 
-			FIELD="FILE" 
-			NUM_ROW="10" 
-		/>
+    <PARAMETERS>
+        <PARAMETER 
+            NAME="XSD_FILE" 
+            FIELD="FILE" 
+            NUM_ROW="10" 
+        />
 
-		<PARAMETER 
-			NAME="MODELCACHE_DIR"
-			NUM_ROW="20"
-			FIELD="DIRECTORY"
-			REQUIRED="true" 
-		>
-			<DEFAULT></DEFAULT>
-		</PARAMETER>
+        <PARAMETER 
+            NAME="MODELCACHE_DIR"
+            NUM_ROW="20"
+            FIELD="DIRECTORY"
+            REQUIRED="true" 
+        >
+            <DEFAULT></DEFAULT>
+        </PARAMETER>
 		
-		<PARAMETER 
-			NAME="CREATE_JAR_FILE" 
-			FIELD="CHECK" 
-			NUM_ROW="30" 
-			REQUIRED="true" 
-		/>
+        <PARAMETER 
+            NAME="CREATE_JAR_FILE" 
+            FIELD="CHECK" 
+            NUM_ROW="30" 
+            REQUIRED="true" 
+        />
 
-		<PARAMETER 
-			NAME="JAR_FILE" 
-			FIELD="FILE" 
-			NUM_ROW="40" 
-			REQUIRED="true"
-			SHOW_IF="CREATE_JAR_FILE == 'true'" 
-		/>
+        <PARAMETER 
+            NAME="JAR_FILE" 
+            FIELD="FILE" 
+            NUM_ROW="40" 
+            REQUIRED="true"
+            SHOW_IF="CREATE_JAR_FILE == 'true'" 
+        />
 
-	</PARAMETERS>
+    </PARAMETERS>
 
-	<ADVANCED_PARAMETERS>
-		<PARAMETER 
-			NAME="PRINTOUT_ABSTRACT_CLASSES" 
-			FIELD="CHECK" 
-			NUM_ROW="30" 
-			REQUIRED="true" 
-		>
-			<DEFAULT>false</DEFAULT>
-		</PARAMETER>
-	</ADVANCED_PARAMETERS>
+    <ADVANCED_PARAMETERS>
+        <PARAMETER 
+            NAME="PRINTOUT_ABSTRACT_CLASSES" 
+            FIELD="CHECK" 
+            NUM_ROW="30" 
+            REQUIRED="true" 
+        >
+            <DEFAULT>false</DEFAULT>
+        </PARAMETER>
+        <PARAMETER 
+            NAME="PRINTOUT_DOCUMENT_GRAPH" 
+            FIELD="CHECK" 
+            NUM_ROW="40" 
+            REQUIRED="true" 
+        >
+        <PARAMETER 
+            NAME="PERFORM_TYPE_SUBSTITUTE" 
+            FIELD="CHECK" 
+            NUM_ROW="50" 
+            REQUIRED="true" 
+        >
+            <DEFAULT>false</DEFAULT>
+        </PARAMETER>
+    </ADVANCED_PARAMETERS>
 
-	<CODEGENERATION>
-		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.0.jar" REQUIRED="true" />
-		</IMPORTS>
-	</CODEGENERATION>
+    <CODEGENERATION>
+        <IMPORTS>
+            <IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.0.jar" REQUIRED="true" />
+        </IMPORTS>
+    </CODEGENERATION>
 
-	<RETURNS>
-		<RETURN AVAILABILITY="AFTER" NAME="XSD_FILE" TYPE="id_String" />
-		<RETURN AVAILABILITY="AFTER" NAME="CLASSFILES_DIR" TYPE="id_String" />
-		<RETURN AVAILABILITY="AFTER" NAME="JAR_FILE" TYPE="id_String" />
-	</RETURNS>
+    <RETURNS>
+        <RETURN AVAILABILITY="AFTER" NAME="XSD_FILE" TYPE="id_String" />
+        <RETURN AVAILABILITY="AFTER" NAME="CLASSFILES_DIR" TYPE="id_String" />
+        <RETURN AVAILABILITY="AFTER" NAME="JAR_FILE" TYPE="id_String" />
+    </RETURNS>
 </COMPONENT>
 	

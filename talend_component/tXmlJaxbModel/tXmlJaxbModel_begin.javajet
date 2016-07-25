@@ -14,9 +14,14 @@
     boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
     String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
     boolean printAbstractClasses = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_ABSTRACT_CLASSES__"));
+    boolean createGraph = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_DOCUMENT_GRAPH__"));
+    boolean enableBasicSubstitution = "true".equals(ElementParameterParser.getValue(node, "__PERFORM_TYPE_SUBSTITUTE__"));
 %>
 	{
 		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
+                options.createGraph=createGraph;
+                options.enableBasicSubstitution=enableBasicSubstitution;
+
 		String modelCacheDir = <%=modelCacheDir%>;
 		if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
 			 options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
