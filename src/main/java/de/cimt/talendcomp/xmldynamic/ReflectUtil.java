@@ -2,6 +2,11 @@ package de.cimt.talendcomp.xmldynamic;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericDeclaration;
@@ -13,7 +18,6 @@ import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -26,14 +30,27 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.xml.bind.JAXBException;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.util.JAXBResult;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.transform.stream.StreamSource;
 
 import org.colllib.caches.GenCache;
 import org.colllib.datastruct.AutoInitMap;
@@ -45,6 +62,7 @@ import org.colllib.transformer.Transformer;
 import org.colllib.transformer.TransformerCollection;
 import org.colllib.util.CollectionUtil;
 import org.colllib.util.TypeUtil;
+import org.w3c.dom.Node;
 
 /**
  *
@@ -78,6 +96,43 @@ public class ReflectUtil {
             return (Number) convert(Math.round(numb.doubleValue()), type);
         }
         return (Number) convert(numb, type);
+    }
+
+    public static <T> T convertXML(Object v, Class<?> vClass, Class<T> tClass) {
+        try {
+            Source s = null;
+            if (CharSequence.class.isAssignableFrom(vClass)) {
+                s = new StreamSource( new StringReader(((CharSequence) v).toString()) );
+            }
+            if (Node.class.isAssignableFrom(vClass)) {
+                s = new DOMSource((Node) v);
+            }
+            if (XMLEventReader.class.isAssignableFrom(vClass)) {
+                s = new StAXSource((XMLEventReader) v);
+            }
+            if (XMLStreamReader.class.isAssignableFrom(vClass)) {
+                s = new StAXSource((XMLStreamReader) v);
+            }
+            if (Reader.class.isAssignableFrom(vClass)) {
+                s = new StAXSource((XMLStreamReader) v);
+            }
+            if (File.class.isAssignableFrom(vClass)) {
+                s = new StreamSource((File) v);
+            }
+            if (InputStream.class.isAssignableFrom(vClass)) {
+                s = new StreamSource((InputStream) v);
+            }
+            if (s != null) {
+                s.setSystemId("~/" + UUID.randomUUID().toString());
+                JAXBResult result = new JAXBResult(Util.createJAXBContext());
+                TransformerFactory.newInstance().newTransformer().transform(s, result);
+                return (T) result.getResult();
+            }
+
+            return TypeUtil.convert(v, vClass, tClass);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
     /**
@@ -115,17 +170,20 @@ public class ReflectUtil {
             return null;
         }
         if (vClass.isAssignableFrom(java.util.Date.class) && tClass.isAssignableFrom(XMLGregorianCalendar.class)) {
-    		Calendar cal = GregorianCalendar.getInstance();
-    		Date dateValue = (Date) v;
-    		cal.setTime(dateValue);
-    		try {
-				return (T) javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar) cal);
-			} catch (DatatypeConfigurationException e) {
-				throw new RuntimeException(e);
-			}
+            Calendar cal = GregorianCalendar.getInstance();
+            Date dateValue = (Date) v;
+            cal.setTime(dateValue);
+            try {
+                return (T) javax.xml.datatype.DatatypeFactory.newInstance().newXMLGregorianCalendar((GregorianCalendar) cal);
+            } catch (DatatypeConfigurationException e) {
+                throw new RuntimeException(e);
+            }
         } else if (XMLGregorianCalendar.class.isAssignableFrom(vClass) && Date.class.isAssignableFrom(tClass)) {
-        	XMLGregorianCalendar xmlCal = (XMLGregorianCalendar) v;
-        	return (T) xmlCal.toGregorianCalendar().getTime();
+            XMLGregorianCalendar xmlCal = (XMLGregorianCalendar) v;
+            return (T) xmlCal.toGregorianCalendar().getTime();
+        }
+        if (vClass.isAssignableFrom(TXMLObject.class)) {
+            return convertXML(v, vClass, tClass);
         }
         try {
             return TypeUtil.convert(v, vClass, tClass);
@@ -149,21 +207,21 @@ public class ReflectUtil {
         }
     }
 
-    public static Duration handleDurations(Object v, Class<?> vClass, Class<Duration> tClass) throws Exception  {
+    public static Duration handleDurations(Object v, Class<?> vClass, Class<Duration> tClass) throws Exception {
         final DatatypeFactory dtf = DatatypeFactory.newInstance();
-        if(CharSequence.class.isAssignableFrom( vClass )){
-            try{
+        if (CharSequence.class.isAssignableFrom(vClass)) {
+            try {
                 try {
-                    Method m=DatatypeFactory.class.getMethod("newDuration", vClass);
-                    return (Duration) m.invoke( dtf , v);
+                    Method m = DatatypeFactory.class.getMethod("newDuration", vClass);
+                    return (Duration) m.invoke(dtf, v);
                 } catch (IllegalArgumentException ex) {
                     try {
-                        Method m=DatatypeFactory.class.getMethod("newDurationDayTime", vClass);
-                        return (Duration) m.invoke( dtf , v);
+                        Method m = DatatypeFactory.class.getMethod("newDurationDayTime", vClass);
+                        return (Duration) m.invoke(dtf, v);
                     } catch (IllegalArgumentException nex) {
                         try {
-                            Method m=DatatypeFactory.class.getMethod("newDurationYearMonth", vClass);
-                            return (Duration) m.invoke( dtf , v);
+                            Method m = DatatypeFactory.class.getMethod("newDurationYearMonth", vClass);
+                            return (Duration) m.invoke(dtf, v);
                         } catch (IllegalArgumentException nnex) {
                         }
                     }
@@ -171,20 +229,21 @@ public class ReflectUtil {
             } catch (NoSuchMethodException ex) {
             }
         }
-        Calendar cal=null;
-        if(Date.class.isAssignableFrom( vClass )){
-            cal=GregorianCalendar.getInstance();
-            cal.setTime( (Date) v );
-        } else if (Calendar.class.isAssignableFrom( vClass )){
-            cal=(Calendar) v;
+        Calendar cal = null;
+        if (Date.class.isAssignableFrom(vClass)) {
+            cal = GregorianCalendar.getInstance();
+            cal.setTime((Date) v);
+        } else if (Calendar.class.isAssignableFrom(vClass)) {
+            cal = (Calendar) v;
         }
-        
-        if(cal!=null){
-            return dtf.newDuration(true, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND) );
+
+        if (cal != null) {
+            return dtf.newDuration(true, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
         }
-        
+
         return null;
     }
+
     public static <T> T[] convert(Object[] vs, Class<T> tClass) {
         return convert(vs, vs.getClass().getComponentType(), tClass);
     }
@@ -486,68 +545,65 @@ public class ReflectUtil {
             return fallback;
         }
     }
-    
+
     /**
      * checks when ever a class is a root class in the XML document
+     *
      * @param clazz
      * @return true if it is a root
      */
     public static boolean isRootClass(Class<? extends TXMLObject> clazz) {
-    	Annotation[] annoArray = clazz.getAnnotations();
-    	for (Annotation ann : annoArray) {
-    		if (ann instanceof XmlRootElement) {
-    			return true;
-    		}
-    	}
-    	return false;
+        Annotation[] annoArray = clazz.getAnnotations();
+        for (Annotation ann : annoArray) {
+            if (ann instanceof XmlRootElement) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String camelizeName(String attrName) {
-    	if (attrName == null) {
-    		throw new IllegalArgumentException("attrName cannot be null");
-    	}
-    	if (attrName.contains("_")) {
-    		StringBuilder sb = new StringBuilder();
-    		char[] array = attrName.toCharArray();
-    		boolean lastWasUnderScore = false;
-    		boolean isFirstChar = true;
-    		for (char c : array) {
-    			if (c == '_') {
-    				if (isFirstChar == false) {
-        				lastWasUnderScore = true;
-    				}
-    			} else {
-    				if (lastWasUnderScore) {
-        				sb.append(Character.toUpperCase(c));
-    					lastWasUnderScore = false;
-    				} else {
-        				if (isFirstChar) {
-            				sb.append(Character.toLowerCase(c));
-        				} else {
-            				sb.append(c);
-        				}
-    				}
-    			}
-				isFirstChar = false;
-    		}
-    		return sb.toString();
-    	}
-    	return attrName;
+        if (attrName == null) {
+            throw new IllegalArgumentException("attrName cannot be null");
+        }
+        if (attrName.contains("_")) {
+            StringBuilder sb = new StringBuilder();
+            char[] array = attrName.toCharArray();
+            boolean lastWasUnderScore = false;
+            boolean isFirstChar = true;
+            for (char c : array) {
+                if (c == '_') {
+                    if (isFirstChar == false) {
+                        lastWasUnderScore = true;
+                    }
+                } else if (lastWasUnderScore) {
+                    sb.append(Character.toUpperCase(c));
+                    lastWasUnderScore = false;
+                } else if (isFirstChar) {
+                    sb.append(Character.toLowerCase(c));
+                } else {
+                    sb.append(c);
+                }
+                isFirstChar = false;
+            }
+            return sb.toString();
+        }
+        return attrName;
     }
-    
+
     public static String getSimpleClassName(String className) {
-    	if (className == null) {
-    		throw new IllegalArgumentException("className cannot be null");
-    	}
-    	int pos = className.lastIndexOf('$');
-    	if (pos == -1) {
-    		pos = className.lastIndexOf('.');
-    	}
-    	if (pos != -1) {
-    		return className.substring(pos + 1);
-    	} else {
-    		return className;
-    	}
+        if (className == null) {
+            throw new IllegalArgumentException("className cannot be null");
+        }
+        int pos = className.lastIndexOf('$');
+        if (pos == -1) {
+            pos = className.lastIndexOf('.');
+        }
+        if (pos != -1) {
+            return className.substring(pos + 1);
+        } else {
+            return className;
+        }
     }
-    
+
 }
