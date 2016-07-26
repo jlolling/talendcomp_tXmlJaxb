@@ -23,19 +23,65 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-       </plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <!--<version>2.4.3</version>-->
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                </configuration>
+
+            </plugin>
+            <plugin>
+                <groupId>com.coderplus.maven.plugins</groupId>
+                <artifactId>copy-rename-maven-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-file</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <sourceFile>target/${project.build.finalName}.jar</sourceFile>
+                                    <destinationFile>talend_component/tXmlJaxbModel/${project.artifactId}.jar</destinationFile>
+                                </fileSet>                
+                                <fileSet>
+                                    <sourceFile>target/${project.build.finalName}.jar</sourceFile>
+                                    <destinationFile>talend_component/tXmlJaxbObjectInput/${project.artifactId}.jar</destinationFile>
+                                </fileSet>                
+                                <fileSet>
+                                    <sourceFile>target/${project.build.finalName}.jar</sourceFile>
+                                    <destinationFile>talend_component/tXmlJaxbObjectOutput/${project.artifactId}.jar</destinationFile>
+                                </fileSet>                
+                                <fileSet>
+                                    <sourceFile>target/${project.build.finalName}.jar</sourceFile>
+                                    <destinationFile>talend_component/tXmlJaxbSave/${project.artifactId}.jar</destinationFile>
+                                </fileSet>                
+                            </fileSets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
     <dependencies>
         <dependency>
@@ -59,20 +105,21 @@
             <version>2.2.11</version>
         </dependency>
         <dependency>
-		    <groupId>junit</groupId>
-		    <artifactId>junit</artifactId>
-		    <version>4.12</version>
-		    <scope>test</scope>
-		</dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
-		    <groupId>de.cimt.talendcomp.test</groupId>
-		    <artifactId>talend-fake-job</artifactId>
-		    <version>0.9</version>
-		    <scope>test</scope>
-		</dependency>
+            <groupId>de.cimt.talendcomp.test</groupId>
+            <artifactId>talend-fake-job</artifactId>
+            <version>0.9</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.componentProjectDirectory>talend_component/tXmlJaxbModel/</project.build.componentProjectDirectory>
     </properties>
-    <version>2.0</version>
+    <version>2.1</version>
 </project>
