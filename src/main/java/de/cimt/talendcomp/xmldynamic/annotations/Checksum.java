@@ -1,4 +1,4 @@
-package de.cimt.talendcomp.xmldynamic;
+package de.cimt.talendcomp.xmldynamic.annotations;
 
 /**
  *

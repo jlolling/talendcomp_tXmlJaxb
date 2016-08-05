@@ -1,4 +1,4 @@
-package de.cimt.talendcomp.xmldynamic;
+package de.cimt.talendcomp.xmldynamic.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

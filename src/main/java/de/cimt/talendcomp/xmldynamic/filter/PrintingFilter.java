@@ -1,4 +1,4 @@
-package de.cimt.talendcomp.xmldynamic;
+package de.cimt.talendcomp.xmldynamic.filter;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

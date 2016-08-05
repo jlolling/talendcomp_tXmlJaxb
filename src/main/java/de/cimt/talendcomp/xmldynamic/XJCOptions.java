@@ -1,32 +1,278 @@
 package de.cimt.talendcomp.xmldynamic;
 
 import com.sun.tools.xjc.Options;
+import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
+import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
+import de.cimt.talendcomp.xmldynamic.filter.DependencyFilter;
+import de.cimt.talendcomp.xmldynamic.filter.GraphFilter;
+import de.cimt.talendcomp.xmldynamic.filter.PluginFilter;
+import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
+import de.cimt.talendcomp.xmldynamic.filter.ChecksumFilter;
+import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
+import org.apache.log4j.Logger;
+import org.colllib.datastruct.Pair;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 /**
  *
  * @author dkoch
  */
 public class XJCOptions extends Options {
-    public boolean extendClasspath            =true;
-    public boolean compileSource              =true;
-    public boolean createGraph                =true;
-    public boolean enableBasicSubstitution    =true;
-    
-    /**
-     * used to activate printimng of manipulated grammars befor generating codemodel
-     */
-    public boolean printGrammar   =false;
-    public String  targetName     ="gen_" + System.currentTimeMillis() + ".jar";
 
+    private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
+    public boolean extendClasspath = true;
+    public boolean compileSource = true;
+    public boolean createGraph = false;
+    public boolean enableBasicSubstitution = false;
+    public boolean checksum = false;
+    public boolean printGrammar = false;
+    String checksumValue="";
+    public String targetName = "gen_" + Util.uniqueString() + ".jar";
+
+    private TypeReadHandler typesHelper = new TypeReadHandler();
+    
+    // stores relations between source and alias
+    private final Map<String, String> grammarCache = new HashMap<String, String>();
+    
+    // temporary directory used to store modified grammars
+    private final File tmproot;
+
+//    private Set<Pair<String, String>> complexTypes=new TreeSet<Pair<String, String>>(); 
+    /**
+     * used to activate printimng of manipulated grammars befor generating
+     * codemodel
+     */
     public XJCOptions() {
         super();
-        pluginURIs.add( InlineSchemaPlugin.PNS.getNamespaceURI() );
+        File tmpfile = null;
+        try {
+            tmpfile = File.createTempFile("2890374092", "092830198");
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(XJCOptions.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException("temp not available");
+        }
+//        tmproot = new File("C:\\Users\\dkoch\\AppData\\Local\\Temp\\09b2d8bb02ea490d8892845bdd3fb45f\\");
+        tmproot = new File(tmpfile.getParentFile(), Util.uniqueString());
+        System.err.println("set tmproot to "+tmproot.getAbsolutePath());
+        tmproot.mkdirs();
+        tmproot.deleteOnExit();
+        pluginURIs.add(InlineSchemaPlugin.PNS.getNamespaceURI());
 //        activePlugins.add( new InlineSchemaPlugin() );
-        strictCheck=false;
-        noFileHeader=true;
-        compatibilityMode=2;
-        enableIntrospection=true;
-        verbose=true;
+        strictCheck = false;
+        noFileHeader = true;
+        compatibilityMode = 2;
+        enableIntrospection = true;
+        verbose = true;
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        tmproot.delete();
+        super.finalize();
+    }
+
+    @Override
+    public synchronized void addGrammar(final InputSource source) throws RuntimeException{
+        /**
+         * Changed behavior as this method never send the original inputsource 
+         * to the superclass. 
+         * It uses a set of filters to preprocess the original input and to parse 
+         * it as one or multiple expandes sources to a inmemorysource instance.
+         * this one will be transferd to the superclass.
+         */
+        try {
+
+            URI rootURI = null;
+            try {
+                rootURI = new URI(source.getSystemId());
+            } catch (java.net.URISyntaxException use) {
+                rootURI = new File(source.getSystemId()).toURI();
+            }
+            String alias = Util.uniqueString() + ".xsd";
+
+            XMLFilterChain chain = new XMLFilterChain();
+            boolean isMemorySource = source.getClass().equals(InMemorySource.class);
+            boolean wsdlSource = (source.getSystemId().toLowerCase().endsWith(".wsdl"));
+            if (source.getSystemId().toLowerCase().endsWith(".wsdl")) {
+                WSDLSchemaFilter wsdlfilter = new WSDLSchemaFilter() {
+                    @Override
+                    public synchronized String createInputSource(String xmlbuffer) {
+                        final String id = Util.uniqueString() + ".xsd";
+//                        System.err.println("\n\nxmlbuffer=\n" + xmlbuffer + "\n\n");
+                        addGrammar( new InMemorySource(xmlbuffer, id) );
+                        return id;
+                    }
+
+                };
+                chain.add(wsdlfilter);
+            }
+
+
+
+            if (source.getClass().equals(InMemorySource.class)) {
+                alias = ((InMemorySource) source).alias;
+            } 
+            chain.add(typesHelper);
+            DependencyFilter df = new DependencyFilter(rootURI) {
+                
+                @Override
+                protected synchronized String getRelocatedSchemaLocation(URI root, String location) {
+                    if (location == null || location.length() == 0) {
+                        return null;
+                    }
+                    try {
+                        URI nestedUri = new URI(location);
+
+                        if (!nestedUri.isAbsolute()) {
+                            // memorysources are allready analysed...
+                            if(root.getScheme().equalsIgnoreCase("mem") && grammarCache.containsValue(location) ){
+                                return location;
+                            }
+                            nestedUri = root.resolve(nestedUri);
+                        }
+                        String systemID = nestedUri.toString();
+                                
+                        // only unhandled sources must be analysed...
+                        if (!grammarCache.containsKey(systemID)) {
+                            InputSource source = new InputSource(systemID);
+                            source.setSystemId(systemID);
+                            addGrammar(source);
+                        }
+                        return grammarCache.get(systemID);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            };
+            chain.add(df);
+
+            SAXParserFactory spf = SAXParserFactory.newInstance();
+            spf.setNamespaceAware(true);
+            spf.setXIncludeAware(true);
+
+            XMLReader reader = new XMLFilteredReader(
+                    spf.newSAXParser().getXMLReader(),
+                    chain
+            );
+
+            StringWriter w=new StringWriter();
+//            System.err.println(" transform source  "+source);
+            TransformerFactory.newInstance().newTransformer().transform(new SAXSource(reader, source), new StreamResult(w));
+
+            InMemorySource ims=new InMemorySource(w.toString(), alias) ;
+            if(ims.isEmtpy())
+                return;
+            
+//            if(w.toString().trim)
+                
+            grammarCache.put(rootURI.toString(), alias);
+
+            super.addGrammar( new InMemorySource(w.toString(), alias) );
+        } catch (Throwable ex) {
+//            ex.printStackTrace();
+//            LOG.warn(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
+            throw new RuntimeException(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
+        }
+    }
+
+    /**
+     * Input schema files.
+     */
+    @Override
+    public synchronized InputSource[] getGrammars() {
+        try {
+            XMLFilterChain chain = new XMLFilterChain();//ew WSDLSchemaFilter() ,);
+            SAXParserFactory spf = SAXParserFactory.newInstance();
+            spf.setNamespaceAware(true);
+            spf.setXIncludeAware(true);
+            
+            final Set<Pair<String, String>> typeBindings = typesHelper.getComplexTypes();
+            PluginFilter pluginFilter = new PluginFilter() {
+                @Override
+                public boolean testManipulationRequired(Pair<String, String> fqtype) {
+                    return typeBindings.contains(fqtype);
+                }
+            };
+            if (printGrammar) {
+                chain.add(new PrintingFilter());
+            }
+            if (createGraph) {
+                chain.add(new GraphFilter());
+            }
+            
+            chain.add(pluginFilter);
+            ChecksumFilter csf=new ChecksumFilter();
+            chain.add(csf);
+
+            List<InputSource> ng = new ArrayList<InputSource>();
+            XMLFilteredReader reader = new XMLFilteredReader(spf.newSAXParser().getXMLReader(), chain);
+            final Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            for (InputSource source : super.getGrammars()) {
+                File res = new File(tmproot, ((InMemorySource) source).alias);
+                
+                transformer.transform(
+                    new SAXSource(reader, source),
+                    new StreamResult(res)
+                );
+                
+                InputSource exportedGrammar=new InputSource(new FileInputStream(res));
+                exportedGrammar.setSystemId( res.toURI().toString() );
+                ng.add( exportedGrammar );
+            }
+            
+            checksumValue=csf.toString();
+            return ng.toArray( new InputSource[ng.size()] );
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(XJCOptions.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Recursively scan directories and add all XSD files in it.
+     * @param dir folder or file 
+     */
+    @Override
+    public void addGrammarRecursive(File dir) {
+
+        if (dir == null || !dir.exists() || !dir.canRead()) {
+            return;
+        }
+
+        if (dir.isFile()) {
+            addGrammar(dir);
+            return;
+        }
+
+        for (File f : dir.listFiles()) {
+            if (f.isDirectory()) {
+                addGrammar(f);
+            } else if (f.getName().toLowerCase().endsWith(".xsd") || f.getName().toLowerCase().endsWith(".xsd")) {
+                addGrammar(f);
+            }
+        }
+    }
+
+    @Override
+    public InputSource[] getBindFiles() {
+        return super.getBindFiles();
     }
 
 }

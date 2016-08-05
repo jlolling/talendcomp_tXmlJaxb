@@ -1,29 +1,25 @@
-package de.cimt.talendcomp.xmldynamic;
+package de.cimt.talendcomp.xmldynamic.filter;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import de.cimt.talendcomp.xmldynamic.InlineSchemaPlugin;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import org.colllib.datastruct.Pair;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
-import org.xml.sax.helpers.XMLFilterImpl;
 
 /**
  *
  * @author dkoch
  */
-abstract class PluginFilter extends XMLFilterImpl {
+public class PluginFilter extends BaseFilter {
 
-    public static QName JAXB = new QName("http://java.sun.com/xml/ns/jaxb", "jaxb", "jaxb");
-    public static QName XJC = new QName("http://java.sun.com/xml/ns/jaxb/xjc", "xjc", "xjc");
-    protected Map<String, String> prefixmapping = new HashMap<String, String>();
+    public static final QName JAXB = new QName("http://java.sun.com/xml/ns/jaxb", "jaxb", "jaxb");
+    public static final QName XJC  = new QName("http://java.sun.com/xml/ns/jaxb/xjc", "xjc", "xjc");
 
-    protected String tns = null;
-    
-    abstract boolean testManipulationRequired(Pair<String, String> fqtype);
+    public boolean testManipulationRequired(Pair<String, String> fqtype){
+        return false;
+    };
 
     /**
      * Computes for given type the fully qualified type.
@@ -34,87 +30,48 @@ abstract class PluginFilter extends XMLFilterImpl {
     private Pair<String, String> solve(String type) {
         int pos = type.indexOf(":");
         return (pos < 0)
-                ? new Pair<String, String>(tns, type)
+                ? new Pair<String, String>(prefixmapping.get(""), type)
                 : new Pair<String, String>(prefixmapping.get(type.substring(0, pos)), type.substring(pos + 1));
 
-    }
-
-    public String getPrefixForUrl(String url) {
-        for (Entry<String, String> pair : prefixmapping.entrySet()) {
-            if (pair.getValue().equalsIgnoreCase(url)) {
-                return pair.getKey();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public void endPrefixMapping(String prefix) throws SAXException {
-        prefixmapping.remove(prefix);
-        super.endPrefixMapping(prefix);
-    }
-
-    @Override
-    public void startPrefixMapping(String prefix, String uri) throws SAXException {
-        prefixmapping.put(prefix, uri);
-        super.startPrefixMapping(prefix, uri);
     }
 
     @Override
     public void startDocument() throws SAXException {
         prefixmapping.clear();
-        tns = null;
         super.startDocument();
     }
 
-    public String composePrefix(String url, String prefered) {
-        if (url != null && prefixmapping.containsValue(url))
-            return getPrefixForUrl(url);
-
-        if (prefixmapping.containsKey(prefered)) {
-            int count = 0;
-            while (prefixmapping.containsKey(prefered + count)) {
-                count++;
-            }
-            prefered=prefered + count;
-        }
-        prefixmapping.put(prefered, url);
-
-        return prefered;
-    }
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
     public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-        if (uri.length() > 0 && !uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) {
+        final boolean schemaUri = equalUris(XMLConstants.W3C_XML_SCHEMA_NS_URI, uri);
+        String name=toLocalName(localName, qName);
+        if (!schemaUri) {
             super.startElement(uri, localName, qName, atts);
             return;
         }
         
-        if (localName == null || localName.length() == 0) {
-            localName = qName.substring( qName.indexOf(":") + 1);
-        }
-
-        if ((uri.length() == 0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("schema")) {
+        if (name.equalsIgnoreCase("schema")) {
             /**
-             * manipulate xml content for schema declarations
-             * - ensure namespace prefixmapping for JAXB and XJC is present
-             * - add or extend extensionBindingPrefixes to use activate InlineSchemaPlugin
+             * manipulate xml content for schema declarations - ensure namespace
+             * prefixmapping for JAXB and XJC is present - add or extend
+             * extensionBindingPrefixes to use activate InlineSchemaPlugin
              */
             // <editor-fold defaultstate="collapsed" desc="manipulate schema elements">                          
+            String tns = atts.getValue("targetNamespace");
+            if(tns!=null && !prefixmapping.containsKey("$TNS"))
+                prefixmapping.put("$TNS", tns);
+            
             startPrefixMapping(InlineSchemaPlugin.PNS.getPrefix(), InlineSchemaPlugin.PNS.getNamespaceURI());
 
             String jaxbPrefix = getPrefixForUrl(JAXB.getNamespaceURI());
             if (jaxbPrefix == null) {
-                jaxbPrefix = composePrefix(
-                		JAXB.getNamespaceURI(),
-                        JAXB.getPrefix());
+                jaxbPrefix = composePrefix(JAXB.getNamespaceURI(), JAXB.getPrefix());
                 startPrefixMapping(jaxbPrefix, JAXB.getNamespaceURI());
             }
             String xjcPrefix = getPrefixForUrl(XJC.getNamespaceURI());
             if (xjcPrefix == null) {
-                xjcPrefix = composePrefix(
-                		XJC.getNamespaceURI(),
-                        XJC.getPrefix());
+                xjcPrefix = composePrefix(XJC.getNamespaceURI(), XJC.getPrefix());
                 startPrefixMapping(xjcPrefix, XJC.getNamespaceURI());
             }
 
@@ -122,8 +79,7 @@ abstract class PluginFilter extends XMLFilterImpl {
             boolean hasJaxbBindingPrefixes = false;
 
             for (int i = 0, max = atts.getLength(); i < max; i++) {
-                if (atts.getLocalName(i).equalsIgnoreCase("extensionBindingPrefixes")
-                        && atts.getURI(i).equals(JAXB.getNamespaceURI())) {
+                if (atts.getLocalName(i).equalsIgnoreCase("extensionBindingPrefixes") && atts.getURI(i).equals(JAXB.getNamespaceURI())) {
                     hasJaxbBindingPrefixes = true;
                     String value = atts.getValue(i);
                     if (value.contains(xjcPrefix) == false) {
@@ -146,37 +102,40 @@ abstract class PluginFilter extends XMLFilterImpl {
                             atts.getType(i),
                             atts.getValue(i));
                 }
-                if (atts.getLocalName(i) == "targetNamespace") {
-                    tns=atts.getValue(i);
-                }
             }
             if (hasJaxbBindingPrefixes == false) {
-                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes",
-                        "extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
+                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes", "extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
             }
             super.startElement(uri, localName, qName, impl);
             // </editor-fold> 
-       
-        } else if ((uri.length() == 0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("element")) {
+
+        } else if (name.equalsIgnoreCase("element")) {
             /**
-             * change xml content for elements using a special type testOverwriteRequired returning true
+             * change xml content for elements using a special type
+             * testOverwriteRequired returning true
              */
             // <editor-fold defaultstate="collapsed" desc="change xml content">                          
             String prefix = getPrefixForUrl(uri);
-            prefix = prefix == null ? "" : prefix + ":";
+            prefix = (prefix == null || prefix.length()==0) ? "" : (prefix + ":");
             String type = null;
             AttributesImpl impl = new AttributesImpl();
 
+            /**
+             * copy each attribute without changes but type when testManipulationRequired returns true.
+             * in that case skip this attribute and create annonymous complex type extending found type
+             */
+            
             for (int i = 0, max = atts.getLength(); i < max; i++) {
-                String name = atts.getLocalName(i);
-                if(name == null)
-                    name = atts.getQName(i);
-                
-                if (name.equalsIgnoreCase("type") && testManipulationRequired(solve(atts.getValue(i))) ) {
+                String cname = atts.getLocalName(i);
+                if (cname == null) {
+                    cname = atts.getQName(i);
+                }
+
+                if (cname.equalsIgnoreCase("type") && testManipulationRequired(solve(atts.getValue(i)))) {
                     type = atts.getValue(i);
                     continue;
                 }
-                    
+                
                 impl.addAttribute(
                         atts.getURI(i),
                         atts.getLocalName(i),
@@ -193,7 +152,6 @@ abstract class PluginFilter extends XMLFilterImpl {
                 super.startElement(uri, "complexType", prefix + "complexType", new AttributesImpl());
                 super.startElement(uri, "complexContent", prefix + "complexContent", new AttributesImpl());
                 super.startElement(uri, "extension", prefix + "extension", impl);
-//                                    super.characters("<![CDATA[Huhu]]>".toCharArray(), 0, "<![CDATA[Huhu]]>".length());
                 super.endElement(uri, "extension", prefix + "extension");
                 super.endElement(uri, "complexContent", prefix + "complexContent");
                 super.endElement(uri, "complexType", prefix + "complexType");
@@ -201,11 +159,10 @@ abstract class PluginFilter extends XMLFilterImpl {
             }
             // </editor-fold> 
 
-
-        } else if ((uri.length() == 0 || uri.equalsIgnoreCase(XMLConstants.W3C_XML_SCHEMA_NS_URI)) && localName.equalsIgnoreCase("complexType")) {
-            String name = atts.getValue("name");
+        } else if (name.equalsIgnoreCase("complexType")) {
+            String cname = atts.getValue("name");
             AttributesImpl impl = new AttributesImpl(atts);
-            if ( testManipulationRequired( new Pair(tns, name) ) && impl.getIndex("abstract") < 0 ) {
+            if (testManipulationRequired(new Pair("$TNS", cname)) && impl.getIndex("abstract") < 0) {
                 impl.addAttribute("", "abstract", "abstract", "CDATA", "true");
             }
 

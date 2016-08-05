@@ -1,38 +1,32 @@
-package de.cimt.talendcomp.xmldynamic;
+package de.cimt.talendcomp.xmldynamic.filter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Stack;
-import javax.xml.XMLConstants;
-import org.colllib.util.CollectionUtil;
-import org.colllib.util.StringUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.XMLFilterImpl;
 
 /**
- *
+ * class to allow printing of document graphs. this is the initial version and 
+ * must be enhanced to display more informations, because currently the output
+ * is purly usable for people who already examined the definitions
+ * 
+ * <ul>
+ *  <li>Tpyes of Elements/Attributes</li>
+ *  <li>Namespaces für References and Types</li>
+ *  <li>Manadatory Elements</li>
+ * </ul>
  * @author dkoch
  */
-public class GraphFilter extends XMLFilterImpl {
-//    Map<String, Object> element;
-//    List<String> elements=new ArrayList<String>();
-
+public class GraphFilter extends BaseFilter {
+    
     private final String refMarker = "#";
     private final String attMarker = "@";
     private final String cpxMarker = "$";
-    protected Map<String, String> prefixmapping = new HashMap<String, String>();
 
     StringBuffer buffer = new StringBuffer();
     int tabs = 0;
     Stack<Integer> breadcrumb = new Stack<Integer>();
 
-    private String toLocalName(String localName, String qName) {
-        return (localName != null && localName.length() > 0) ? localName : qName.substring(qName.indexOf(":") + 1);
-    }
     private String spaces() {
         char[] spaces = new char[tabs];
         Arrays.fill(spaces, '\t');
@@ -42,7 +36,6 @@ public class GraphFilter extends XMLFilterImpl {
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         tabs -= breadcrumb.pop();
-
         super.endElement(uri, localName, qName);
     }
 
@@ -77,20 +70,15 @@ public class GraphFilter extends XMLFilterImpl {
     }
 
     @Override
+    public void startDocument() throws SAXException {
+        buffer = new StringBuffer();
+        super.startDocument();
+    }
+
+    @Override
     public void endDocument() throws SAXException {
         super.endDocument();
         System.err.println(buffer.toString());
     }
 
-    @Override
-    public void endPrefixMapping(String prefix) throws SAXException {
-        prefixmapping.remove(prefix);
-        super.endPrefixMapping(prefix);
-    }
-
-    @Override
-    public void startPrefixMapping(String prefix, String uri) throws SAXException {
-        prefixmapping.put(prefix, uri);
-        super.startPrefixMapping(prefix, uri);
-    }
 }

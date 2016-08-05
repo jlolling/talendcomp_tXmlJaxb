@@ -1,5 +1,7 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
+import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
 import com.sun.codemodel.JAnnotationArrayMember;
 import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JArray;
@@ -34,7 +36,6 @@ import com.sun.xml.xsom.XSComponent;
 import com.sun.xml.xsom.XSElementDecl;
 import com.sun.xml.xsom.XSParticle;
 import com.sun.xml.xsom.XSTerm;
-import com.sun.xml.xsom.impl.ParticleImpl;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +49,7 @@ import java.util.logging.Logger;
  */
 public class InlineSchemaPlugin extends Plugin {
 
-    static final QName PNS = new QName("http://xsd.cimt.de/plugins/inline", "_cisp", "_cisp");
+    public static final QName PNS = new QName("http://xsd.cimt.de/plugins/inline", "_cisp", "_cisp");
 
     @Override
     public String getOptionName() {
@@ -102,7 +103,7 @@ public class InlineSchemaPlugin extends Plugin {
                 } else {
                     t.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                 }
-            };
+            }
 
             meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getElements");
             meth.annotate(java.lang.Override.class);
@@ -163,10 +164,6 @@ public class InlineSchemaPlugin extends Plugin {
             }
         }
         
-        
-        
-        
-        return;// new JAnnotationUse[]{};
     }
     
     @Override
