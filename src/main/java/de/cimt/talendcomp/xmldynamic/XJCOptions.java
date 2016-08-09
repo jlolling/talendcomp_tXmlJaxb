@@ -13,7 +13,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,6 +86,8 @@ public class XJCOptions extends Options {
 
     @Override
     protected void finalize() throws Throwable {
+        for(File f : tmproot.listFiles())
+            f.delete();
         tmproot.delete();
         super.finalize();
     }
@@ -173,15 +177,12 @@ public class XJCOptions extends Options {
             );
 
             StringWriter w=new StringWriter();
-//            System.err.println(" transform source  "+source);
             TransformerFactory.newInstance().newTransformer().transform(new SAXSource(reader, source), new StreamResult(w));
 
             InMemorySource ims=new InMemorySource(w.toString(), alias) ;
             if(ims.isEmtpy())
                 return;
             
-//            if(w.toString().trim)
-                
             grammarCache.put(rootURI.toString(), alias);
 
             super.addGrammar( new InMemorySource(w.toString(), alias) );
@@ -272,7 +273,20 @@ public class XJCOptions extends Options {
 
     @Override
     public InputSource[] getBindFiles() {
-        return super.getBindFiles();
+        InputSource[] bindfiles=super.getBindFiles();
+        if(!enableBasicSubstitution){
+            return bindfiles;
+        }
+       /**
+         * when enableBasicSubstitution is set, activate replacement for xsd:duration, 
+         * xsd:date, xsd:dateTime and enable plugin xjc-simple
+         */
+        InputSource bind=new InputSource(XJCOptions.class.getResourceAsStream("bindings.xml") );
+        bind.setSystemId( XJCOptions.class.getResource("bindings.xml").toString() );
+        InputSource[] allbindfiles=(InputSource[]) Array.newInstance(InputSource.class, bindfiles.length+1);
+        System.arraycopy(bindfiles, 0, allbindfiles, 1, bindfiles.length);
+        allbindfiles[0]= bind;
+        return allbindfiles;
     }
 
 }
