@@ -62,19 +62,15 @@
                             <fileSets>
                                 <fileSet>
                                     <sourceFile>target/${project.build.finalName}.jar</sourceFile>
-                                    <destinationFile>talend_component/tXmlJaxbModel/${project.artifactId}.jar</destinationFile>
+                                    <destinationFile>talend_component/tXmlJaxbModel/${project.artifactId}-${project.version}.jar</destinationFile>
                                 </fileSet>                
                                 <fileSet>
                                     <sourceFile>target/${project.build.finalName}.jar</sourceFile>
-                                    <destinationFile>talend_component/tXmlJaxbObjectInput/${project.artifactId}.jar</destinationFile>
+                                    <destinationFile>talend_component/tXmlJaxbObjectInput/${project.artifactId}-${project.version}.jar</destinationFile>
                                 </fileSet>                
                                 <fileSet>
                                     <sourceFile>target/${project.build.finalName}.jar</sourceFile>
-                                    <destinationFile>talend_component/tXmlJaxbObjectOutput/${project.artifactId}.jar</destinationFile>
-                                </fileSet>                
-                                <fileSet>
-                                    <sourceFile>target/${project.build.finalName}.jar</sourceFile>
-                                    <destinationFile>talend_component/tXmlJaxbSave/${project.artifactId}.jar</destinationFile>
+                                    <destinationFile>talend_component/tXmlJaxbObjectOutput/${project.artifactId}-${project.version}.jar</destinationFile>
                                 </fileSet>                
                             </fileSets>
                         </configuration>
