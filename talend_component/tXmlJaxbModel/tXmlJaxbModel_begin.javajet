@@ -10,17 +10,26 @@
     INode node = (INode)codeGenArgument.getArgument();
     String cid = node.getUniqueName();	
     String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__");
+    if (xsdFile == null || xsdFile.trim().isEmpty()) {
+    	 xsdFile = "null";
+    }
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
+    if (modelCacheDir == null || modelCacheDir.trim().isEmpty()) {
+    	 modelCacheDir = "null";
+    }
     boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
     String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
+    if (jarFilePath == null || jarFilePath.trim().isEmpty()) {
+    	 jarFilePath = "null";
+    }
     boolean printAbstractClasses = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_ABSTRACT_CLASSES__"));
     boolean createGraph = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_DOCUMENT_GRAPH__"));
     boolean enableBasicSubstitution = "true".equals(ElementParameterParser.getValue(node, "__PERFORM_TYPE_SUBSTITUTE__"));
 %>
 	{
 		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
-                options.createGraph=createGraph;
-                options.enableBasicSubstitution=enableBasicSubstitution;
+      options.createGraph = <%=createGraph%>;
+      options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
 
 		String modelCacheDir = <%=modelCacheDir%>;
 		if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
@@ -35,6 +44,8 @@
 			 	  throw new Exception("XSD file: " + xsdFile + " does not exists!");
 			 }
 			 options.addGrammar(file);
+		} else {
+			 throw new Exception("No xsd file path given!");
 		}
 		// build the model
 		de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());

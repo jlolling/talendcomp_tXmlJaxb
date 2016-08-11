@@ -223,10 +223,12 @@ public class ReflectUtil {
                             Method m = DatatypeFactory.class.getMethod("newDurationYearMonth", vClass);
                             return (Duration) m.invoke(dtf, v);
                         } catch (IllegalArgumentException nnex) {
+                        	// ignore intentionally
                         }
                     }
                 }
             } catch (NoSuchMethodException ex) {
+            	// ignore intentionally
             }
         }
         Calendar cal = null;

@@ -41,8 +41,8 @@ public class XJCOptions extends Options {
     private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
     public boolean extendClasspath = true;
     public boolean compileSource = true;
-    public boolean createGraph = false;
-    public boolean enableBasicSubstitution = false;
+    public boolean createGraph = false; // paints the structure
+    public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
     public boolean checksum = false;
     public boolean printGrammar = false;
     String checksumValue="";
@@ -273,19 +273,19 @@ public class XJCOptions extends Options {
 
     @Override
     public InputSource[] getBindFiles() {
-        InputSource[] bindfiles=super.getBindFiles();
-        if(!enableBasicSubstitution){
+        InputSource[] bindfiles = super.getBindFiles();
+        if (!enableBasicSubstitution) {
             return bindfiles;
         }
        /**
          * when enableBasicSubstitution is set, activate replacement for xsd:duration, 
          * xsd:date, xsd:dateTime and enable plugin xjc-simple
          */
-        InputSource bind=new InputSource(XJCOptions.class.getResourceAsStream("bindings.xml") );
-        bind.setSystemId( XJCOptions.class.getResource("bindings.xml").toString() );
-        InputSource[] allbindfiles=(InputSource[]) Array.newInstance(InputSource.class, bindfiles.length+1);
+        InputSource bind = new InputSource(XJCOptions.class.getResourceAsStream("bindings.xml"));
+        bind.setSystemId(XJCOptions.class.getResource("bindings.xml").toString());
+        InputSource[] allbindfiles = (InputSource[]) Array.newInstance(InputSource.class, bindfiles.length + 1);
         System.arraycopy(bindfiles, 0, allbindfiles, 1, bindfiles.length);
-        allbindfiles[0]= bind;
+        allbindfiles[0] = bind;
         return allbindfiles;
     }
 

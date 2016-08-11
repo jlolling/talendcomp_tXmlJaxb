@@ -3,8 +3,8 @@
 <COMPONENT>
     <HEADER AUTHOR="cimt AG" COMPATIBILITY="ALL"
                 SCHEMA_AUTO_PROPAGATE="false"
-                PLATEFORM="ALL" RELEASE_DATE="20160715"
-                SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.0">
+                PLATEFORM="ALL" RELEASE_DATE="20160811"
+                SERIAL="" STARTABLE="true" STATUS="PROD" VERSION="2.2">
         <SIGNATURE />
     </HEADER>
 
@@ -61,6 +61,7 @@
     </PARAMETERS>
 
     <ADVANCED_PARAMETERS>
+    
         <PARAMETER 
             NAME="PRINTOUT_ABSTRACT_CLASSES" 
             FIELD="CHECK" 
@@ -69,12 +70,16 @@
         >
             <DEFAULT>false</DEFAULT>
         </PARAMETER>
+        
         <PARAMETER 
             NAME="PRINTOUT_DOCUMENT_GRAPH" 
             FIELD="CHECK" 
             NUM_ROW="40" 
             REQUIRED="true" 
         >
+            <DEFAULT>false</DEFAULT>
+        </PARAMETER>
+
         <PARAMETER 
             NAME="PERFORM_TYPE_SUBSTITUTE" 
             FIELD="CHECK" 
@@ -83,11 +88,12 @@
         >
             <DEFAULT>false</DEFAULT>
         </PARAMETER>
+        
     </ADVANCED_PARAMETERS>
 
     <CODEGENERATION>
         <IMPORTS>
-            <IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.0.jar" REQUIRED="true" />
+            <IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.2.jar" REQUIRED="true" />
         </IMPORTS>
     </CODEGENERATION>
 
