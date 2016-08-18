@@ -5,31 +5,23 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-
-import org.junit.Before;
 import org.junit.Test;
-import org.xml.sax.InputSource;
 
 import com.sun.codemodel.JCodeModel;
 
-import de.cimt.talendcomp.test.TalendFakeJob;
+import de.cimt.talend.mock.TalendJobMock;
 import de.cimt.talendcomp.xmldynamic.JarUtil;
 import de.cimt.talendcomp.xmldynamic.ModelBuilder;
 import de.cimt.talendcomp.xmldynamic.ReflectUtil;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
-import junit.framework.AssertionFailedError;
 
-public class TXmlJaxbTestjob extends TalendFakeJob {
+public class TXmlJaxbTestjob extends TalendJobMock {
 	
 	private boolean classesLoaded = false;
 	
