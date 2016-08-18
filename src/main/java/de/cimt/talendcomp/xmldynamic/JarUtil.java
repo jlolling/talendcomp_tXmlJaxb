@@ -72,10 +72,10 @@ public class JarUtil {
 		Manifest manifest = new Manifest();
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 		if (grammarFilePath != null) {
-			manifest.getMainAttributes().put("grammar-file", grammarFilePath);
+			manifest.getMainAttributes().put(new Attributes.Name("grammar-file"), grammarFilePath);
 		}
-		manifest.getMainAttributes().put("generated-at", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-		manifest.getMainAttributes().put("generated-by", System.getProperty("user.name"));
+		manifest.getMainAttributes().put(new Attributes.Name("generated-at"), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+		manifest.getMainAttributes().put(new Attributes.Name("generated-by"), System.getProperty("user.name"));
 		JarOutputStream target = null;
 		try {
 			target = new JarOutputStream(new FileOutputStream(jarFile), manifest);
