@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -15,6 +17,7 @@ public class JarUtil {
 	private String classFilesDirPath = null;
 	private String classFilesBasePath = null;
 	private String jarFilePath = null;
+	private String grammarFilePath = null;
 	
 	public String getClassFilesDir() {
 		return classFilesDirPath;
@@ -68,12 +71,11 @@ public class JarUtil {
 		}
 		Manifest manifest = new Manifest();
 		manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-                /**
-                 * todo: add additional properties
-                 *  - date
-                 *  - grammars
-                 *  ...
-                 */
+		if (grammarFilePath != null) {
+			manifest.getMainAttributes().put("grammar-file", grammarFilePath);
+		}
+		manifest.getMainAttributes().put("generated-at", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+		manifest.getMainAttributes().put("generated-by", System.getProperty("user.name"));
 		JarOutputStream target = null;
 		try {
 			target = new JarOutputStream(new FileOutputStream(jarFile), manifest);
@@ -84,7 +86,6 @@ public class JarUtil {
 			}
 		}
 	}
-	
 	
 	private void add(File sourceDir, File baseDir, JarOutputStream target) throws IOException {
 		BufferedInputStream in = null;
@@ -137,4 +138,13 @@ public class JarUtil {
 			}
 		}
 	}
+
+	public String getGrammarFilePath() {
+		return grammarFilePath;
+	}
+
+	public void setGrammarFilePath(String grammarFilePath) {
+		this.grammarFilePath = grammarFilePath;
+	}
+	
 }

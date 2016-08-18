@@ -27,35 +27,43 @@
     boolean enableBasicSubstitution = "true".equals(ElementParameterParser.getValue(node, "__PERFORM_TYPE_SUBSTITUTE__"));
 %>
 	{
-		de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
-      options.createGraph = <%=createGraph%>;
-      options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
-
-		String modelCacheDir = <%=modelCacheDir%>;
-		if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
-			 options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
-		} else {
-			throw new Exception("Model Cache Dir cannot be null or empty");
-		}
-		String xsdFile = <%=xsdFile%>;
-		if (xsdFile != null && xsdFile.trim().isEmpty() == false) {
-			 java.io.File file = new java.io.File(xsdFile);
-			 if (file.exists() == false) {
-			 	  throw new Exception("XSD file: " + xsdFile + " does not exists!");
+		String xsdFilePath = <%=xsdFile%>;
+		java.io.File xsdFile = null;
+		if (xsdFilePath != null && xsdFilePath.trim().isEmpty() == false) {
+			 xsdFile = new java.io.File(xsdFilePath);
+			 if (xsdFile.exists() == false) {
+			 	  throw new Exception("XSD file: " + xsdFile.getAbsolutePath() + " does not exists!");
 			 }
-			 options.addGrammar(file);
 		} else {
 			 throw new Exception("No xsd file path given!");
 		}
-		// build the model
-		de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
-		de.cimt.talendcomp.xmldynamic.Util.printContexts(<%=printAbstractClasses%>);
+		if (de.cimt.talendcomp.xmldynamic.ModelBuilder.isModelAlreadyBuild(xsdFile)) {
+			synchronized(de.cimt.talendcomp.xmldynamic.ModelBuilder.lock) {
+				de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
+		      options.createGraph = <%=createGraph%>;
+		      options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
+		
+				String modelCacheDir = <%=modelCacheDir%>;
+				if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
+					 options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
+				} else {
+					throw new Exception("Model Cache Dir cannot be null or empty");
+				}
+				options.addGrammar(xsdFile);
+				// build the model
+				de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
+				de.cimt.talendcomp.xmldynamic.Util.printContexts(<%=printAbstractClasses%>);
 <%	if (createJar) { %>
-		de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
-		jarBuilder.setClassFilesRootDir(modelCacheDir);
-		String jarFilePath = <%=jarFilePath%>;
-		jarBuilder.setJarFilePath(jarFilePath);
-		jarBuilder.create();
-		globalMap.put("<%=cid%>_JAR_FILE", jarFilePath);
+				de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
+				jarBuilder.setClassFilesRootDir(modelCacheDir);
+				String jarFilePath = <%=jarFilePath%>;
+				jarBuilder.setJarFilePath(jarFilePath);
+				jarBuilder.setGrammarFilePath(xsdFile.getAbsolutePath());
+				jarBuilder.create();
+				globalMap.put("<%=cid%>_JAR_FILE", jarFilePath);
 <% } %>
+			}
+		} else {
+			de.cimt.talendcomp.xmldynamic.ModelBuilder.debug("Model for grammar file: " + xsdFile.getAbsolutePath() + " already generated. Skip generate step in job: " + jobName);
+		}
    }

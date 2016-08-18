@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
+import org.apache.log4j.Logger;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
@@ -40,17 +41,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
- * @author dkoch
+ * @author Daniel Koch <daniel.koch@cimt-ag.de>
  */
 public class InlineSchemaPlugin extends Plugin {
 
     public static final QName PNS = new QName("http://xsd.cimt.de/plugins/inline", "_cisp", "_cisp");
-
+    private static final Logger LOG = Logger.getLogger(InlineSchemaPlugin.class);
+    
     @Override
     public String getOptionName() {
         return PNS.getLocalPart();
@@ -58,7 +58,7 @@ public class InlineSchemaPlugin extends Plugin {
 
     @Override
     public String getUsage() {
-        return "handle with care";
+        return "handle with care. Ask Daniel ;-)";
     }
 
     @Override
@@ -71,8 +71,6 @@ public class InlineSchemaPlugin extends Plugin {
             final JClass refString = model.codeModel.ref(String.class);
 
             model.rootClass = refObject;
-//            model.codeModel.directClass(TXMLObject.class.getName());
-
             final String ctx = "GenXS" + UUID.randomUUID().toString().replaceAll("[:\\.-]+", "");
 
             JDefinedClass clazz = model.codeModel._class("de.cimt.talendcomp.xmldynamic." + ctx);
@@ -89,10 +87,8 @@ public class InlineSchemaPlugin extends Plugin {
             JArray n = JExpr.newArray(refString);
 
             Set<String> namespaces = new HashSet<String>();
-            final Set<Map.Entry<NClass, CClassInfo>> entrySet = model.beans().entrySet();
             for (Map.Entry<NClass, CClassInfo> beanset : model.beans().entrySet()) {
                 CClassInfo bean = beanset.getValue();
-
                 if (bean.getElementName() != null) {
                     e.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                     final String ns = bean.getElementName().getNamespaceURI();
@@ -121,7 +117,7 @@ public class InlineSchemaPlugin extends Plugin {
             jrf.setContents(clazz.fullName());
 
         } catch (JClassAlreadyExistsException ex) {
-            Logger.getLogger(InlineSchemaPlugin.class.getName()).log(Level.SEVERE, null, ex);
+        	LOG.error(ex);
         }
 
     }
@@ -131,34 +127,31 @@ public class InlineSchemaPlugin extends Plugin {
         return Arrays.asList(PNS.getNamespaceURI());
     }
 
-    private void annotateType(XSComponent component, JAnnotationArrayMember parent){
-        if( XSAttributeUse.class.isAssignableFrom(component.getClass()) ){
+    private void annotateType(XSComponent component, JAnnotationArrayMember parent) {
+        if ( XSAttributeUse.class.isAssignableFrom(component.getClass()) ) {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
             annotate.param("name", ((XSAttributeUse) component).getDecl().getName());
             annotate.param("uri", ((XSAttributeUse) component).getDecl().getTargetNamespace());
             annotate.param("attribute", true);
             return;
         }
-        if( XSElementDecl.class.isAssignableFrom(component.getClass()) ){
+        if ( XSElementDecl.class.isAssignableFrom(component.getClass()) ) {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
             annotate.param("name", ((XSElementDecl) component).getName());
             annotate.param("uri", ((XSElementDecl) component).getTargetNamespace());
         }
-        
-        
-        if( XSParticle.class.isAssignableFrom(component.getClass()) ){
-            XSTerm term=((XSParticle) component).getTerm();
-            if( term.isElementDecl() ){
+        if ( XSParticle.class.isAssignableFrom(component.getClass()) ) {
+            XSTerm term = ((XSParticle) component).getTerm();
+            if ( term.isElementDecl() ) {
                 annotateType(term.asElementDecl(), parent);
                 return; 
             }
             
-            if(term.isModelGroupDecl()){
-                term=term.asModelGroupDecl();//.getModelGroup()
+            if (term.isModelGroupDecl()) {
+                term=term.asModelGroupDecl(); //.getModelGroup()
             }
-            if( term.isModelGroup() ){
-                
-                for( XSParticle child : term.asModelGroup().getChildren()){
+            if ( term.isModelGroup() ) {
+                for (XSParticle child : term.asModelGroup().getChildren()) {
                     annotateType(child, parent);
                 }
             }
@@ -169,10 +162,7 @@ public class InlineSchemaPlugin extends Plugin {
     @Override
     public boolean run(Outline otln, Options optns, ErrorHandler eh) throws SAXException {
         for (ClassOutline co : otln.getClasses()) {
-            
-            System.err.println("\n"+co.implClass.fullName());
             for (CPropertyInfo property : co.target.getProperties()) {
-
                 JFieldVar field = co.implClass.fields().get(property.getName(false));
                 if (field == null) {
                     continue;
@@ -185,7 +175,6 @@ public class InlineSchemaPlugin extends Plugin {
                         paramArray.param(ti.toType(otln, Aspect.EXPOSED));
                         annotateType(property.getSchemaComponent(), annotate.paramArray("references"));
                     }
-
                 } else {
                     annotateType(property.getSchemaComponent(), annotate.paramArray("references"));
                 }

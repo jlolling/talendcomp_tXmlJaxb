@@ -8,37 +8,37 @@ import javax.xml.transform.Result;
 import org.xml.sax.InputSource;
 
 /**
- * Helperclass to use as target for preparsed sources .
- * This class must be package private to avoid additional chechs... 
- * @author dkoch
+ * Helper class to use as target for pre-parsed sources .
+ * This class must be package private to avoid additional checks... 
+ * @author Daniel Koch <daniel.koch@cimt-ag.de>
  */
-class InMemorySource extends InputSource implements Result{
-    private StringBuffer buffer=new StringBuffer();
+class InMemorySource extends InputSource implements Result {
+	
+    private final String content;
     public final String alias;
     
-    public InMemorySource(String source, String alias){
-        this.buffer= (source!=null) ? new StringBuffer( source ) : new StringBuffer();
-//        System.err.println("de.cimt.talendcomp.xmldynamic.InMemorySource.<init>(\n"+source+"\n)");
-        this.alias=alias;
-        super.setSystemId("mem://"+alias);
+    public InMemorySource(String source, String alias) {
+        this.content = (source != null ? source  : "");
+        this.alias = alias;
+        super.setSystemId("mem://" + alias);
     }
 
-    public InMemorySource(String alias){
+    public InMemorySource(String alias) {
         this(null, alias);
     }
 
     @Override
     public Reader getCharacterStream() {
-        return new StringReader(buffer.toString());
+        return new StringReader(content);
     }
 
     @Override
     public InputStream getByteStream() {
-        return new ByteArrayInputStream( buffer.toString().getBytes() );
+        return new ByteArrayInputStream( content.getBytes() );
     }
     
-    public boolean isEmtpy(){
-        return buffer.length()==0;
+    public boolean isEmtpy() {
+        return content.length() == 0;
     }
     
 }

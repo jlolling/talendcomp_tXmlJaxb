@@ -1,36 +1,38 @@
 package de.cimt.talendcomp.xmldynamic;
 
-import com.sun.tools.xjc.Options;
-import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
-import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
-import de.cimt.talendcomp.xmldynamic.filter.DependencyFilter;
-import de.cimt.talendcomp.xmldynamic.filter.GraphFilter;
-import de.cimt.talendcomp.xmldynamic.filter.PluginFilter;
-import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
-import de.cimt.talendcomp.xmldynamic.filter.ChecksumFilter;
-import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
+
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.apache.log4j.Logger;
 import org.colllib.datastruct.Pair;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
+
+import com.sun.tools.xjc.Options;
+
+import de.cimt.talendcomp.xmldynamic.filter.ChecksumFilter;
+import de.cimt.talendcomp.xmldynamic.filter.DependencyFilter;
+import de.cimt.talendcomp.xmldynamic.filter.GraphFilter;
+import de.cimt.talendcomp.xmldynamic.filter.PluginFilter;
+import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
+import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
+import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
+import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
 
 /**
  *
@@ -38,15 +40,16 @@ import org.xml.sax.XMLReader;
  */
 public class XJCOptions extends Options {
 
-    private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
+    private static final Logger LOG = Logger.getLogger(XJCOptions.class.getName());
     public boolean extendClasspath = true;
     public boolean compileSource = true;
     public boolean createGraph = false; // paints the structure
     public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
     public boolean checksum = false;
     public boolean printGrammar = false;
-    String checksumValue="";
+    String checksumValue = "";
     public String targetName = "gen_" + Util.uniqueString() + ".jar";
+    public String grammarFilePath = null;
 
     private TypeReadHandler typesHelper = new TypeReadHandler();
     
@@ -58,8 +61,7 @@ public class XJCOptions extends Options {
 
 //    private Set<Pair<String, String>> complexTypes=new TreeSet<Pair<String, String>>(); 
     /**
-     * used to activate printimng of manipulated grammars befor generating
-     * codemodel
+     * used to activate printing of manipulated grammars before generating code model
      */
     public XJCOptions() {
         super();
@@ -67,12 +69,13 @@ public class XJCOptions extends Options {
         try {
             tmpfile = File.createTempFile("2890374092", "092830198");
         } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(XJCOptions.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.error(ex);
             throw new RuntimeException("temp not available");
         }
-//        tmproot = new File("C:\\Users\\dkoch\\AppData\\Local\\Temp\\09b2d8bb02ea490d8892845bdd3fb45f\\");
         tmproot = new File(tmpfile.getParentFile(), Util.uniqueString());
-        System.err.println("set tmproot to "+tmproot.getAbsolutePath());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Set tmp-root to: "+tmproot.getAbsolutePath());
+        }
         tmproot.mkdirs();
         tmproot.deleteOnExit();
         pluginURIs.add(InlineSchemaPlugin.PNS.getNamespaceURI());
@@ -86,14 +89,15 @@ public class XJCOptions extends Options {
 
     @Override
     protected void finalize() throws Throwable {
-        for(File f : tmproot.listFiles())
+        for (File f : tmproot.listFiles()) {
             f.delete();
+        }
         tmproot.delete();
         super.finalize();
     }
 
     @Override
-    public synchronized void addGrammar(final InputSource source) throws RuntimeException{
+    public synchronized void addGrammar(final InputSource source) throws RuntimeException {
         /**
          * Changed behavior as this method never send the original inputsource 
          * to the superclass. 
@@ -112,14 +116,13 @@ public class XJCOptions extends Options {
             String alias = Util.uniqueString() + ".xsd";
 
             XMLFilterChain chain = new XMLFilterChain();
-            boolean isMemorySource = source.getClass().equals(InMemorySource.class);
-            boolean wsdlSource = (source.getSystemId().toLowerCase().endsWith(".wsdl"));
+//            boolean isMemorySource = source.getClass().equals(InMemorySource.class);
+//            boolean wsdlSource = (source.getSystemId().toLowerCase().endsWith(".wsdl"));
             if (source.getSystemId().toLowerCase().endsWith(".wsdl")) {
                 WSDLSchemaFilter wsdlfilter = new WSDLSchemaFilter() {
                     @Override
                     public synchronized String createInputSource(String xmlbuffer) {
                         final String id = Util.uniqueString() + ".xsd";
-//                        System.err.println("\n\nxmlbuffer=\n" + xmlbuffer + "\n\n");
                         addGrammar( new InMemorySource(xmlbuffer, id) );
                         return id;
                     }
@@ -127,9 +130,6 @@ public class XJCOptions extends Options {
                 };
                 chain.add(wsdlfilter);
             }
-
-
-
             if (source.getClass().equals(InMemorySource.class)) {
                 alias = ((InMemorySource) source).alias;
             } 
@@ -145,15 +145,15 @@ public class XJCOptions extends Options {
                         URI nestedUri = new URI(location);
 
                         if (!nestedUri.isAbsolute()) {
-                            // memorysources are allready analysed...
-                            if(root.getScheme().equalsIgnoreCase("mem") && grammarCache.containsValue(location) ){
+                            // memory sources are already analyzed...
+                            if (root.getScheme().equalsIgnoreCase("mem") && grammarCache.containsValue(location) ) {
                                 return location;
                             }
                             nestedUri = root.resolve(nestedUri);
                         }
                         String systemID = nestedUri.toString();
                                 
-                        // only unhandled sources must be analysed...
+                        // only not handled sources must be analyzed...
                         if (!grammarCache.containsKey(systemID)) {
                             InputSource source = new InputSource(systemID);
                             source.setSystemId(systemID);
@@ -176,19 +176,18 @@ public class XJCOptions extends Options {
                     chain
             );
 
-            StringWriter w=new StringWriter();
+            StringWriter w = new StringWriter();
             TransformerFactory.newInstance().newTransformer().transform(new SAXSource(reader, source), new StreamResult(w));
 
-            InMemorySource ims=new InMemorySource(w.toString(), alias) ;
-            if(ims.isEmtpy())
+            InMemorySource ims = new InMemorySource(w.toString(), alias) ;
+            if (ims.isEmtpy()) {
                 return;
-            
+            }
             grammarCache.put(rootURI.toString(), alias);
 
             super.addGrammar( new InMemorySource(w.toString(), alias) );
         } catch (Throwable ex) {
-//            ex.printStackTrace();
-//            LOG.warn(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
+        	LOG.error(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
             throw new RuntimeException(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
         }
     }
@@ -219,7 +218,7 @@ public class XJCOptions extends Options {
             }
             
             chain.add(pluginFilter);
-            ChecksumFilter csf=new ChecksumFilter();
+            ChecksumFilter csf = new ChecksumFilter();
             chain.add(csf);
 
             List<InputSource> ng = new ArrayList<InputSource>();
@@ -233,15 +232,15 @@ public class XJCOptions extends Options {
                     new StreamResult(res)
                 );
                 
-                InputSource exportedGrammar=new InputSource(new FileInputStream(res));
+                InputSource exportedGrammar = new InputSource(new FileInputStream(res));
                 exportedGrammar.setSystemId( res.toURI().toString() );
                 ng.add( exportedGrammar );
             }
             
-            checksumValue=csf.toString();
+            checksumValue = csf.toString();
             return ng.toArray( new InputSource[ng.size()] );
         } catch (Exception ex) {
-            java.util.logging.Logger.getLogger(XJCOptions.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.error(ex);
             throw new RuntimeException(ex);
         }
     }
@@ -252,16 +251,13 @@ public class XJCOptions extends Options {
      */
     @Override
     public void addGrammarRecursive(File dir) {
-
         if (dir == null || !dir.exists() || !dir.canRead()) {
             return;
         }
-
         if (dir.isFile()) {
             addGrammar(dir);
             return;
         }
-
         for (File f : dir.listFiles()) {
             if (f.isDirectory()) {
                 addGrammar(f);
@@ -269,6 +265,7 @@ public class XJCOptions extends Options {
                 addGrammar(f);
             }
         }
+        this.grammarFilePath = dir.getAbsolutePath();
     }
 
     @Override
@@ -277,7 +274,7 @@ public class XJCOptions extends Options {
         if (!enableBasicSubstitution) {
             return bindfiles;
         }
-       /**
+        /**
          * when enableBasicSubstitution is set, activate replacement for xsd:duration, 
          * xsd:date, xsd:dateTime and enable plugin xjc-simple
          */
@@ -288,5 +285,14 @@ public class XJCOptions extends Options {
         allbindfiles[0] = bind;
         return allbindfiles;
     }
+
+	@Override
+	public void addGrammar(File source) {
+		if (source == null) {
+			throw new IllegalArgumentException("source file must not be null");
+		}
+		this.grammarFilePath = source.getAbsolutePath();
+		super.addGrammar(source);
+	}
 
 }
