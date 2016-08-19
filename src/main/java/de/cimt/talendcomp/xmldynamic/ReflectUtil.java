@@ -3,7 +3,6 @@ package de.cimt.talendcomp.xmldynamic;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
@@ -33,7 +32,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.bind.JAXBException;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.util.JAXBResult;
@@ -42,11 +40,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stax.StAXSource;
@@ -98,7 +93,8 @@ public class ReflectUtil {
         return (Number) convert(numb, type);
     }
 
-    public static <T> T convertXML(Object v, Class<?> vClass, Class<T> tClass) {
+    @SuppressWarnings("unchecked")
+	public static <T> T convertXML(Object v, Class<?> vClass, Class<T> tClass) {
         try {
             Source s = null;
             if (CharSequence.class.isAssignableFrom(vClass)) {

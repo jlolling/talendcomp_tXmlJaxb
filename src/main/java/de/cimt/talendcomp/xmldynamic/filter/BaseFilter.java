@@ -3,8 +3,8 @@ package de.cimt.talendcomp.xmldynamic.filter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.log4j.Logger;
-import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLFilterImpl;
 
@@ -13,6 +13,7 @@ import org.xml.sax.helpers.XMLFilterImpl;
  * @author dkoch
  */
 public class BaseFilter extends XMLFilterImpl {
+	
     protected static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
     protected Map<String, String> prefixmapping = new HashMap<String, String>();
     
@@ -25,9 +26,9 @@ public class BaseFilter extends XMLFilterImpl {
     }
         
     public String composePrefix(String url, String prefered) {
-        if (url != null && prefixmapping.containsValue(url))
+        if (url != null && prefixmapping.containsValue(url)) {
             return getPrefixForUrl(url);
-
+        }
         if (prefixmapping.containsKey(prefered)) {
             int count = 0;
             while (prefixmapping.containsKey(prefered + count)) {
@@ -36,7 +37,6 @@ public class BaseFilter extends XMLFilterImpl {
             prefered=prefered + count;
         }
         prefixmapping.put(prefered, url);
-
         return prefered;
     }
     
@@ -49,7 +49,6 @@ public class BaseFilter extends XMLFilterImpl {
         return null;
     }
 
-    
     @Override
     public void endPrefixMapping(String prefix) throws SAXException {
         prefixmapping.remove(prefix);
@@ -62,9 +61,9 @@ public class BaseFilter extends XMLFilterImpl {
         super.startPrefixMapping(prefix, uri);
     }
     
-    boolean equalUris(String uri1, String uri2){
-        return (
-                (uri1!=null || uri1.length()>=0) ? uri1 : prefixmapping.containsKey("") ? prefixmapping.get("") : "" ).equals( (uri2!=null || uri2.length()>=0) ? uri2 : prefixmapping.get("") );
+    boolean equalUris(String uri1, String uri2) {
+    	return ( (uri1 != null && uri1.isEmpty() == false) ? uri1 : (prefixmapping.containsKey("") ? prefixmapping.get("") : "") )
+    			.equals( (uri2 != null && uri2.isEmpty() == false) ? uri2 : prefixmapping.get("") );
     }
     
 }
