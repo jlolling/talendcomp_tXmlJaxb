@@ -2,15 +2,9 @@ package de.cimt.talendcomp.xmldynamic;
 
 import com.sun.codemodel.JCodeModel;
 import java.io.File;
-import java.io.FileReader;
-import java.io.StringWriter;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.BasicConfigurator;
-import org.xml.sax.InputSource;
 
 /**
  *
