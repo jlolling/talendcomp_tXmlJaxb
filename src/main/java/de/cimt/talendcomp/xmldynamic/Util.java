@@ -12,9 +12,16 @@ import java.util.UUID;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.namespace.QName;
 
 public final class Util {
+    
+    public enum LOOKHERE{
+        IT;
+    }
 
+//    public static Map<>
+    
     public static String buildSQLInClause(List<? extends Object> keys) {
         StringBuilder sb = new StringBuilder();
         boolean firstLoop = true;
@@ -101,6 +108,20 @@ public final class Util {
             classes.addAll(iterator.next().getClasses());
         }
         return JAXBContext.newInstance(classes.toArray(new Class[classes.size()]));
+    }
+
+    public static Class<TXMLObject> findClassFor(QName qn) throws JAXBException {
+        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        while (iterator.hasNext()) 
+        {
+            TXMLBinding bind=iterator.next();
+            
+            final Class<TXMLObject> impl = bind.find(qn);
+            if(impl!=null){
+                return impl;
+            }
+        }
+        return null;
     }
 
     public static List<TXMLObject> getTXMLObjects(TXMLObject parent, String attrPath, boolean ignoreMissing, boolean nullable) throws Exception {

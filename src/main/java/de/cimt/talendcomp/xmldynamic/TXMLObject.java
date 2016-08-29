@@ -1,5 +1,7 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
+import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -14,12 +16,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
 
 import org.colllib.caches.GenCache;
 import org.colllib.datastruct.Pair;
@@ -109,17 +116,21 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     public void set_XmlID(Object _xmlID) {
         this._xmlID = _xmlID;
     }
+    
     public boolean addOrSet(TXMLObject childObject) {
+        if(childObject==null)
+            return false;
+        
     	String attrName = findFirstPropertyByType(childObject.getClass());
     	if (attrName == null) {
-    		return false;
+            return false;
     	} else {
-    		return addOrSet(attrName, childObject);
+            return addOrSet(attrName, childObject);
     	}
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public boolean set(String attr, Object value) {
+    public boolean set(String attr, Object value) {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
@@ -163,7 +174,7 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
         if (pa == null) {
-        	return new MissingAttribute(attr);
+            return new MissingAttribute(attr);
         }
         Class<?> targetClass = pa.getPropertyType();
         if (targetClass.isAssignableFrom(XMLGregorianCalendar.class)) {
@@ -215,7 +226,16 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     	attr = ReflectUtil.camelizeName(attr);
         ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
         if (pa == null) {
-            return false;
+            if(attr.indexOf("/")>0){
+                try {
+                    return childAddOrSet(attr, value);
+                } catch (Exception ex) {
+                    Logger.getLogger(TXMLObject.class.getName()).log(Level.SEVERE, null, ex);
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
         Object currentValue = pa.getPropertyValue(this);
         if (pa.getPropertyType().isArray()) {
@@ -278,12 +298,87 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         			return pa.getName();
         		}
         	} else {
-                if (pa.getPropertyType().getName().equals(className)) {
-                    return pa.getName();
-                }
+                    if (pa.getPropertyType().getName().equals(className)) {
+                        return pa.getName();
+                    }
         	}
         }
         return null;
+    }
+
+    private ExtPropertyAccessor findFirstyAccessorByType(Class<? extends TXMLObject> clazz) {
+        for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
+            TXMLTypeHelper eth = (TXMLTypeHelper) pa.findAnnotation(TXMLTypeHelper.class);
+            
+            if(eth!=null){ 
+                for(  QNameRef ref : eth.refs() ){
+                    if(ref.type().equals(clazz)){
+                        return pa;
+                    }
+                }
+            } else {
+                if (pa.getPropertyType().equals(clazz)) {
+                    return pa;
+                }
+            }
+        }
+        return null;
+    }
+    
+    private Pair<ExtPropertyAccessor, Class> findFirstyAccessorByElementName(String name) {
+        
+        for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
+            TXMLTypeHelper eth = (TXMLTypeHelper) pa.findAnnotation(TXMLTypeHelper.class);
+            
+            if(eth!=null){ 
+                for(  QNameRef ref : eth.refs() ){
+                    if(ref.name().equals(name)){
+                        return new Pair<ExtPropertyAccessor, Class>(pa, ref.type());
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    private ExtPropertyAccessor findFirstyAccessorByElementQName(QName fqname) {
+        for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
+            TXMLTypeHelper eth = (TXMLTypeHelper) pa.findAnnotation(TXMLTypeHelper.class);
+            if(eth!=null){ // check property annotation for registered element classes
+                for( QNameRef ref : eth.refs()){
+                    if(ref.name().equals(fqname.getLocalPart()) && ref.uri().equals(fqname.getNamespaceURI()))
+                        return pa;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean childAddOrSet(String path, Object childvalue) throws Exception{
+        int pos=path.indexOf("/");
+        if(pos<0){
+            // this should be handles somewhere else
+            return false;
+        } 
+        
+        final Pair<ExtPropertyAccessor, Class> pa = findFirstyAccessorByElementName( path.substring(0, pos) );
+        if(pa==null){
+            throw new IllegalArgumentException("unresolveable path "+path+" for class "+this.getClass().getName() );
+        }
+
+        Class type=pa.x.getPropertyType();
+        final boolean collectionType=Collection.class.isAssignableFrom(type);
+        Object value=pa.x.getPropertyValue(this);
+//        System.err.println("value="+value);
+        if( ! TXMLObject.class.isAssignableFrom(pa.y) ){
+            throw new IllegalArgumentException("unresolveable path "+path+". Referring Element type does not support nested content");
+        }
+        
+        TXMLObject child=(TXMLObject) pa.y.newInstance();
+        this.addOrSet( child );
+        
+        child.addOrSet(path.substring(pos+1), childvalue);
+        return true;
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -361,10 +456,10 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<Class<TXMLObject>, PropertyDescriptor> introspect(Class<TXMLObject> vadderclass) throws Exception {
+    private static Map<Class<TXMLObject>, PropertyDescriptor> introspect(Class<TXMLObject> parent) throws Exception {
         Map<Class<TXMLObject>, PropertyDescriptor> bindings = new HashMap<Class<TXMLObject>, PropertyDescriptor>();
 
-        BeanInfo bi = Introspector.getBeanInfo(vadderclass);
+        BeanInfo bi = Introspector.getBeanInfo(parent);
 
         for (PropertyDescriptor pd : bi.getPropertyDescriptors()) {
             if (pd.getPropertyType().isAssignableFrom(TXMLObject.class)) {
@@ -378,13 +473,20 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     }
 
     public String toXML() throws JAXBException {
-        return toXML(false);
+        return toXML(false, false);
     }
     
     public String toXML(boolean formatted) throws JAXBException {
+        return toXML(formatted, false);
+    }
+    
+    public String toXML(boolean formatted, boolean fragment) throws JAXBException {
         final Marshaller marshaller = Util.createJAXBContext().createMarshaller();
         if (formatted) {
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        }
+        if(fragment){
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
         }
         StringWriter sw = new StringWriter();
        
@@ -392,5 +494,6 @@ public abstract class TXMLObject implements Serializable, Cloneable {
        
         return sw.toString();
     }
+    
     
 }

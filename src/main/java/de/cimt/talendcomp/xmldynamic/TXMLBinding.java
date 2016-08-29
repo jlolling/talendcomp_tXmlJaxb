@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.namespace.QName;
 
 /**
@@ -22,6 +23,15 @@ public interface TXMLBinding {
     public Class<TXMLObject>[] getTypes();
     public String[] getNamespaces();
     public long getTimestamp();
+    
+    public boolean isMember(QName qn);
+    
+    /**
+     * Searches for a class implementing the given qname. 
+     * @param qn name and namespace of the element implementation to be searched for
+     * @return the implementing class or null if not found
+     */
+    public Class<TXMLObject> find(QName qn);
 }
 
 
@@ -31,11 +41,7 @@ abstract class InternalTXMLBindingHelper implements TXMLBinding {
         List<Class<TXMLObject>> classes=new ArrayList<Class<TXMLObject>>();
         classes.addAll( Arrays.asList(this.getElements()) );
         classes.addAll( Arrays.asList(this.getTypes()) );
-//        System.err.println( classes.size() );
-//        System.err.println( classes.getClass() );
-//        System.err.println( classes.getClass().getGenericInterfaces() );
-//        Class<TXMLObject>[] newInstance = (Class<TXMLObject>[]) Array.newInstance( classes.getClass().getComponentType(), classes.size());
-		return  classes;//.toArray( newInstance );
+        return  classes;
     }
     
     public boolean matchesNamespace(QName qn){
@@ -51,6 +57,14 @@ abstract class InternalTXMLBindingHelper implements TXMLBinding {
         
         if(matchesNamespace(qn)){
             for(Class<TXMLObject> c : getElements()){
+                XmlSchema[] schemas=(XmlSchema[]) c.getPackage().getDeclaredAnnotationsByType(XmlSchema.class);
+                boolean nsMatch=false;
+                for(XmlSchema schema : schemas){
+                    if(schema.namespace().equals( qn.getNamespaceURI() ))
+                        nsMatch=true;
+                }
+                if(!nsMatch)
+                    continue;
                 
                 XmlElement elem=c.getAnnotation(XmlElement.class);
                 if(elem!=null && qn.getLocalPart().equals(elem.name()))
