@@ -37,6 +37,8 @@ import com.sun.xml.xsom.XSComponent;
 import com.sun.xml.xsom.XSElementDecl;
 import com.sun.xml.xsom.XSParticle;
 import com.sun.xml.xsom.XSTerm;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -127,23 +129,34 @@ public class InlineSchemaPlugin extends Plugin {
         return Arrays.asList(PNS.getNamespaceURI());
     }
 
-    private void annotateType(XSComponent component, JAnnotationArrayMember parent) {
+    /**
+     * this method is used to gerenrate qnamerefs for each property of a class. if a collection
+     * is found all possible members are added.
+     * @param component current definition
+     * @param parent annotation to be filled
+     * @param outline current working outline
+     * @param ref list of possible elements
+     */
+    private void annotateType(XSComponent component, JAnnotationArrayMember parent, Outline outline, List<? extends CTypeInfo> ref) {
         if ( XSAttributeUse.class.isAssignableFrom(component.getClass()) ) {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
             annotate.param("name", ((XSAttributeUse) component).getDecl().getName());
             annotate.param("uri", ((XSAttributeUse) component).getDecl().getTargetNamespace());
+            annotate.param("type", ref.get(0).toType(outline, Aspect.EXPOSED));
             annotate.param("attribute", true);
             return;
         }
         if ( XSElementDecl.class.isAssignableFrom(component.getClass()) ) {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
             annotate.param("name", ((XSElementDecl) component).getName());
+            annotate.param("type", ref.get(0).toType(outline, Aspect.EXPOSED));
             annotate.param("uri", ((XSElementDecl) component).getTargetNamespace());
+            return;
         }
         if ( XSParticle.class.isAssignableFrom(component.getClass()) ) {
             XSTerm term = ((XSParticle) component).getTerm();
             if ( term.isElementDecl() ) {
-                annotateType(term.asElementDecl(), parent);
+                annotateType(term.asElementDecl(), parent, outline, ref);
                 return; 
             }
             
@@ -151,12 +164,13 @@ public class InlineSchemaPlugin extends Plugin {
                 term=term.asModelGroupDecl(); //.getModelGroup()
             }
             if ( term.isModelGroup() ) {
+                int i=0;
                 for (XSParticle child : term.asModelGroup().getChildren()) {
-                    annotateType(child, parent);
+                    annotateType(child, parent, outline, ref.subList(i++, ref.size()));
+//                    i++;
                 }
             }
         }
-        
     }
     
     @Override
@@ -170,17 +184,12 @@ public class InlineSchemaPlugin extends Plugin {
                 JAnnotationUse annotate = field.annotate(TXMLTypeHelper.class);
                 if (property.isCollection()) {
                     annotate.param("collection", true);
-                    final JAnnotationArrayMember paramArray = annotate.paramArray("componentClasses");
-                    for (CTypeInfo ti : property.ref()) {
-                        paramArray.param(ti.toType(otln, Aspect.EXPOSED));
-                        annotateType(property.getSchemaComponent(), annotate.paramArray("references"));
-                    }
-                } else {
-                    annotateType(property.getSchemaComponent(), annotate.paramArray("references"));
                 }
+                annotateType(property.getSchemaComponent(), annotate.paramArray("refs"), otln, new ArrayList<CTypeInfo>(property.ref()) );
             }
         }
         return true;
     }
 
+    
 }
