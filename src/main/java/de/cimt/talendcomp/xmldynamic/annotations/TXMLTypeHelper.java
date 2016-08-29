@@ -12,11 +12,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value=ElementType.FIELD)
 public @interface TXMLTypeHelper {
-	
     boolean collection() default false;
     @SuppressWarnings("rawtypes")
-	Class[] componentClasses() default {};
-    QNameRef[] references() default {};
-    
+    QNameRef[] refs() default {};
     
 }

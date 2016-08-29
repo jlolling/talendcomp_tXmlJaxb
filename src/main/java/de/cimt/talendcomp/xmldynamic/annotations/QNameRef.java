@@ -15,5 +15,6 @@ import java.lang.annotation.Target;
 public @interface QNameRef {
     String name();
     String uri();
-    boolean attribute() default true;
+    boolean attribute() default false;
+    Class<?> type() default Object.class;
 }
