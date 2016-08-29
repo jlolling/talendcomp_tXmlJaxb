@@ -16,12 +16,6 @@ import javax.xml.namespace.QName;
 
 public final class Util {
     
-    public enum LOOKHERE{
-        IT;
-    }
-
-//    public static Map<>
-    
     public static String buildSQLInClause(List<? extends Object> keys) {
         StringBuilder sb = new StringBuilder();
         boolean firstLoop = true;
