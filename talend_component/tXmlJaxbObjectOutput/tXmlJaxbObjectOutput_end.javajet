@@ -74,11 +74,13 @@
 	}
 <% 	} // if (autoRelations && parentIsRoot == false)
 	} // if (isRoot == false) %>
-	// build SQL in clause 
-	// start with collecting the keys
-	java.util.List<Object> listKeys = new java.util.ArrayList<Object>();
-	for (Object key : keyMap_<%=cid%>.keySet()) {
-		listKeys.add(key);
+	{ // end block for <%=cid%>
+		// build SQL in clause 
+		// start with collecting the keys
+		java.util.List<Object> listKeys = new java.util.ArrayList<Object>();
+		for (Object key : keyMap_<%=cid%>.keySet()) {
+			listKeys.add(key);
+		}
+		// build SQL code
+		globalMap.put("<%=cid%>_KEYS_AS_SQL_IN_CLAUSE", de.cimt.talendcomp.xmldynamic.Util.buildSQLInClause(listKeys));
 	}
-	// build SQL code
-	globalMap.put("<%=cid%>_KEYS_AS_SQL_IN_CLAUSE", de.cimt.talendcomp.xmldynamic.Util.buildSQLInClause(listKeys));
