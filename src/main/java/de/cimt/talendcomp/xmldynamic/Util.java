@@ -74,13 +74,13 @@ public final class Util {
     public static void printContexts(boolean includeAbstract) {
         final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
         StringBuilder builder = new StringBuilder();
-        builder.append("\nContexts start ###################################\n");
+        builder.append("\nJAX-B Contexts start ###################################\n");
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getClasses()) {
                 extractClassInfo(includeAbstract, builder, clazz);
             }
         }
-        builder.append("\nContexts end ###################################\n");
+        builder.append("\nJAX-B Contexts end ###################################\n");
         System.out.println(builder.toString());
     }
 
