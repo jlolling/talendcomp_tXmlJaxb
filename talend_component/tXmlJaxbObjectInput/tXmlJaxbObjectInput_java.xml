@@ -68,7 +68,7 @@
 		
 	    <PARAMETER 
 	    	NAME="XML_CONTENT" 
-	    	FIELD="TEXT" 
+	    	FIELD="MEMO_JAVA" 
 	    	NUM_ROW="40" 
 	    	REQUIRED="true"
 	    	SHOW_IF="(IS_ROOT == 'true') and (SETUP == 'READ_FROM_INPUT')">

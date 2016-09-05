@@ -23,7 +23,10 @@
  	if ("READ_FROM_INPUT_PLAIN_TEXT".equals(setup)) {
 		xmlString = ElementParameterParser.getValue(node, "__XML_CONTENT_PLAIN_TEXT__");
     	if (xmlString  != null && xmlString.trim().isEmpty() == false) {
-	    	xmlString = "\"" + xmlString.trim().replace("\r", "").replace("\"", "\\\"").replace("\n", "\\n\" +\n\"") + "\"";
+	    	xmlString = "\"" + xmlString.trim().replace("\r", "")
+	    													.replace("\\", "\\\\")
+	    													.replace("\"", "\\\"")
+	    													.replace("\n", "\\n\" +\n\"") + "\"";
 	   } else {
     		xmlString = "null";
     	}
