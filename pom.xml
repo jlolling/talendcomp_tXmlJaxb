@@ -106,16 +106,19 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+        <!--
+         TODO: removed until available from mvn repo
         <dependency>
             <groupId>de.cimt.talend.mock</groupId>
             <artifactId>talend-job-mock</artifactId>
             <version>1.0</version>
             <scope>test</scope>
         </dependency>
+        -->
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.componentProjectDirectory>talend_component/tXmlJaxbModel/</project.build.componentProjectDirectory>
     </properties>
-    <version>2.3</version>
+    <version>2.4</version>
 </project>

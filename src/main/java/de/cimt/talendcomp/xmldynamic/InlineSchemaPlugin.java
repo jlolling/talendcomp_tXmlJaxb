@@ -78,7 +78,7 @@ public class InlineSchemaPlugin extends Plugin {
             JDefinedClass clazz = model.codeModel._class("de.cimt.talendcomp.xmldynamic." + ctx);
             clazz._implements(model.codeModel.ref(TXMLBinding.class));
             clazz._extends(model.codeModel.ref(InternalTXMLBindingHelper.class));
-
+            
             // override getTimespamp
             JMethod meth = clazz.method(JMod.PUBLIC, model.codeModel.LONG, "getTimestamp");
             meth.annotate(java.lang.Override.class);
@@ -106,9 +106,13 @@ public class InlineSchemaPlugin extends Plugin {
             meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getElements");
             meth.annotate(java.lang.Override.class);
             meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), e));
-
+            JAnnotationUse annotate = meth.annotate(java.lang.SuppressWarnings.class);
+            annotate.param("value", "unchecked");
+//@SuppressWarnings("unchecked")
             meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getTypes");
-            meth.annotate(java.lang.Override.class);
+            annotate = meth.annotate(java.lang.Override.class);
+            annotate = meth.annotate(java.lang.SuppressWarnings.class);
+            annotate.param("value", "unchecked");
             meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), t));
 
             meth = clazz.method(JMod.PUBLIC, refString.array(), "getNamespaces");
@@ -140,8 +144,8 @@ public class InlineSchemaPlugin extends Plugin {
     private void annotateType(XSComponent component, JAnnotationArrayMember parent, Outline outline, List<? extends CTypeInfo> ref) {
         if ( XSAttributeUse.class.isAssignableFrom(component.getClass()) ) {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
-            annotate.param("name", ((XSAttributeUse) component).getDecl().getName());
             annotate.param("uri", ((XSAttributeUse) component).getDecl().getTargetNamespace());
+            annotate.param("name", ((XSAttributeUse) component).getDecl().getName());
             annotate.param("type", ref.get(0).toType(outline, Aspect.EXPOSED));
             annotate.param("attribute", true);
             return;

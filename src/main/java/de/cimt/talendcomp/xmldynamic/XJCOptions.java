@@ -46,10 +46,12 @@ public class XJCOptions extends Options {
     public boolean createGraph = false; // paints the structure
     public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
     public boolean checksum = false;
+    public boolean forceGenerate = false;
     public boolean printGrammar = false;
-    String checksumValue = "";
+    public String checksumValue = "";
     public String targetName = "gen_" + Util.uniqueString() + ".jar";
     public String grammarFilePath = null;
+    public long newestGrammar=0l;
 
     private TypeReadHandler typesHelper = new TypeReadHandler();
     
@@ -293,6 +295,11 @@ public class XJCOptions extends Options {
 		}
 		this.grammarFilePath = source.getAbsolutePath();
 		super.addGrammar(source);
+                
+                if(source.lastModified()>newestGrammar){
+                    System.err.println("update newestGrammar ");
+                    newestGrammar=source.lastModified();
+                }
 	}
 
 }

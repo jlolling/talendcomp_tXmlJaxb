@@ -13,17 +13,20 @@ import org.junit.Test;
 
 import com.sun.codemodel.JCodeModel;
 
-import de.cimt.talend.mock.TalendJobMock;
+//import de.cimt.talend.mock.TalendJobMock; // TODO: removed until available from mvn repo
 import de.cimt.talendcomp.xmldynamic.JarUtil;
 import de.cimt.talendcomp.xmldynamic.ModelBuilder;
 import de.cimt.talendcomp.xmldynamic.ReflectUtil;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
+import java.util.HashMap;
+import java.util.Map;
 
-public class TXmlJaxbTestjob extends TalendJobMock {
-	
-	private boolean classesLoaded = false;
+public class TXmlJaxbTestjob   {
+	String currentComponent ;
+	Map<String, Object> globalMap = new HashMap<String, Object>();
+        private boolean classesLoaded = false;
 	
 //	@Before
 	public void testCreateModel() throws Exception {

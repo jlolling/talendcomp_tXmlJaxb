@@ -124,53 +124,104 @@ public final class ModelBuilder {
     }
     
     /**
+     * check instantiating JavaCompiler to proof jdk is present
+     */
+    private boolean isJDK(){
+        try{
+            JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
+            return true;
+        } catch(Throwable t){
+            return false;
+        }
+    }
+    
+    
+    private boolean testUpdateRequired(){
+        
+        if(opt.forceGenerate || opt.targetDir == null || !opt.targetDir.exists() ){
+            System.err.println("1) UpdateRequired");
+            System.err.println("opt.forceGenerate="+opt.forceGenerate);
+            System.err.println("opt.targetDir    ="+opt.targetDir);
+            System.err.println("targetDir.exists ="+opt.targetDir.exists());
+            return true;
+        }
+
+        final List<File> listFiles = listFiles(opt.targetDir, true, "TXMLBinding");    
+            
+        if(listFiles.isEmpty()){
+            System.err.println("2) UpdateRequired");
+            return true;
+        }
+        
+        for(File f : listFiles){
+            if(f.lastModified()<opt.newestGrammar){
+                
+                return true;
+            }
+        }
+        return false;
+        
+    }
+    
+    /**
      * generates code model to java sources, compiles classes and extends current
      * system classloader
      *
      * @throws Exception
      */
     public void generate() throws Exception {
-    	if (models.contains(opt.grammarFilePath) == false) {
-            Model model = ModelLoader.load(opt, codeModel, ERR);
-            Outline ouln = model.generateCode(opt, ERR);
-            if (ouln == null) {
-                throw new Exception("failed to compile a schema");
-            }
-            if (opt.checksum) {
-                for (PackageOutline co : ouln.getAllPackageContexts()) {
-                    JClass jc = model.codeModel.directClass("de.cimt.talendcomp.xmldynamic.Checksum");
+                
+        if(!models.contains(opt.grammarFilePath)){
 
-                    co.objectFactory().annotate(jc).param("key", opt.checksumValue);
+            if (testUpdateRequired()){ 
+                setupModelDir(opt.targetDir);
+                Model model = ModelLoader.load(opt, codeModel, ERR);
+                Outline ouln = model.generateCode(opt, ERR);
+                if (ouln == null) {
+                    throw new Exception("failed to compile a schema");
                 }
-            }
-            if (opt.targetDir == null) {
-                opt.targetDir = createTemporaryFolder();
-            }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Output folder for generated classes: " + opt.targetDir.getAbsolutePath());
-            }
-            if (opt.targetDir.exists() == false) {
-                opt.targetDir.mkdirs();
-            }
-            if (opt.targetDir.exists() == false) {
-                throw new Exception("Cannot create/use target folder: " + opt.targetDir);
-            }
-            LOG.debug("Generate classes:");
-            model.codeModel.build( new FileCodeWriter(opt.targetDir) );
-            if (!opt.compileSource) {
-                return;
-            }
-            JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
-            if (jc == null) {
-                String message = "Cannot access the javac compiler. Take care you use a JDK instead of a JRE.\n"
-                        + "java.home: " + System.getProperty("java.home") + "\n"
-                        + "java.class.path: " + System.getProperty("java.class.path");
-                LOG.error(message);
-                throw new IllegalStateException( message );
-            }
-            StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
-            if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
-                throw new Exception(Messages.COMPILATION_FAILED);
+                if (opt.checksum) {
+                    for (PackageOutline co : ouln.getAllPackageContexts()) {
+                        JClass jc = model.codeModel.directClass("de.cimt.talendcomp.xmldynamic.Checksum");
+
+                        co.objectFactory().annotate(jc).param("key", opt.checksumValue);
+                    }
+                }
+                if (opt.targetDir == null) {
+                    opt.targetDir = createTemporaryFolder();
+                }
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Output folder for generated classes: " + opt.targetDir.getAbsolutePath());
+                }
+                if (opt.targetDir.exists() == false) {
+                    opt.targetDir.mkdirs();
+                }
+                if (opt.targetDir.exists() == false) {
+                    throw new Exception("Cannot create/use target folder: " + opt.targetDir);
+                }
+                LOG.debug("Generate classes:");
+                model.codeModel.build( new FileCodeWriter(opt.targetDir) );
+                if (!opt.compileSource) {
+                    return;
+                }
+                JavaCompiler jc;
+                try{
+                    jc = ToolProvider.getSystemJavaCompiler();
+                } catch(Throwable t){ // may throw an exception when jre is used
+                    jc = null;
+                }
+
+                if (jc == null) {
+                    String message = "Cannot access the javac compiler. Take care you use a JDK instead of a JRE.\n"
+                            + "java.home: " + System.getProperty("java.home") + "\n"
+                            + "java.class.path: " + System.getProperty("java.class.path");
+                    LOG.error(message);
+                    throw new IllegalStateException( message );
+                }
+                StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
+                if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
+                    throw new Exception(Messages.COMPILATION_FAILED);
+                }
             }
             if (!opt.extendClasspath) {
                 return;
@@ -180,8 +231,9 @@ public final class ModelBuilder {
             method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{opt.targetDir.toURI().toURL()});
             models.add(opt.grammarFilePath);
     	} else {
-    		LOG.debug("Model for schema file: " + opt.grammarFilePath + " already generetaed, skip generate step.");
+            LOG.debug("Model for schema file: " + opt.grammarFilePath + " already generated, skip generate step.");
     	}
+        
     }
 
     public static List<File> listFiles(File root, boolean recursive, String extension) {
@@ -206,15 +258,14 @@ public final class ModelBuilder {
         return tf;
     }
 
-    public static File setupModelDir(String dirPath) throws Exception {
-        File modelDir = new File(dirPath);
+    private static File setupModelDir(File modelDir) throws Exception {
+//        File modelDir = new File(dirPath);
         if (modelDir.exists()) {
-            if (modelDir.isFile()) {
-                if (modelDir.delete()) {
-                    throw new Exception("At the location of the model dir a file already exists: " + modelDir.getAbsolutePath() + " and this cannot be deleted!");
-                }
+            if (modelDir.isFile() && !modelDir.delete()) {
+                throw new Exception("At the location of the model dir a file already exists: " + modelDir.getAbsolutePath() + " and this cannot be deleted!");
             }
-            final Path directory = Paths.get(dirPath);
+            final Path directory = modelDir.toPath();
+//            Paths.get(modelDir.getAbsolutePath());
             Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

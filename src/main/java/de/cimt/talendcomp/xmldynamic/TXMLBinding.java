@@ -18,6 +18,7 @@ import javax.xml.namespace.QName;
  * 
  */
 public interface TXMLBinding {
+    public static String ANYNAMESPACE="##any";
     public List<Class<TXMLObject>> getClasses();
     public Class<TXMLObject>[] getElements();
     public Class<TXMLObject>[] getTypes();
@@ -54,17 +55,21 @@ abstract class InternalTXMLBindingHelper implements TXMLBinding {
     }
     
     public Class<TXMLObject> find(QName qn){
+        final String nsuri= (qn.getNamespaceURI()!=null) ? qn.getNamespaceURI() : ANYNAMESPACE;
         
         if(matchesNamespace(qn)){
             for(Class<TXMLObject> c : getElements()){
-                XmlSchema[] schemas=(XmlSchema[]) c.getPackage().getDeclaredAnnotationsByType(XmlSchema.class);
-                boolean nsMatch=false;
-                for(XmlSchema schema : schemas){
-                    if(schema.namespace().equals( qn.getNamespaceURI() ))
-                        nsMatch=true;
+                // only perform namespacecheck when required
+                if(!ANYNAMESPACE.equals(nsuri)){
+                    XmlSchema[] schemas=(XmlSchema[]) c.getPackage().getDeclaredAnnotationsByType(XmlSchema.class);
+                    boolean nsMatch=false;
+                    for(XmlSchema schema : schemas){
+                        if(schema.namespace().equals( nsuri ))
+                            nsMatch=true;
+                    }
+                    if(!nsMatch)
+                        continue;
                 }
-                if(!nsMatch)
-                    continue;
                 
                 XmlElement elem=c.getAnnotation(XmlElement.class);
                 if(elem!=null && qn.getLocalPart().equals(elem.name()))

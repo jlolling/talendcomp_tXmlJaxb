@@ -28,6 +28,7 @@
 %>
 	try {
 		String xsdFilePath = <%=xsdFile%>;
+                // TODO: please avoid variable names used outside jet
 		java.io.File xsdFile = null;
 		if (xsdFilePath != null && xsdFilePath.trim().isEmpty() == false) {
 			 xsdFile = new java.io.File(xsdFilePath);
@@ -46,7 +47,8 @@
 			      options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
 					String modelCacheDir = <%=modelCacheDir%>;
 					if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
-						 options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
+						 options.targetDir = modelCacheDir; 
+                                                // FIXME: review this line: options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
 						 globalMap.put("<%=cid%>_MODELCACHE_DIR", options.targetDir);
 					} else {
 						throw new Exception("Model cache dir cannot be null or empty");

@@ -22,7 +22,7 @@ public class TML {
 
 		XJCOptions opts = new XJCOptions();
 		opts.targetDir = new File("./target/generated-sources/modelbuilder/");
-		ModelBuilder.setupModelDir(opts.targetDir.getAbsolutePath());
+//		ModelBuilder.setupModelDir(opts.targetDir.getAbsolutePath());
 		opts.targetDir.mkdirs();
 		opts.addGrammar(new File("./src/test/resources/customer.xsd"));
 		System.out.println("Generate model...");
@@ -34,7 +34,7 @@ public class TML {
 		
 		opts = new XJCOptions();
 		opts.targetDir = new File("./target/generated-sources/modelbuilder/");
-		ModelBuilder.setupModelDir(opts.targetDir.getAbsolutePath());
+//		ModelBuilder.setupModelDir(opts.targetDir.getAbsolutePath());
 		opts.targetDir.mkdirs();
 		opts.addGrammar(new File("./src/test/resources/atollWS.wsdl"));
 		System.out.println("Generate model...");
