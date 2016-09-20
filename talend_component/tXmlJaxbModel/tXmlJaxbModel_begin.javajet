@@ -14,9 +14,7 @@
     	 xsdFile = "null";
     }
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
-    if (modelCacheDir == null || modelCacheDir.trim().isEmpty()) {
-    	 modelCacheDir = "null";
-    }
+    
     boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
     String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
     if (jarFilePath == null || jarFilePath.trim().isEmpty()) {
@@ -43,28 +41,27 @@
 				// ask again to prevent multiple generate process caused by short coming requests
 				if (de.cimt.talendcomp.xmldynamic.ModelBuilder.isModelAlreadyBuild(xsdFile) == false) {
 					de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
-			      options.createGraph = <%=createGraph%>;
-			      options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
-					String modelCacheDir = <%=modelCacheDir%>;
-					if (modelCacheDir != null && modelCacheDir.trim().isEmpty() == false) {
-						 options.targetDir = modelCacheDir; 
-                                                // FIXME: review this line: options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
-						 globalMap.put("<%=cid%>_MODELCACHE_DIR", options.targetDir);
+					options.createGraph = <%=createGraph%>;
+					options.createJar = <%=createJar%>;
+					options.jarFilePath = <%=jarFilePath%>;
+					options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
+                                        <%if(modelCacheDir!=null){%>
+                                            options.targetDir = new java.io.File( <%=modelCacheDir%> );
+                                        <%}%>
+					
+					if (options.targetDir != null) {
+                                            // FIXME: review this line: options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
+                                            globalMap.put("<%=cid%>_MODELCACHE_DIR", options.targetDir);
 					} else {
-						throw new Exception("Model cache dir cannot be null or empty");
+                                            throw new Exception("Model cache dir cannot be null or empty");
 					}
+
 					options.addGrammar(xsdFile);
 					// build the model
 					de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
 					de.cimt.talendcomp.xmldynamic.Util.printContexts(<%=printAbstractClasses%>);
 <%	if (createJar) { %>
-					de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
-					jarBuilder.setClassFilesRootDir(modelCacheDir);
-					String jarFilePath = <%=jarFilePath%>;
-					jarBuilder.setJarFilePath(jarFilePath);
-					jarBuilder.setGrammarFilePath(xsdFile.getAbsolutePath());
-					jarBuilder.create();
-					globalMap.put("<%=cid%>_JAR_FILE", jarFilePath);
+					globalMap.put("<%=cid%>_JAR_FILE", options.jarFilePath);
 <% } %>
 				}
 			}

@@ -48,10 +48,13 @@ public class XJCOptions extends Options {
     public boolean checksum = false;
     public boolean forceGenerate = false;
     public boolean printGrammar = false;
-    public String checksumValue = "";
-    public String targetName = "gen_" + Util.uniqueString() + ".jar";
-    public String grammarFilePath = null;
+    public boolean createJar = false;
+    public String  jarFilePath = null;
+    public String  checksumValue = "";
+    public String  targetName = "gen_" + Util.uniqueString() + ".jar";
+    public String  grammarFilePath = null;
     public long newestGrammar=0l;
+    
 
     private TypeReadHandler typesHelper = new TypeReadHandler();
     
@@ -288,18 +291,19 @@ public class XJCOptions extends Options {
         return allbindfiles;
     }
 
-	@Override
-	public void addGrammar(File source) {
-		if (source == null) {
-			throw new IllegalArgumentException("source file must not be null");
-		}
-		this.grammarFilePath = source.getAbsolutePath();
-		super.addGrammar(source);
-                
-                if(source.lastModified()>newestGrammar){
-                    System.err.println("update newestGrammar ");
-                    newestGrammar=source.lastModified();
-                }
-	}
+    @Override
+    public void addGrammar(File source) {
+            if (source == null) {
+                    throw new IllegalArgumentException("source file must not be null");
+            }
+            this.grammarFilePath = source.getAbsolutePath();
+            super.addGrammar(source);
 
+            if(source.lastModified()>newestGrammar){
+                System.err.println("update newestGrammar ");
+                newestGrammar=source.lastModified();
+            }
+    }
+
+    
 }

@@ -77,10 +77,5 @@
 	{ // end block for <%=cid%>
 		// build SQL in clause 
 		// start with collecting the keys
-		java.util.List<Object> listKeys = new java.util.ArrayList<Object>();
-		for (Object key : keyMap_<%=cid%>.keySet()) {
-			listKeys.add(key);
-		}
-		// build SQL code
-		globalMap.put("<%=cid%>_KEYS_AS_SQL_IN_CLAUSE", de.cimt.talendcomp.xmldynamic.Util.buildSQLInClause(listKeys));
+		globalMap.put("<%=cid%>_KEYS_AS_SQL_IN_CLAUSE", de.cimt.talendcomp.xmldynamic.Util.buildSQLInClause( keyMap_<%=cid%>.keySet() ));
 	}

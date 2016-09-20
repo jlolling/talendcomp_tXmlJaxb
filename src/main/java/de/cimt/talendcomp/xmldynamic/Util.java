@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.StringReader;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -16,7 +17,7 @@ import javax.xml.namespace.QName;
 
 public final class Util {
     
-    public static String buildSQLInClause(List<? extends Object> keys) {
+    public static String buildSQLInClause(Collection<? extends Object> keys) {
         StringBuilder sb = new StringBuilder();
         boolean firstLoop = true;
         for (Object key : keys) {

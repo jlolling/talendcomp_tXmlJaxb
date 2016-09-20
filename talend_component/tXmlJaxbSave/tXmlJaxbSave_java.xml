@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <COMPONENT>
 	<HEADER 
 		AUTHOR="cimt AG" 
@@ -10,7 +9,7 @@
 		SERIAL="" 
 		STARTABLE="true" 
 		STATUS="PROD" 
-		VERSION="2.4">
+		VERSION="2.6">
 		<SIGNATURE />
 	</HEADER>
 

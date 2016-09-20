@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,7 +95,7 @@ public class ReflectUtil {
     }
 
     @SuppressWarnings("unchecked")
-	public static <T> T convertXML(Object v, Class<?> vClass, Class<T> tClass) {
+    public static <T> T convertXML(Object v, Class<?> vClass, Class<T> tClass) {
         try {
             Source s = null;
             if (CharSequence.class.isAssignableFrom(vClass)) {
@@ -153,7 +154,9 @@ public class ReflectUtil {
      * Convert an object to type tClass This Methods also allows Numbers in
      * localized format and customizations of enum values (like XmlEnumValue).
      *
+     * @param <T> wildcard type of targettype
      * @param v the object to convert
+     * @param vClass class of value v 
      * @param tClass target class
      * @return v the converted object of type tClass
      * @exception java.lang.UnsupportedOperationException in case of any error
@@ -481,7 +484,7 @@ public class ReflectUtil {
                 property.setPublicField(f);
             } else if (mcoll.containsKey(name)) {
                 ExtPropertyAccessor property = mcoll.get(name);
-                Class<?> propertyType = null;
+                Class<?> propertyType;
                 try {
                     propertyType = property.getPropertyType();
                     if (propertyType.equals(type)) {
@@ -489,7 +492,6 @@ public class ReflectUtil {
                     }
                 } catch (NullPointerException exception) {
                     // Nur Setter vorhanden, wird unten durch applyFilter aussortiert.
-                    propertyType = null;
                 }
             }
         }
@@ -561,7 +563,22 @@ public class ReflectUtil {
     }
 
     public static String camelizeName(String attrName) {
-        if (attrName == null) {
+        
+//        // TODO REVIEW PROPOSAL
+//        if (attrName == null || attrName.contains("_") ) {
+//            return attrName;
+//        }
+//        StringTokenizer stok=new StringTokenizer(attrName, "_", false);
+//        
+//        StringBuilder sbuild = new StringBuilder();
+//        while (stok.hasMoreElements()){
+//            final String str=stok.nextToken().toLowerCase();
+//            sbuild.append( Character.toUpperCase( str.charAt(0) ) ).append( str.substring(1) );
+//        }
+//        return sbuild.toString();
+        
+
+        if (attrName == null ) {
             throw new IllegalArgumentException("attrName cannot be null");
         }
         if (attrName.contains("_")) {

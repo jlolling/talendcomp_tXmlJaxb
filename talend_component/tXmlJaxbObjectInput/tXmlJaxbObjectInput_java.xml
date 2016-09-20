@@ -9,7 +9,7 @@
 		SERIAL="" 
 		STARTABLE="true" 
 		STATUS="BETA" 
-		VERSION="2.4">
+		VERSION="2.6">
 		<SIGNATURE />
 	</HEADER>
 
@@ -141,7 +141,7 @@
 
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.4.jar" REQUIRED="true" />
+			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="cimt-talendcomp-xmldynamic-2.6.jar" REQUIRED="true" />
 		</IMPORTS>		
 	</CODEGENERATION>
 	
