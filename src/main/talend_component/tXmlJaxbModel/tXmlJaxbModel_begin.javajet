@@ -1,0 +1,74 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();	
+    String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__");
+    if (xsdFile == null || xsdFile.trim().isEmpty()) {
+    	 xsdFile = "null";
+    }
+    String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
+    
+    boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
+    String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
+    if (jarFilePath == null || jarFilePath.trim().isEmpty()) {
+    	 jarFilePath = "null";
+    }
+    boolean printAbstractClasses = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_ABSTRACT_CLASSES__"));
+    boolean createGraph = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_DOCUMENT_GRAPH__"));
+    boolean enableBasicSubstitution = "true".equals(ElementParameterParser.getValue(node, "__PERFORM_TYPE_SUBSTITUTE__"));
+%>
+	try {
+		String xsdFilePath = <%=xsdFile%>;
+                // TODO: please avoid variable names used outside jet
+		java.io.File xsdFile = null;
+		if (xsdFilePath != null && xsdFilePath.trim().isEmpty() == false) {
+			 xsdFile = new java.io.File(xsdFilePath);
+			 if (xsdFile.exists() == false) {
+			 	  throw new Exception("XSD file: " + xsdFile.getAbsolutePath() + " does not exists!");
+			 }
+		} else {
+			 throw new Exception("No xsd file path given!");
+		}
+		if (de.cimt.talendcomp.xmldynamic.ModelBuilder.isModelAlreadyBuild(xsdFile) == false) {
+			synchronized(de.cimt.talendcomp.xmldynamic.ModelBuilder.lock) {
+				// ask again to prevent multiple generate process caused by short coming requests
+				if (de.cimt.talendcomp.xmldynamic.ModelBuilder.isModelAlreadyBuild(xsdFile) == false) {
+					de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
+					options.createGraph = <%=createGraph%>;
+					options.createJar = <%=createJar%>;
+					options.jarFilePath = <%=jarFilePath%>;
+					options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
+                                        <%if(modelCacheDir!=null){%>
+                                            options.targetDir = new java.io.File( <%=modelCacheDir%> );
+                                        <%}%>
+					
+					if (options.targetDir != null) {
+                                            // FIXME: review this line: options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
+                                            globalMap.put("<%=cid%>_MODELCACHE_DIR", options.targetDir);
+					} else {
+                                            throw new Exception("Model cache dir cannot be null or empty");
+					}
+
+					options.addGrammar(xsdFile);
+					// build the model
+					de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
+					de.cimt.talendcomp.xmldynamic.Util.printContexts(<%=printAbstractClasses%>);
+<%	if (createJar) { %>
+					globalMap.put("<%=cid%>_JAR_FILE", options.jarFilePath);
+<% } %>
+				}
+			}
+		} else {
+			de.cimt.talendcomp.xmldynamic.ModelBuilder.debug("Model for grammar file: " + xsdFile.getAbsolutePath() + " already generated. Skip generate step in job: " + jobName);
+		}
+   } catch (Exception e) {
+   	globalMap.put("<%=cid%>_ERROR_MESSAGE", "Build model failed: " + e.getMessage());
+   	throw e;
+   }

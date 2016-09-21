@@ -131,15 +131,16 @@ public final class ModelBuilder {
         if(opt.forceGenerate || opt.targetDir == null || !opt.targetDir.exists() ){
             return true;
         }
-
          
         if(opt.createJar){
             if( opt.jarFilePath==null)
                 return true;
+            
             final File jar=new File(opt.jarFilePath);
             
-            if(!jar.exists() || jar.lastModified()>opt.newestGrammar)
+            if(!jar.exists() || jar.lastModified()<opt.newestGrammar){
                 return true;
+            }
         } else {
             final List<File> listFiles = listFiles(opt.targetDir, true, "TXMLBinding");    
             if(listFiles.isEmpty()){
@@ -147,12 +148,10 @@ public final class ModelBuilder {
             }
             for(File f : listFiles){
                 if(f.lastModified()<opt.newestGrammar){
-
                     return true;
                 }
             }
         }
-        
         return false;
         
     }
@@ -216,6 +215,13 @@ public final class ModelBuilder {
                 if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
                     throw new Exception(Messages.COMPILATION_FAILED);
                 }
+                if(opt.createJar){
+                    JarUtil jarBuilder = new JarUtil();
+                    jarBuilder.setJarFilePath( opt.jarFilePath );
+                    jarBuilder.setGrammarFilePath( opt.grammarFilePath );
+                    jarBuilder.setClassFilesRootDir(opt.targetDir.getAbsolutePath() );
+                    jarBuilder.create();
+                }
             }
             
             models.add(opt.grammarFilePath);
@@ -223,31 +229,20 @@ public final class ModelBuilder {
                 if (!opt.extendClasspath) {
                     return;
                 }
+                LOG.debug("extend Classpath using classes");
                 Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
                 method.setAccessible(true);
                 method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{opt.targetDir.toURI().toURL()});
             } else {
-                JarUtil jarBuilder = new JarUtil();
-                jarBuilder.setJarFilePath( opt.jarFilePath );
-                jarBuilder.setGrammarFilePath( opt.grammarFilePath );
-                jarBuilder.setClassFilesRootDir(opt.targetDir.getAbsolutePath() );
-                jarBuilder.create();
                 
                 if (!opt.extendClasspath) {
                     return;
                 }
+                LOG.debug("extend Classpath using jar file");
                 Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
                 method.setAccessible(true);
                 method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{ new File(opt.jarFilePath).toURI().toURL()});
-/*                
-                de.cimt.talendcomp.xmldynamic.JarUtil jarBuilder = new de.cimt.talendcomp.xmldynamic.JarUtil();
-                jarBuilder.setClassFilesRootDir(modelCacheDir);
-                String jarFilePath = <%=jarFilePath%>;
-                jarBuilder.setJarFilePath(jarFilePath);
-                jarBuilder.setGrammarFilePath(xsdFile.getAbsolutePath());
-                jarBuilder.create();
-                globalMap.put("<%=cid%>_JAR_FILE", jarFilePath);
-*/           
+
             }
     	} else {
             LOG.debug("Model for schema file: " + opt.grammarFilePath + " already generated, skip generate step.");

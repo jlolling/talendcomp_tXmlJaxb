@@ -1,0 +1,139 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.core.model.utils.NodeUtil
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		java.util.List 
+		java.util.ArrayList 
+    	java.util.Map		
+	" 
+%>
+<% 
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode) codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	String setup = ElementParameterParser.getValue(node, "__SETUP__");
+	String xmlString = "null";
+ 	if ("READ_FROM_INPUT_PLAIN_TEXT".equals(setup)) {
+		xmlString = ElementParameterParser.getValue(node, "__XML_CONTENT_PLAIN_TEXT__");
+    	if (xmlString  != null && xmlString.trim().isEmpty() == false) {
+	    	xmlString = "\"" + xmlString.trim().replace("\r", "")
+	    													.replace("\\", "\\\\")
+	    													.replace("\"", "\\\"")
+	    													.replace("\n", "\\n\" +\n\"") + "\"";
+	   } else {
+    		xmlString = "null";
+    	}
+	} else if ("READ_FROM_INPUT".equals(setup)) {
+		boolean simplifiedLineBreaks = "true".equals(ElementParameterParser.getValue(node, "__SIMPLIFIED_LINE_BREAKS__"));
+		xmlString = ElementParameterParser.getValue(node, "__XML_CONTENT__");
+    	if (xmlString  != null && xmlString.trim().isEmpty() == false) {
+    		if (simplifiedLineBreaks) {
+	    		xmlString = xmlString.trim().replace("\r", "").replace("\n", "\\n\" +\n\"");
+    		} else {
+	    		xmlString = xmlString.trim().replace("\r", "");
+    		}
+	   } else {
+    		xmlString = "null";
+    	}
+	}
+	String file = ElementParameterParser.getValue(node, "__FILENAME__");
+	if (file == null || file.trim().isEmpty()) {
+    	 file = "null";
+	}
+	IConnection conn = null;
+	List<? extends IConnection> inConns = NodeUtil.getOutgoingConnections(node, IConnectionCategory.DATA);
+	if (inConns.size() > 0) {
+		conn = inConns.get(0);
+	}
+	List<IMetadataColumn> listColumns = new ArrayList<IMetadataColumn>(); // dummy
+	List<IMetadataTable> metadatas = node.getMetadataList();
+	if (metadatas != null && metadatas.size() > 0) {
+    	IMetadataTable metadata = metadatas.get(0);
+    	if (metadata != null) {
+    		listColumns = metadata.getListColumns();
+		}
+	}
+	@SuppressWarnings("unchecked")	
+	List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
+   boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
+   String parentComp = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
+   String attrPath = ElementParameterParser.getValue(node, "__ATTRIBUTE_PATH__");
+   if (attrPath == null) {
+   	attrPath = "null";
+   }
+%>
+	java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> <%=cid%>_loopList = null;
+<% if (isRoot) { %>
+	try {
+		// initiating the root
+<%		if ("READ_FROM_INPUT".equals(setup) || "READ_FROM_INPUT_PLAIN_TEXT".equals(setup)) { %>
+		String xmlContent = <%=xmlString%>;
+		de.cimt.talendcomp.xmldynamic.TXMLObject root = de.cimt.talendcomp.xmldynamic.Util.unmarshall(xmlContent);
+<% 	} else if ("READ_FROM_FILE".equals(setup)) { %>
+		java.io.File file = new java.io.File(<%=file%>);
+		globalMap.put("<%=cid%>_FILENAME", file.getAbsolutePath());
+		de.cimt.talendcomp.xmldynamic.TXMLObject root = de.cimt.talendcomp.xmldynamic.Util.unmarshall(file);
+<% 	} %>
+		<%=cid%>_loopList = new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>();
+		<%=cid%>_loopList.add(root);
+		globalMap.put("<%=cid%>_CURRENT_OBJECT", root);
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Initialize root document failed: " + e.getMessage());
+		throw e;
+	}
+<%	} else { %>
+	try {
+		// start with a already existing object
+		de.cimt.talendcomp.xmldynamic.TXMLObject parent = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get("<%=parentComp%>_CURRENT_OBJECT");
+		if (parent == null) {
+			throw new Exception("The parent component <%=parentComp%> does not provide an object. That should not happened!");
+		}
+		String attributePath = <%=attrPath%>;
+		<%=cid%>_loopList = de.cimt.talendcomp.xmldynamic.Util.getTXMLObjects(parent, attributePath, false, true);
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Get loop object failed: " + e.getMessage());
+		throw e;
+	}
+<%	} // if (root == false) %>
+<% if (conn != null) { %>
+	int counter_<%=cid%> = 0;
+	// looping of the returned objects
+	for (de.cimt.talendcomp.xmldynamic.TXMLObject <%=cid%>_currentObject : <%=cid%>_loopList) {
+	   // make the object available for other components in iterations
+		globalMap.put("<%=cid%>_CURRENT_OBJECT", <%=cid%>_currentObject);
+		// increment the counter
+		Integer <%=cid%>_numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+		if (<%=cid%>_numberObjects == null) {
+			<%=cid%>_numberObjects = 0;
+		}
+		globalMap.put("<%=cid%>_NB_LINE", <%=cid%>_numberObjects + 1);
+		// start iterating through the fields
+<%		for (int i = 0; i < listColumns.size(); i++) {
+			IMetadataColumn mc = listColumns.get(i);
+			Map<String, String> config = configList.get(i);
+			boolean use = "true".equals(config.get("USE"));
+			if (use == false) {
+				continue; // skip over unused columns
+			}
+			String fieldName = config.get("ATTRIBUTE_ALIAS");
+			boolean ignoreMissing = "true".equals(config.get("IGNORE_MISSING"));
+			if (fieldName == null || fieldName.trim().isEmpty() || fieldName.equals("\"\"")) {
+				fieldName = "\"" + mc.getLabel() + "\"";
+			}
+			boolean isNullable = mc.isNullable();
+			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), isNullable); %>
+		try {
+			<%=conn.getName()%>.<%=mc.getLabel()%> = (<%=javaPackageClassName%>) <%=cid%>_currentObject.get(<%=fieldName%>, <%=javaPackageClassName%>.class, <%=ignoreMissing%>, <%=isNullable%>);
+		} catch (Exception e) {
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", "Get attribute value: " + <%=fieldName%> + " failed: " + e.getMessage());
+			throw e;
+		}
+<%		} // for %>
+<%	} // if (conn != null) %>

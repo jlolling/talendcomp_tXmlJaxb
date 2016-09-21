@@ -1,0 +1,31 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+	" 
+%>
+<% 
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode) codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+   boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
+   String className = ElementParameterParser.getValue(node, "__CLASS_NAME__");
+   boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));
+%>
+	java.util.Map<Object, de.cimt.talendcomp.xmldynamic.TXMLObject> keyMap_<%=cid%> = new java.util.HashMap<Object, de.cimt.talendcomp.xmldynamic.TXMLObject>();
+	globalMap.put("keyMap_<%=cid%>", keyMap_<%=cid%>);
+<% if (isRoot == false) { %>
+	java.util.Map<Object, java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>> foreignKeyMap_<%=cid%> = new java.util.HashMap<Object, java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>>();
+	globalMap.put("foreignKeyMap_<%=cid%>", foreignKeyMap_<%=cid%>);
+<% } %>
+<%	if (createObjectAtBegin || isRoot) { %>
+	try {
+		// now create the new object
+		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) Class.forName(<%=className%>).newInstance();
+		globalMap.put("<%=cid%>_CURRENT_OBJECT", currentObject);
+	} catch (Exception e) {
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Instantiation of object failed: " + e.getMessage());
+		throw e;
+	}
+<%	} %>

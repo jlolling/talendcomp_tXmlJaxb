@@ -300,7 +300,6 @@ public class XJCOptions extends Options {
             super.addGrammar(source);
 
             if(source.lastModified()>newestGrammar){
-                System.err.println("update newestGrammar ");
                 newestGrammar=source.lastModified();
             }
     }
