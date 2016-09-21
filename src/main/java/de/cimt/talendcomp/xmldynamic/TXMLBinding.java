@@ -54,6 +54,7 @@ abstract class InternalTXMLBindingHelper implements TXMLBinding {
         return false;
     }
     
+    @Override
     public Class<TXMLObject> find(QName qn){
         final String nsuri= (qn.getNamespaceURI()!=null) ? qn.getNamespaceURI() : ANYNAMESPACE;
         
@@ -61,13 +62,8 @@ abstract class InternalTXMLBindingHelper implements TXMLBinding {
             for(Class<TXMLObject> c : getElements()){
                 // only perform namespacecheck when required
                 if(!ANYNAMESPACE.equals(nsuri)){
-                    XmlSchema[] schemas=(XmlSchema[]) c.getPackage().getDeclaredAnnotationsByType(XmlSchema.class);
-                    boolean nsMatch=false;
-                    for(XmlSchema schema : schemas){
-                        if(schema.namespace().equals( nsuri ))
-                            nsMatch=true;
-                    }
-                    if(!nsMatch)
+                    XmlSchema schema=(XmlSchema) c.getPackage().getAnnotation(XmlSchema.class);
+                    if(schema==null || !schema.namespace().equals( nsuri ))
                         continue;
                 }
                 
@@ -84,6 +80,7 @@ abstract class InternalTXMLBindingHelper implements TXMLBinding {
         
     }
     
+    @Override
     public boolean isMember(QName qn){
         return find(qn)!=null;
     }
