@@ -19,10 +19,10 @@ import org.xml.sax.SAXException;
  *
  * @author daniel.koch@cimt-ag.de
  */
-public class TypeReadHandler extends BaseFilter {
-
-    private final List<Pair<String, String>> complexTypes = new ArrayList<Pair<String, String>>();
-    private final Map<Pair<String, String>, AtomicInteger> usageCount = new HashMap<Pair<String, String>, AtomicInteger>() {
+public abstract class TypeReadHandler extends BaseFilter {
+/*
+    private final List<Pair<String, String>> _complexTypes = new ArrayList<Pair<String, String>>();
+    private final Map<Pair<String, String>, AtomicInteger> _usageCount = new HashMap<Pair<String, String>, AtomicInteger>() {
         private static final long serialVersionUID = 1L;
 
         @SuppressWarnings("unchecked")
@@ -36,7 +36,26 @@ public class TypeReadHandler extends BaseFilter {
             return val;
         }
     };
+    
+    public Set<Pair<String, String>> getComplexTypes() {
+        return CollectionUtil.filterMap(usageCount, new Filter<Pair<String, String>>() {
+                @Override
+                public boolean matches(Pair<String, String> t) {
+                    return complexTypes.contains(t);
+                }
+            },
+                    new Filter<AtomicInteger>() {
+                @Override
+                public boolean matches(AtomicInteger t) {
+                    return t.get() > 1;
+                }
 
+            }).keySet();
+    }*/ 
+    public abstract int incrementUsageCount(Pair<String, String> type);
+    public abstract void registerComplexType(Pair<String, String> complexType);
+  
+    
     @Override
     public void startDocument() throws SAXException {
         prefixmapping.clear();
@@ -56,12 +75,12 @@ public class TypeReadHandler extends BaseFilter {
                             ? new Pair<String, String>(prefixmapping.get(""), type)
                             : new Pair<String, String>(prefixmapping.get(type.substring(0, pos)), type.substring(pos + 1));
 
-                    usageCount.get(fqtype).incrementAndGet();
+                   incrementUsageCount(fqtype);
                 }
             } else if (localName.equalsIgnoreCase("complexType")) {
                 String name = attributes.getValue("name");
                 if (name != null) {
-                    this.complexTypes.add(new Pair<String, String>(prefixmapping.get("$TNS"), name));
+                   registerComplexType(new Pair<String, String>(prefixmapping.get("$TNS"), name));
                 }
             } else if (localName.equalsIgnoreCase("extension") || localName.equalsIgnoreCase("restriction")) {
                 String type = attributes.getValue("base");
@@ -71,39 +90,14 @@ public class TypeReadHandler extends BaseFilter {
                             ? new Pair<String, String>(prefixmapping.get(""), type)
                             : new Pair<String, String>(prefixmapping.get(type.substring(0, pos)), type.substring(pos + 1));
 
-                    usageCount.get(fqtype).incrementAndGet();
+                    incrementUsageCount(fqtype);
                 }
             } else if (localName.equalsIgnoreCase("schema") ) {
                 String tns = attributes.getValue("targetNamespace");
-//                if(!prefixmapping.containsKey("$TNS") && tns!=null)
                 prefixmapping.put("$TNS", tns);
                 
             }
         }
         super.startElement(uri, localName, qName, attributes);
     }
-
-    public Set<Pair<String, String>> getComplexTypes() {
-
-//        for (Entry<Pair<String, String>, AtomicInteger> entry : usageCount.entrySet()) {
-//            System.out.println("\t" + entry.getKey() + " => " + entry.getValue());
-//        }
-//        final Set<Pair<String, String>> s = 
-        return CollectionUtil.filterMap(usageCount,
-                new Filter<Pair<String, String>>() {
-            @Override
-            public boolean matches(Pair<String, String> t) {
-                return complexTypes.contains(t);
-            }
-        },
-                new Filter<AtomicInteger>() {
-            @Override
-            public boolean matches(AtomicInteger t) {
-                return t.get() > 1;
-            }
-
-        }).keySet();
-    }
-    
-    
 }

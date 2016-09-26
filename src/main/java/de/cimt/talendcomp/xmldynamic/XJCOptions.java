@@ -33,6 +33,10 @@ import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
 import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
 import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
+import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.colllib.filter.Filter;
+import org.colllib.util.CollectionUtil;
 
 /**
  *
@@ -56,14 +60,29 @@ public class XJCOptions extends Options {
     public long newestGrammar=0l;
     
 
-    private TypeReadHandler typesHelper = new TypeReadHandler();
+//    private TypeReadHandler typesHelper = new TypeReadHandler();
     
     // stores relations between source and alias
     private final Map<String, String> grammarCache = new HashMap<String, String>();
     
     // temporary directory used to store modified grammars
     private final File tmproot;
+    private final List<Pair<String, String>> _complexTypes = new ArrayList<Pair<String, String>>();
+    private final Map<Pair<String, String>, AtomicInteger> _usageCount = new HashMap<Pair<String, String>, AtomicInteger>() {
+        private static final long serialVersionUID = 1L;
 
+        @SuppressWarnings("unchecked")
+        @Override
+        public AtomicInteger get(Object key) {
+            AtomicInteger val = super.get(key);
+            if (val == null) {
+                val = new AtomicInteger(0);
+                put((Pair<String, String>) key, val);
+            }
+            return val;
+        }
+    };
+    
 //    private Set<Pair<String, String>> complexTypes=new TreeSet<Pair<String, String>>(); 
     /**
      * used to activate printing of manipulated grammars before generating code model
@@ -91,7 +110,23 @@ public class XJCOptions extends Options {
         enableIntrospection = true;
         verbose = true;
     }
+    
+    private Set<Pair<String, String>> getComplexTypes() {
+        return CollectionUtil.filterMap(_usageCount, new Filter<Pair<String, String>>() {
+                @Override
+                public boolean matches(Pair<String, String> t) {
+                    return _complexTypes.contains(t);
+                }
+            },
+                    new Filter<AtomicInteger>() {
+                @Override
+                public boolean matches(AtomicInteger t) {
+                    return t.get() > 1;
+                }
 
+            }).keySet();
+    }
+    
     @Override
     protected void finalize() throws Throwable {
         for (File f : tmproot.listFiles()) {
@@ -138,7 +173,19 @@ public class XJCOptions extends Options {
             if (source.getClass().equals(InMemorySource.class)) {
                 alias = ((InMemorySource) source).alias;
             } 
-            chain.add(typesHelper);
+            
+            chain.add( new TypeReadHandler(){
+                @Override
+                public int incrementUsageCount(Pair<String, String> type) {
+                    return _usageCount.get(type).incrementAndGet();
+                }
+
+                @Override
+                public void registerComplexType(Pair<String, String> complexType) {
+                    _complexTypes.add(complexType);
+                }
+            });
+            
             DependencyFilter df = new DependencyFilter(rootURI) {
                 
                 @Override
@@ -208,7 +255,7 @@ public class XJCOptions extends Options {
             spf.setNamespaceAware(true);
             spf.setXIncludeAware(true);
             
-            final Set<Pair<String, String>> typeBindings = typesHelper.getComplexTypes();
+            final Set<Pair<String, String>> typeBindings = getComplexTypes();
             PluginFilter pluginFilter = new PluginFilter() {
                 @Override
                 public boolean testManipulationRequired(Pair<String, String> fqtype) {
