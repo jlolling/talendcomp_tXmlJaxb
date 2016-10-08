@@ -140,9 +140,6 @@
 	</ADVANCED_PARAMETERS>
 
 	<CODEGENERATION>
-		<IMPORTS>
-			<IMPORT NAME="de.cimt.talendcomp.xmldynamic" MODULE="${build.finalName}.jar" REQUIRED="true" />
-		</IMPORTS>		
 	</CODEGENERATION>
 	
 	<RETURNS>

@@ -1,13 +1,14 @@
 package de.cimt.talendcomp.xmldynamic.filter;
 
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
-import de.cimt.talendcomp.xmldynamic.Util;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -17,10 +18,13 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import de.cimt.talendcomp.xmldynamic.Util;
 
 /**
  * extracts schemainformations from wsdl
@@ -130,8 +134,6 @@ public class WSDLSchemaFilter extends BaseFilter {
 
     @Override
     public void setContentHandler(ContentHandler handler) {
-        // FIXME: REMOVE OUTPUT
-        System.err.println("setContentHandler "+handler);
         this.handler = handler;
     }
 
