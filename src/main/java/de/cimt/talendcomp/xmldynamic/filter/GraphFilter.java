@@ -2,8 +2,11 @@ package de.cimt.talendcomp.xmldynamic.filter;
 
 import java.util.Arrays;
 import java.util.Stack;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+
+import de.cimt.talendcomp.xmldynamic.ReflectUtil;
 
 /**
  * class to allow printing of document graphs. this is the initial version and 
@@ -78,7 +81,9 @@ public class GraphFilter extends BaseFilter {
     @Override
     public void endDocument() throws SAXException {
         super.endDocument();
-        System.err.println(buffer.toString());
+        if (ReflectUtil.isPrintDebugInfo()) {
+            System.err.println(buffer.toString());
+        }
     }
 
 }

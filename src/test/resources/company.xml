@@ -14,12 +14,12 @@
             <ns5:_house_number xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:int">21</ns5:_house_number>
             <ns5:city>Tegel</ns5:city>
         </ns5:poaddress>
-        <ns5:age>2016-09-05+02:00</ns5:age>
+        <ns5:age>2016-10-08+02:00</ns5:age>
     </ns5:customer>
     <ns5:customer>
         <ns5:id>B</ns5:id>
         <ns5:name>Jan</ns5:name>
-        <ns5:age>2016-09-05+02:00</ns5:age>
+        <ns5:age>2016-10-08+02:00</ns5:age>
         <ns5:title>Dr.</ns5:title>
         <ns5:title>Mr.</ns5:title>
     </ns5:customer>

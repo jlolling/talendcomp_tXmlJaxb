@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,9 +62,12 @@ import org.w3c.dom.Node;
 /**
  *
  * Angepasste aus Colllib um die bestehenden Funktionen zu erweitern
+ * TODO: let us enhance the collib library
  */
 public class ReflectUtil {
 
+	private static boolean printDebugInfo = false;
+	
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static Number convertNumber(String text, Class type) throws ParseException {
         Number numb = null;
@@ -125,7 +127,6 @@ public class ReflectUtil {
                 TransformerFactory.newInstance().newTransformer().transform(s, result);
                 return (T) result.getResult();
             }
-
             return TypeUtil.convert(v, vClass, tClass);
         } catch (Throwable t) {
             throw new RuntimeException(t);
@@ -530,15 +531,17 @@ public class ReflectUtil {
                 return (Class<?>) ((ParameterizedType) t).getRawType();
             }
             if (t instanceof TypeVariable) {
-                System.err.println("T     =" + t);
-                System.err.println("NAME  =" + ((TypeVariable<?>) t).getName());
-                System.err.println("BOUNDS=" + Arrays.asList(((TypeVariable<?>) t).getBounds()));
-                GenericDeclaration gd = ((TypeVariable<?>) t).getGenericDeclaration();
-                System.err.println("GD    =" + gd);
-                for (TypeVariable<?> v : gd.getTypeParameters()) {
-                    System.err.println(v.getClass());
-                }
-                return (Class<?>) ((TypeVariable<?>) t).getName().getClass();
+            	if (isPrintDebugInfo()) {
+                    System.err.println("T     =" + t);
+                    System.err.println("NAME  =" + ((TypeVariable<?>) t).getName());
+                    System.err.println("BOUNDS=" + Arrays.asList(((TypeVariable<?>) t).getBounds()));
+                    GenericDeclaration gd = ((TypeVariable<?>) t).getGenericDeclaration();
+                    System.err.println("GD    =" + gd);
+                    for (TypeVariable<?> v : gd.getTypeParameters()) {
+                        System.err.println(v.getClass());
+                    }
+            	}
+                return ((TypeVariable<?>) t).getName().getClass();
             }
             return (Class<?>) t;
         } catch (ClassCastException cce) {
@@ -620,5 +623,13 @@ public class ReflectUtil {
             return className;
         }
     }
+
+	public static boolean isPrintDebugInfo() {
+		return printDebugInfo;
+	}
+
+	public static void setPrintDebugInfo(boolean printDebugInfo) {
+		ReflectUtil.printDebugInfo = printDebugInfo;
+	}
 
 }
