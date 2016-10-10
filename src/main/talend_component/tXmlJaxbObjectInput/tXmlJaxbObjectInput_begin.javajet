@@ -62,12 +62,14 @@
 	}
 	@SuppressWarnings("unchecked")	
 	List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
-   boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
-   String parentComp = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
-   String attrPath = ElementParameterParser.getValue(node, "__ATTRIBUTE_PATH__");
-   if (attrPath == null) {
+	boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
+	String parentComp = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
+	String attrPath = ElementParameterParser.getValue(node, "__ATTRIBUTE_PATH__");
+	if (attrPath == null) {
    	attrPath = "null";
-   }
+	}
+    boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
+   							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
 %>
 	java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> <%=cid%>_loopList = null;
 <% if (isRoot) { %>
@@ -84,8 +86,12 @@
 		<%=cid%>_loopList = new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>();
 		<%=cid%>_loopList.add(root);
 		globalMap.put("<%=cid%>_CURRENT_OBJECT", root);
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Initialize root document failed: " + e.getMessage());
+	} catch (Throwable e) {
+		String message = "Initialize root document failed: " + e.getMessage();
+<%		if (log4jEnabled) { %>
+		log.error(currentComponent + ": " + message, e);
+<%		} %>
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;
 	}
 <%	} else { %>
@@ -97,8 +103,12 @@
 		}
 		String attributePath = <%=attrPath%>;
 		<%=cid%>_loopList = de.cimt.talendcomp.xmldynamic.Util.getTXMLObjects(parent, attributePath, false, true);
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Get loop object failed: " + e.getMessage());
+	} catch (Throwable e) {
+		String message = "Get loop object failed: " + e.getMessage();
+<%		if (log4jEnabled) { %>
+		log.error(currentComponent + ": " + message, e);
+<%		} %>
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;
 	}
 <%	} // if (root == false) %>
@@ -131,8 +141,12 @@
 			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), isNullable); %>
 		try {
 			<%=conn.getName()%>.<%=mc.getLabel()%> = (<%=javaPackageClassName%>) <%=cid%>_currentObject.get(<%=fieldName%>, <%=javaPackageClassName%>.class, <%=ignoreMissing%>, <%=isNullable%>);
-		} catch (Exception e) {
-			globalMap.put("<%=cid%>_ERROR_MESSAGE", "Get attribute value: " + <%=fieldName%> + " failed: " + e.getMessage());
+		} catch (Throwable e) {
+			String message = "Get attribute value: " + <%=fieldName%> + " failed: " + e.getMessage();
+<%			if (log4jEnabled) { %>
+			log.error(currentComponent + ": " + message, e);
+<%			} %>
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 			throw e;
 		}
 <%		} // for %>

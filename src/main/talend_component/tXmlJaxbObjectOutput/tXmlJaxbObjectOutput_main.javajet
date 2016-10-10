@@ -32,12 +32,14 @@
 	}
 	@SuppressWarnings("unchecked")	
 	List<Map<String, String>> configList = (List<Map<String,String>>) ElementParameterParser.getObjectValue(node, "__COLUMN_CONFIG__");
-   String className = ElementParameterParser.getValue(node, "__CLASS_NAME__");
-   boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
-   boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
-   String parentObject = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
-   String parentKeyField = ElementParameterParser.getValue(node, "__PARENT_KEY_COLUMN__");
-   boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));
+	String className = ElementParameterParser.getValue(node, "__CLASS_NAME__");
+	boolean isRoot = "true".equals(ElementParameterParser.getValue(node, "__IS_ROOT__"));
+	boolean autoRelations = "true".equals(ElementParameterParser.getValue(node, "__AUTOMATIC_PARENT_CHILD_RELATIONS__"));
+	String parentObject = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
+	String parentKeyField = ElementParameterParser.getValue(node, "__PARENT_KEY_COLUMN__");
+	boolean createObjectAtBegin = "true".equals(ElementParameterParser.getValue(node, "__CREATE_OBJECT_ONCE__"));
+    boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
+   							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
 %>
 <%	if (createObjectAtBegin == false && isRoot == false) { %>
 	try {
@@ -59,7 +61,7 @@
 		globalMap.put("<%=cid%>_NB_LINE", <%=cid%>_numberObjects + 1);
 		// fill the attributes
 <% String keyFieldName = null;
-   for (int i = 0; i < listColumns.size(); i++) {
+	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
 		if (mc.isKey()) {
 			keyFieldName = mc.getLabel();
@@ -73,28 +75,27 @@
 		boolean ignoreMissing = "true".equals(config.get("IGNORE_MISSING"));
 		if (fieldName == null || fieldName.trim().isEmpty() || fieldName.equals("\"\"")) {
 			fieldName = "\"" + mc.getLabel() + "\"";
-		}
-		%>
+		} %>
 		if (currentObject.addOrSet(<%=fieldName%>, <%=conn.getName()%>.<%=mc.getLabel()%>) == false) {
-<%    if (ignoreMissing == false) { %>
+<%		if (ignoreMissing == false) { %>
 			throw new Exception("Attribute: <%=className.replace("\"","")%>.<%=fieldName.replace("\"","")%> does not exist!");
-<%    } else { %>
+<%		} else { %>
 			// we ignore the fact the attribute does not exists
-<%    } // if (ignoreMissing == false) %>
+<%		} // if (ignoreMissing == false) %>
 		}
-<% } // for (int i = 0; i < listColumns.size(); i++)
+<%	} // for (int i = 0; i < listColumns.size(); i++)
 	if (keyFieldName == null) { %>
 		// No key field defined !
 <%	} else { %>
 		// memorize key with current object
 		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
 <%	}
-   if (isRoot == false) {
-   	INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
-   	boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
-   	if (autoRelations == false || parentIsRoot) {
+	if (isRoot == false) {
+   		INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
+   		boolean parentIsRoot = "true".equals(ElementParameterParser.getValue(parentNode, "__IS_ROOT__"));
+   		if (autoRelations == false || parentIsRoot) {
 			if (createObjectAtBegin == false) { %>
-   	// add current object to parent if we do run this flow per parent object (iteration)
+   		// add current object to parent if we do run this flow per parent object (iteration)
 		// but we only can do this if the current object was not created right at the beginning 
 		// otherwise the assignment to the parent will be done in the end part
 		String parentObjectCompentName = "<%=parentObject%>";
@@ -114,9 +115,13 @@
 			foreignKeyMap_<%=cid%>.put(<%=conn.getName()%>.<%=parentKeyField%>, listObjectsForParent);
 		}
 		listObjectsForParent.add(currentObject);
-<% 	} // if (autoRelations == false || parentIsRoot)
+<% 		} // if (autoRelations == false || parentIsRoot)
  	} // if (isRoot == false) %>
-	} catch (Exception e) {
-		globalMap.put("<%=cid%>_ERROR_MESSAGE", e.getMessage());
+	} catch (Throwable e) {
+		String message = "Set values failed: " + e.getMessage();
+<%	if (log4jEnabled) { %>
+		log.error(currentComponent + ": " + message, e);
+<%	} %>
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;
 	}

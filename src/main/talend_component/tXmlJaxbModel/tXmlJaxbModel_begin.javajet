@@ -11,10 +11,9 @@
     String cid = node.getUniqueName();	
     String xsdFile = ElementParameterParser.getValue(node, "__XSD_FILE__");
     if (xsdFile == null || xsdFile.trim().isEmpty()) {
-    	 xsdFile = "null";
+		xsdFile = "null";
     }
     String modelCacheDir = ElementParameterParser.getValue(node, "__MODELCACHE_DIR__");
-    
     boolean createJar = "true".equals(ElementParameterParser.getValue(node, "__CREATE_JAR_FILE__"));
     String jarFilePath = ElementParameterParser.getValue(node, "__JAR_FILE__");
     if (jarFilePath == null || jarFilePath.trim().isEmpty()) {
@@ -23,10 +22,12 @@
     boolean printAbstractClasses = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_ABSTRACT_CLASSES__"));
     boolean createGraph = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_DOCUMENT_GRAPH__"));
     boolean enableBasicSubstitution = "true".equals(ElementParameterParser.getValue(node, "__PERFORM_TYPE_SUBSTITUTE__"));
+    boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
+   							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
 %>
 	try {
 		String xsdFilePath = <%=xsdFile%>;
-                // TODO: please avoid variable names used outside jet
+        // TODO: please avoid variable names used outside jet
 		java.io.File xsdFile = null;
 		if (xsdFilePath != null && xsdFilePath.trim().isEmpty() == false) {
 			 xsdFile = new java.io.File(xsdFilePath);
@@ -45,30 +46,31 @@
 					options.createJar = <%=createJar%>;
 					options.jarFilePath = <%=jarFilePath%>;
 					options.enableBasicSubstitution = <%=enableBasicSubstitution%>;
-                                        <%if(modelCacheDir!=null){%>
-                                            options.targetDir = new java.io.File( <%=modelCacheDir%> );
-                                        <%}%>
-					
+<%	if (modelCacheDir!=null) { %>
+					// FIXME: review this line: options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
+					options.targetDir = new java.io.File( <%=modelCacheDir%> );
+<%	} %>
 					if (options.targetDir != null) {
-                                            // FIXME: review this line: options.targetDir = de.cimt.talendcomp.xmldynamic.ModelBuilder.setupModelDir(modelCacheDir);
-                                            globalMap.put("<%=cid%>_MODELCACHE_DIR", options.targetDir);
+						globalMap.put("<%=cid%>_MODELCACHE_DIR", options.targetDir);
 					} else {
-                                            throw new Exception("Model cache dir cannot be null or empty");
+						throw new Exception("Model cache dir cannot be null or empty");
 					}
-
 					options.addGrammar(xsdFile);
 					// build the model
 					de.cimt.talendcomp.xmldynamic.ModelBuilder.generate(options, new com.sun.codemodel.JCodeModel());
 					de.cimt.talendcomp.xmldynamic.Util.printContexts(<%=printAbstractClasses%>);
 <%	if (createJar) { %>
 					globalMap.put("<%=cid%>_JAR_FILE", options.jarFilePath);
-<% } %>
+<%	} %>
 				}
 			}
 		} else {
 			de.cimt.talendcomp.xmldynamic.ModelBuilder.debug("Model for grammar file: " + xsdFile.getAbsolutePath() + " already generated. Skip generate step in job: " + jobName);
 		}
-   } catch (Exception e) {
-   	globalMap.put("<%=cid%>_ERROR_MESSAGE", "Build model failed: " + e.getMessage());
-   	throw e;
-   }
+	} catch (Throwable e) {
+<%	if (log4jEnabled) { %>
+		log.error(currentComponent + ": " + e.getMessage(), e);
+<%	} %>
+		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Build model failed: " + e.getMessage());
+   		throw e;
+	}
