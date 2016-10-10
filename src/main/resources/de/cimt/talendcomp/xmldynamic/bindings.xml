@@ -10,10 +10,9 @@
        
         <xjc:simple />
         <xjc:javaType name="java.util.Date" xmlType="xsd:date"     adapter="de.cimt.talendcomp.xmldynamic.adapter.DateAdapter" />
-        <xjc:javaType name="java.util.Date" xmlType="xsd:dateTime" adapter="de.cimt.talendcomp.xmldynamic.adapter.DateAdapter" />
         <xjc:javaType name="java.util.Date" xmlType="xsd:gYearMonth" adapter="de.cimt.talendcomp.xmldynamic.adapter.DateAdapter" />
         
-        <xjc:javaType name="java.util.Date" xmlType="xsd:duration" adapter="de.cimt.talendcomp.xmldynamic.adapter.DurationAdapter" />
+        <xjc:javaType name="java.util.Date" xmlType="xsd:dateTime" adapter="de.cimt.talendcomp.xmldynamic.adapter.DateTimeAdapter" />
         
     </jaxb:globalBindings>
        
