@@ -1,10 +1,15 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -14,9 +19,43 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
+import org.apache.log4j.Logger;
 
 public final class Util {
-    
+
+    private static final List<TXMLBinding> KNOWNCLASSES = new ArrayList<TXMLBinding>();
+
+    static void register(URI uri, boolean jar) throws Exception{
+        if(jar){
+            uri= new URI( "jar:" + uri.toASCIIString() +"!/META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding" );
+        } else {
+             uri=uri.resolve((jar ? "!/" : "./")+"META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding");
+        }
+        InputStream in=null;
+        try{
+            in=uri.toURL().openStream();
+            int size;
+            byte[] buffer = new byte[2048];
+            StringBuilder buf = new StringBuilder();
+            while ((size = in.read(buffer)) > 0) {
+                buf.append(new String(buffer, 0, size));
+            }
+            String[] names = buf.toString().split("\n");
+            for (int i = 0, max = names.length; i < max; i++) {
+                final String value = (names[i].contains("#") ? names[i].substring(0, names[i].indexOf("#")) : names[i]).trim();
+                
+                if(value.length()==0)
+                    continue;
+                
+                KNOWNCLASSES.add( (TXMLBinding) Class.forName( value ).newInstance() );
+            }
+        }finally{
+            if(in!=null)
+                in.close();
+        }
+        
+    }
+
     public static String buildSQLInClause(Collection<? extends Object> keys) {
         StringBuilder sb = new StringBuilder();
         boolean firstLoop = true;
@@ -73,7 +112,8 @@ public final class Util {
     }
 
     public static void printContexts(boolean includeAbstract) {
-        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+       
+        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
         StringBuilder builder = new StringBuilder();
         builder.append("\nJAX-B Contexts start ###################################\n");
         while (iterator.hasNext()) {
@@ -83,10 +123,11 @@ public final class Util {
         }
         builder.append("\nJAX-B Contexts end ###################################\n");
         System.out.println(builder.toString());
+        
     }
 
     public static void printElements() {
-        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
         StringBuilder builder = new StringBuilder();
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getElements()) {
@@ -97,7 +138,7 @@ public final class Util {
     }
 
     public static JAXBContext createJAXBContext() throws JAXBException {
-        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
         List<Class<TXMLObject>> classes = new ArrayList<Class<TXMLObject>>();
         while (iterator.hasNext()) {
             classes.addAll(iterator.next().getClasses());
@@ -106,13 +147,12 @@ public final class Util {
     }
 
     public static Class<TXMLObject> findClassFor(QName qn) throws JAXBException {
-        final Iterator<TXMLBinding> iterator = ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
-        while (iterator.hasNext()) 
-        {
-            TXMLBinding bind=iterator.next();
-            
+        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
+        while (iterator.hasNext()) {
+            TXMLBinding bind = iterator.next();
+
             final Class<TXMLObject> impl = bind.find(qn);
-            if(impl!=null){
+            if (impl != null) {
                 return impl;
             }
         }

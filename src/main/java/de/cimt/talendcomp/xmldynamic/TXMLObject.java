@@ -116,8 +116,10 @@ public abstract class TXMLObject implements Serializable, Cloneable {
     }
     
     public boolean addOrSet(TXMLObject childObject) {
-        if(childObject==null)
-            return false;
+        if(childObject==null){
+            System.err.println("child is null");
+           return false;
+        }
         
     	String attrName = findFirstPropertyByType(childObject.getClass());
     	if (attrName == null) {
@@ -266,40 +268,14 @@ public abstract class TXMLObject implements Serializable, Cloneable {
 
     public String findFirstPropertyByType(Class<? extends TXMLObject> clazz) {
         for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
-        	if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
-        		// because Collection do only references Object
-        		// we rely on the name of the property and compare it with the clazz name
-        		// FIXME: this is not a nice way, because it does not work with choice
-        		String attributeName = pa.getName().toLowerCase();
-        		String className = clazz.getSimpleName().toLowerCase();
-        		if (attributeName.equals(className)) {
-        			return pa.getName();
-        		}
-        	} else {
-                if (pa.getPropertyType().equals(clazz)) {
+            TXMLTypeHelper typeHelper=pa.findAnnotation(TXMLTypeHelper.class);
+            if(typeHelper==null)
+                continue;
+            
+            for(QNameRef ref : typeHelper.refs()){
+                if(clazz.equals(ref.type()))
                     return pa.getName();
-                }
-        	}
-        }
-        return null;
-    }
-
-    public String findFirstPropertyByType(String className) {
-        for (ExtPropertyAccessor pa : CACHE.get(this.getClass()).values()) {
-        	if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
-        		// because Collection do only references Object
-        		// we rely on the name of the property and compare it with the clazz name
-        		// FIXME: this is not a nice way, because it does not work with choice
-        		String attributeName = pa.getName().toLowerCase();
-        		String simpleClassName = ReflectUtil.getSimpleClassName(className);
-        		if (attributeName.equals(simpleClassName)) {
-        			return pa.getName();
-        		}
-        	} else {
-                    if (pa.getPropertyType().getName().equals(className)) {
-                        return pa.getName();
-                    }
-        	}
+            }
         }
         return null;
     }

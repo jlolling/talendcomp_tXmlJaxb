@@ -33,6 +33,7 @@ import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.util.ErrorReceiverFilter;
+import java.net.URI;
 
 /**
  * Builds a {@link Model} object.
@@ -128,25 +129,31 @@ public final class ModelBuilder {
     private boolean testUpdateRequired(){
         
         if(opt.forceGenerate || opt.targetDir == null || !opt.targetDir.exists() ){
+            LOG.debug("testUpdateRequired=true => opt.forceGenerate="+opt.forceGenerate+" opt.targetDir="+opt.targetDir+" !opt.targetDir.exists()="+(!opt.targetDir.exists()));
             return true;
         }
          
         if(opt.createJar){
-            if( opt.jarFilePath==null)
+            if( opt.jarFilePath==null){
+                LOG.debug("opt.jarFilePath=null");
                 return true;
+            }
             
             final File jar=new File(opt.jarFilePath);
             
             if(!jar.exists() || jar.lastModified()<opt.newestGrammar){
+                LOG.debug("!jar.exists() || jar.lastModified()<opt.newestGrammar");
                 return true;
             }
         } else {
             final List<File> listFiles = listFiles(opt.targetDir, true, "TXMLBinding");    
             if(listFiles.isEmpty()){
+                LOG.debug("listFiles.isEmpty(");
                 return true;
             }
             for(File f : listFiles){
                 if(f.lastModified()<opt.newestGrammar){
+                    LOG.debug("file "+f+" is older than grammar ");
                     return true;
                 }
             }
@@ -224,25 +231,18 @@ public final class ModelBuilder {
             }
             
             models.add(opt.grammarFilePath);
-            if(!opt.createJar){
-                if (!opt.extendClasspath) {
-                    return;
-                }
-                LOG.debug("extend Classpath using classes");
-                Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-                method.setAccessible(true);
-                method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{opt.targetDir.toURI().toURL()});
-            } else {
-                
-                if (!opt.extendClasspath) {
-                    return;
-                }
-                LOG.debug("extend Classpath using jar file");
-                Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-                method.setAccessible(true);
-                method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{ new File(opt.jarFilePath).toURI().toURL()});
-
+            if (!opt.extendClasspath) {
+                return;
             }
+            URI uri= ( (opt.createJar && opt.jarFilePath!=null) ?  new File(opt.jarFilePath) : opt.targetDir).toURI();
+
+            LOG.debug("extend classpath loading "+uri);
+            Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+            method.setAccessible(true);
+            method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{uri.toURL()});
+            
+            LOG.debug("Register model");
+            Util.register(uri, (opt.createJar && opt.jarFilePath!=null));
     	} else {
             LOG.debug("Model for schema file: " + opt.grammarFilePath + " already generated, skip generate step.");
     	}
