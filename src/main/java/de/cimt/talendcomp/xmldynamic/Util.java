@@ -137,27 +137,32 @@ public final class Util {
                     throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - the attribute: " + value + " is missing!");
                 }
             } else if (value instanceof TXMLObject) {
-                // continue 
-                currentObject = (TXMLObject) value;
-                continue; // continue with the next child
+                if (i < attrList.size() - 1) {
+                    // continue because we are not at the end of the path
+                    currentObject = (TXMLObject) value;
+                    continue; // continue with the next child
+                } else {
+                	// the referenced object is simply a TXMLObject
+                	result.add((TXMLObject) value);
+                }
             } else if (value instanceof List) {
                 // check the collection if the elements are TXMLObjects
                 if (i < attrList.size() - 1) {
-                    // nothing left in the path but we do not got a TXMLOBject!
-                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is List at: " + attr + " but we do not at the end of the path! Reduce your path to this attribute and start from this component with an iteration to the next level!");
+                    // nothing left in the path but we do not got a TXMLObject!
+                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is List at: " + attr + " but we are not at the end of the path! Reduce your path to this attribute and start from this component with an iteration to the next level!");
                 }
                 List<?> list = (List<?>) value;
                 for (Object element : list) {
                     if (element instanceof TXMLObject) {
                         result.add((TXMLObject) element);
                     } else if (element != null) {
-                        throw new Exception("In the list of the attribute there is an object which is not an TXMLObject. We found this class: " + element.getClass().getName());
+                        throw new Exception("In the list of the attribute " + attr + " there is an object which is not an TXMLObject (a complex xml element). We found this class: " + element.getClass().getName());
                     }
                 }
             } else if (value != null) {
                 if (i == attrList.size() - 1) {
-                    // nothing left in the path but we do not got a TXMLOBject!
-                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is no TXMLObject but a value: " + value + ". Reduce your path to address the parent object!");
+                    // nothing left in the path but we do not got a TXMLObject!
+                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is no TXMLObject (a complex xml element) but a value: " + value + ". Reduce your path to address the parent object!");
                 }
             } else if (nullable == false) {
                 throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - value is missing but mandatory!");

@@ -66,10 +66,15 @@
 	String parentComp = ElementParameterParser.getValue(node, "__PARENT_OBJECT_COMPONENT__");
 	String attrPath = ElementParameterParser.getValue(node, "__ATTRIBUTE_PATH__");
 	if (attrPath == null) {
-   	attrPath = "null";
+   		attrPath = "null";
 	}
     boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
    							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
+	boolean iterateOverValueList = "true".equals(ElementParameterParser.getValue(node, "__ITERATE_OVER_VALUE_LIST__"));
+	String valueListColumn = "";
+	if (iterateOverValueList) {
+		valueListColumn = ElementParameterParser.getValue(node, "__VALUE_LIST_COLUMN__");
+	}
 %>
 	java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> <%=cid%>_loopList = null;
 <% if (isRoot) { %>
@@ -112,33 +117,45 @@
 		throw e;
 	}
 <%	} // if (root == false) %>
-<% if (conn != null) { %>
 	int counter_<%=cid%> = 0;
 	// looping of the returned objects
 	for (de.cimt.talendcomp.xmldynamic.TXMLObject <%=cid%>_currentObject : <%=cid%>_loopList) {
-	   // make the object available for other components in iterations
+	    // make the object available for other components in iterations
 		globalMap.put("<%=cid%>_CURRENT_OBJECT", <%=cid%>_currentObject);
 		// increment the counter
-		Integer <%=cid%>_numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE");
+		Integer <%=cid%>_numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE_OBJECTS");
 		if (<%=cid%>_numberObjects == null) {
 			<%=cid%>_numberObjects = 0;
 		}
-		globalMap.put("<%=cid%>_NB_LINE", <%=cid%>_numberObjects + 1);
+		globalMap.put("<%=cid%>_NB_LINE_OBJECTS", <%=cid%>_numberObjects + 1);
 		// start iterating through the fields
-<%		for (int i = 0; i < listColumns.size(); i++) {
+<%	if (conn != null) {
+		String valueListJavaType = null;
+		boolean valueListIgnoreMissing = true;
+		boolean valueListIsNullable = true;
+		String valueListColumnName = null;
+		for (int i = 0; i < listColumns.size(); i++) {
 			IMetadataColumn mc = listColumns.get(i);
 			Map<String, String> config = configList.get(i);
 			boolean use = "true".equals(config.get("USE"));
 			if (use == false) {
 				continue; // skip over unused columns
 			}
-			String fieldName = config.get("ATTRIBUTE_ALIAS");
+			boolean isNullable = mc.isNullable();
 			boolean ignoreMissing = "true".equals(config.get("IGNORE_MISSING"));
+			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), isNullable);
+			String fieldName = config.get("ATTRIBUTE_ALIAS");
 			if (fieldName == null || fieldName.trim().isEmpty() || fieldName.equals("\"\"")) {
 				fieldName = "\"" + mc.getLabel() + "\"";
 			}
-			boolean isNullable = mc.isNullable();
-			String javaPackageClassName = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), isNullable); %>
+			if (mc.getLabel().equals(valueListColumn)) {
+				valueListIgnoreMissing = ignoreMissing;
+				valueListIsNullable = isNullable;
+				valueListJavaType = JavaTypesManager.getTypeToGenerate(mc.getTalendType(), true);
+				valueListColumnName = fieldName;
+				continue; // we will handle it later
+			}
+			%>
 		try {
 			<%=conn.getName()%>.<%=mc.getLabel()%> = (<%=javaPackageClassName%>) <%=cid%>_currentObject.get(<%=fieldName%>, <%=javaPackageClassName%>.class, <%=ignoreMissing%>, <%=isNullable%>);
 		} catch (Throwable e) {
@@ -150,4 +167,22 @@
 			throw e;
 		}
 <%		} // for %>
+<%		if (iterateOverValueList) { %>
+		// extract the value list attribute
+		java.util.List<<%=valueListJavaType%>> <%=cid%>_list_<%=valueListColumn%> = new java.util.ArrayList<<%=valueListJavaType%>>(); // dummy to prevent NullPointerException
+		try {
+			<%=cid%>_list_<%=valueListColumn%> = (java.util.List<<%=valueListJavaType%>>) <%=cid%>_currentObject.get(<%=valueListColumnName%>, java.util.List.class, <%=valueListIgnoreMissing%>, <%=valueListIsNullable%>);
+		} catch (Throwable e) {
+			String message = "Get attribute value: " + <%=valueListColumnName%> + " failed: " + e.getMessage();
+<%			if (log4jEnabled) { %>
+			log.error(currentComponent + ": " + message, e);
+<%			} %>
+			globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
+			throw e;
+		}
+		// extra loop to iterate over the value list <%=valueListColumn%>
+		for (<%=valueListJavaType%> <%=cid%>_value_<%=valueListColumn%> : <%=cid%>_list_<%=valueListColumn%>) {
+			<%=conn.getName()%>.<%=valueListColumn%> = <%=cid%>_value_<%=valueListColumn%>;
+<%		} // if (iterateOverValueList) %>
 <%	} // if (conn != null) %>
+		counter_<%=cid%>++;

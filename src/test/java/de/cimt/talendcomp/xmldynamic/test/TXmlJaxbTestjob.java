@@ -7,7 +7,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -20,8 +22,6 @@ import de.cimt.talendcomp.xmldynamic.ReflectUtil;
 import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TXmlJaxbTestjob   {
 	String currentComponent ;

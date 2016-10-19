@@ -38,7 +38,7 @@
 			NAME="PARENT_OBJECT_COMPONENT" 
 			FIELD="COMPONENT_LIST" 
 			NUM_ROW="10"
-			FILTER="REGEXP:^(tXmlJaxbObjectOutput)(.)*"
+			FILTER="REGEXP:^(tXmlJaxbObjectOutput|tXmlJaxbObjectInput)(.)*"
 			REQUIRED="true"
 		/>
 

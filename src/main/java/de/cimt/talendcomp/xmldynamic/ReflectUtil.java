@@ -189,7 +189,6 @@ public class ReflectUtil {
             return TypeUtil.convert(v, vClass, tClass);
         } catch (Throwable uoe) {
             if (Number.class.isAssignableFrom(tClass)) {
-
                 try {
                     return (T) convertNumber(v.toString(), tClass);
                 } catch (Throwable ex) {
