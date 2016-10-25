@@ -1,15 +1,16 @@
 package de.cimt.talendcomp.xmldynamic;
 
-import java.io.BufferedInputStream;
+import de.cimt.talendcomp.xmldynamic.annotations.Jetcode;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -20,20 +21,168 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
+import org.eclipse.osgi.internal.loader.BundleLoader;
+import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 
 public final class Util {
+    private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
+    private static final URLClassLoader LOADER;
+    private static final Method METH;
+    private static final List<TXMLBinding> BINDINGS;
+    public static final boolean OSGI;
+    
+    static class OSGIClassLoader extends URLClassLoader{
+        private final BundleLoader osgiLoader;
+        public OSGIClassLoader(URL[] urls, ClassLoader parent, BundleLoader loader) {
+            super(urls, parent);
+            this.osgiLoader=loader;
+        }
+        public OSGIClassLoader(ClassLoader parent, BundleLoader loader) {
+            super(new URL[]{},  parent);
+            this.osgiLoader=loader;
+        }
+        
+        private synchronized Class performBundleLookup(String name) throws ClassNotFoundException{
+            if(osgiLoader==null)
+                throw new ClassNotFoundException();
+            Class<?> clazz=osgiLoader.findClass(name);
+            super.addURL( clazz.getProtectionDomain().getCodeSource().getLocation() );
+            return clazz;
+        }
 
-    private static final List<TXMLBinding> KNOWNCLASSES = new ArrayList<TXMLBinding>();
+        @Override
+        public Class<?> loadClass(final String name) throws ClassNotFoundException, NoClassDefFoundError {
+            Throwable ex=null;
+            try{
+                return super.loadClass(name, true);
+            }catch(ClassNotFoundException cnfe){
+                try{
+                    return performBundleLookup(name);
+                }catch(Throwable t){
+                    throw cnfe;
+                }
+            }catch(java.lang.NoClassDefFoundError cndef){
+               try{
+                    return performBundleLookup(name);
+                }catch(Throwable t){
+                    throw cndef;
+                }
+            }
+        }
+
+        @Override
+        protected void addURL(URL url) {
+//            LOG.warn("add url "+url);
+            super.addURL(url);
+        }
+        
+    }
+    
+    public static void printClassLoader(ClassLoader classLoader) {
+        printClassLoader(classLoader, true);
+    }
+    public static void printClassLoader(ClassLoader classLoader, boolean showparent) {
+        
+        if (null == classLoader) {
+            return;
+        }
+        LOG.info("--------------------");
+        LOG.info(classLoader);
+        if (classLoader instanceof URLClassLoader) {
+            URLClassLoader ucl = (URLClassLoader) classLoader;
+            int i = 0;
+            for (URL url : ucl.getURLs()) {
+                LOG.info("url[" + (i++) + "]=" + url);
+            }
+            
+        }
+        if(showparent)
+            printClassLoader(classLoader.getParent());
+        LOG.info("--------------------");
+    }
+
+    
+    static{
+        Method m;
+        boolean isOSGI=false;
+        URLClassLoader cl=null;
+        try{
+            m = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+            m.setAccessible(true);
+            
+            try{
+                
+                cl=(URLClassLoader) Util.class.getClassLoader();
+            }catch(ClassCastException cce){
+                // regular classloaders normally don't cause this exception
+                final String clName=Util.class.getClassLoader().getClass().getName().toLowerCase();
+                BundleLoader bundleLoader=null;
+                try{
+                     bundleLoader =  ((ModuleClassLoader) Util.class.getClassLoader()).getBundleLoader();
+                     isOSGI=true;
+                }catch(Throwable t){
+                     bundleLoader = null;
+                }
+                cl=new OSGIClassLoader( Util.class.getClassLoader(), bundleLoader );
+                Thread.currentThread().setContextClassLoader( cl );
+            }
+
+            
+        }catch(Throwable t){
+            LOG.error("failed to init environment",t);
+            m=null;
+        }
+        /**
+         * when osgi class is of type moduleclassloader and nested classloader doesn't use parent classload for resolving
+         * to avoid this problem a colcal classloader must be used 
+         */
+        
+        OSGI=isOSGI;
+        BINDINGS= new ArrayList<TXMLBinding>();
+        LOG.info("OSGI = "+OSGI);
+        METH=m;
+        LOG.info("METHOD = "+METH);
+        LOADER=cl;
+    }
+
+    private static Iterator<TXMLBinding> load(){
+        // maybe serviceloader should only build once and reloaded when changes are made by loading a model
+        if(!OSGI){
+            return ServiceLoader.load(de.cimt.talendcomp.xmldynamic.TXMLBinding.class).iterator();
+        }
+        return BINDINGS.iterator();
+    }
+    
+    public static TXMLObject createTXMLObject(String name) throws Exception{
+        try {
+            return ((Class<TXMLObject>) findClass(name)).newInstance();
+        } catch (Exception ex) {
+            LOG.error("Error instantiating class "+name, ex);
+            throw ex;
+        }
+    }
+    
+    public static Class<?> findClass(String name) throws ClassNotFoundException{
+        return LOADER.loadClass(name);        
+    }
 
     static void register(URI uri, boolean jar) throws Exception{
+        URI serviceuri=null;
         if(jar){
-            uri= new URI( "jar:" + uri.toASCIIString() +"!/META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding" );
+            serviceuri= new URI( "jar:" + uri.toASCIIString() +"!/META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding" );
         } else {
-             uri=uri.resolve((jar ? "!/" : "./")+"META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding");
+             serviceuri=uri.resolve((jar ? "!/" : "./")+"META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding");
         }
+        
+        try{
+            METH.invoke(LOADER, new Object[]{uri.toURL()});
+        }catch(Throwable t){
+            LOG.error("adding class failed",t);
+        }
+
         InputStream in=null;
         try{
-            in=uri.toURL().openStream();
+            in=serviceuri.toURL().openStream();
             int size;
             byte[] buffer = new byte[2048];
             StringBuilder buf = new StringBuilder();
@@ -43,11 +192,14 @@ public final class Util {
             String[] names = buf.toString().split("\n");
             for (int i = 0, max = names.length; i < max; i++) {
                 final String value = (names[i].contains("#") ? names[i].substring(0, names[i].indexOf("#")) : names[i]).trim();
-                
+                LOG.warn("lookup service "+value);
                 if(value.length()==0)
                     continue;
-                
-                KNOWNCLASSES.add( (TXMLBinding) Class.forName( value ).newInstance() );
+                if(OSGI){
+                    TXMLBinding bindingInstance=((Class<TXMLBinding>) findClass( value )).newInstance();
+                    LOG.warn("bindingInstance="+bindingInstance);
+                    BINDINGS.add( bindingInstance );
+                }
             }
         }finally{
             if(in!=null)
@@ -112,8 +264,7 @@ public final class Util {
     }
 
     public static void printContexts(boolean includeAbstract) {
-       
-        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
+        final Iterator<TXMLBinding> iterator = load();
         StringBuilder builder = new StringBuilder();
         builder.append("\nJAX-B Contexts start ###################################\n");
         while (iterator.hasNext()) {
@@ -123,11 +274,10 @@ public final class Util {
         }
         builder.append("\nJAX-B Contexts end ###################################\n");
         System.out.println(builder.toString());
-        
     }
 
     public static void printElements() {
-        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
+        final Iterator<TXMLBinding> iterator = load();;
         StringBuilder builder = new StringBuilder();
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getElements()) {
@@ -138,7 +288,7 @@ public final class Util {
     }
 
     public static JAXBContext createJAXBContext() throws JAXBException {
-        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
+        final Iterator<TXMLBinding> iterator = load();;
         List<Class<TXMLObject>> classes = new ArrayList<Class<TXMLObject>>();
         while (iterator.hasNext()) {
             classes.addAll(iterator.next().getClasses());
@@ -147,18 +297,20 @@ public final class Util {
     }
 
     public static Class<TXMLObject> findClassFor(QName qn) throws JAXBException {
-        final Iterator<TXMLBinding> iterator = KNOWNCLASSES.iterator();
-        while (iterator.hasNext()) {
-            TXMLBinding bind = iterator.next();
-
+        final Iterator<TXMLBinding> iterator = load();;
+        while (iterator.hasNext()) 
+        {
+            TXMLBinding bind=iterator.next();
+            
             final Class<TXMLObject> impl = bind.find(qn);
-            if (impl != null) {
+            if(impl!=null){
                 return impl;
             }
         }
         return null;
     }
 
+    @Jetcode
     public static List<TXMLObject> getTXMLObjects(TXMLObject parent, String attrPath, boolean ignoreMissing, boolean nullable) throws Exception {
         if (parent == null) {
             throw new IllegalArgumentException("parent cannot be null!");
@@ -177,27 +329,32 @@ public final class Util {
                     throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - the attribute: " + value + " is missing!");
                 }
             } else if (value instanceof TXMLObject) {
-                // continue 
-                currentObject = (TXMLObject) value;
-                continue; // continue with the next child
+                if (i < attrList.size() - 1) {
+                    // continue because we are not at the end of the path
+                    currentObject = (TXMLObject) value;
+                    continue; // continue with the next child
+                } else {
+                	// the referenced object is simply a TXMLObject
+                	result.add((TXMLObject) value);
+                }
             } else if (value instanceof List) {
                 // check the collection if the elements are TXMLObjects
                 if (i < attrList.size() - 1) {
-                    // nothing left in the path but we do not got a TXMLOBject!
-                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is List at: " + attr + " but we do not at the end of the path! Reduce your path to this attribute and start from this component with an iteration to the next level!");
+                    // nothing left in the path but we do not got a TXMLObject!
+                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is List at: " + attr + " but we are not at the end of the path! Reduce your path to this attribute and start from this component with an iteration to the next level!");
                 }
                 List<?> list = (List<?>) value;
                 for (Object element : list) {
                     if (element instanceof TXMLObject) {
                         result.add((TXMLObject) element);
                     } else if (element != null) {
-                        throw new Exception("In the list of the attribute there is an object which is not an TXMLObject. We found this class: " + element.getClass().getName());
+                        throw new Exception("In the list of the attribute " + attr + " there is an object which is not an TXMLObject (a complex xml element). We found this class: " + element.getClass().getName());
                     }
                 }
             } else if (value != null) {
                 if (i == attrList.size() - 1) {
-                    // nothing left in the path but we do not got a TXMLOBject!
-                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is no TXMLObject but a value: " + value + ". Reduce your path to address the parent object!");
+                    // nothing left in the path but we do not got a TXMLObject!
+                    throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - there is no TXMLObject (a complex xml element) but a value: " + value + ". Reduce your path to address the parent object!");
                 }
             } else if (nullable == false) {
                 throw new Exception("Starting from the object: " + parent.toString() + " following the path: " + attrPath + " - value is missing but mandatory!");
