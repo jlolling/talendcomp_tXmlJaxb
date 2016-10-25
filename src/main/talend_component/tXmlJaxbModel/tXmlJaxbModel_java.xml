@@ -73,7 +73,7 @@
             NUM_ROW="30" 
             REQUIRED="true" 
         >
-            <DEFAULT>false</DEFAULT>
+            <DEFAULT>true</DEFAULT>
         </PARAMETER>
         
         <PARAMETER 
@@ -82,7 +82,7 @@
             NUM_ROW="40" 
             REQUIRED="true" 
         >
-            <DEFAULT>false</DEFAULT>
+            <DEFAULT>true</DEFAULT>
         </PARAMETER>
 
         <PARAMETER 

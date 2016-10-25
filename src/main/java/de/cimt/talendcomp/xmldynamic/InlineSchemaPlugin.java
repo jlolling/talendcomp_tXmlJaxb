@@ -172,29 +172,6 @@ public class InlineSchemaPlugin extends Plugin {
                 }
             }
             
-//
-//            JArray e = JExpr.newArray(refClass.narrow(refObject));
-//            JArray t = JExpr.newArray(refClass.narrow(refObject));
-//            JArray n = JExpr.newArray(refString);
-//
-//            clazz.direct( CODEFRAGMENT );
-////            Set<String> namespaces = new HashSet<String>();
-//            for (Map.Entry<NClass, CClassInfo> beanset : model.beans().entrySet()) {
-//                CClassInfo bean = beanset.getValue();
-//                if (bean.getElementName() != null) {
-//                    e.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
-//                    final String ns = bean.getElementName().getNamespaceURI();
-//                    if (!namespaces.contains(ns)) {
-//                        namespaces.add(bean.getElementName().getNamespaceURI());
-//                        n.add(JExpr.lit(ns));
-//                    }
-//                } else {
-//                    t.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
-//                }
-//            }
-;
-            
-
             StringBuilder sbuild=new StringBuilder(); 
             for(JPackage pack : packages){
                 model.rootClass = refObject;
@@ -229,26 +206,6 @@ public class InlineSchemaPlugin extends Plugin {
                 sbuild.append( clazz.fullName() ).append("\n");
                
             }
-//            
-//            JArray e = JExpr.newArray(refClass.narrow(refObject));
-//            JArray t = JExpr.newArray(refClass.narrow(refObject));
-//            JArray n = JExpr.newArray(refString);
-//
-//            clazz.direct( CODEFRAGMENT );
-////            Set<String> namespaces = new HashSet<String>();
-//            for (Map.Entry<NClass, CClassInfo> beanset : model.beans().entrySet()) {
-//                CClassInfo bean = beanset.getValue();
-//                if (bean.getElementName() != null) {
-//                    e.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
-//                    final String ns = bean.getElementName().getNamespaceURI();
-//                    if (!namespaces.contains(ns)) {
-//                        namespaces.add(bean.getElementName().getNamespaceURI());
-//                        n.add(JExpr.lit(ns));
-//                    }
-//                } else {
-//                    t.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
-//                }
-//            }
 
 
             JTextFile jrf = (JTextFile) model.codeModel._package("META-INF.services").addResourceFile(new JTextFile("de.cimt.talendcomp.xmldynamic.TXMLBinding"));
@@ -303,7 +260,6 @@ public class InlineSchemaPlugin extends Plugin {
                 int i=0;
                 for (XSParticle child : term.asModelGroup().getChildren()) {
                     annotateType(child, parent, outline, ref.subList(i++, ref.size()));
-//                    i++;
                 }
             }
         }
