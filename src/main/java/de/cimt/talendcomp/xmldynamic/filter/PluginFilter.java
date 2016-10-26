@@ -47,7 +47,7 @@ public class PluginFilter extends BaseFilter {
     @Override
     public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
         final boolean schemaUri = equalUris(XMLConstants.W3C_XML_SCHEMA_NS_URI, uri);
-        String name=toLocalName(localName, qName);
+        String name = toLocalName(localName, qName);
         if (!schemaUri) {
             super.startElement(uri, localName, qName, atts);
             return;
@@ -61,9 +61,9 @@ public class PluginFilter extends BaseFilter {
              */
             // <editor-fold defaultstate="collapsed" desc="manipulate schema elements">                          
             String tns = atts.getValue("targetNamespace");
-            if(tns!=null && !prefixmapping.containsKey("$TNS"))
+            if (tns!=null && !prefixmapping.containsKey("$TNS")) {
                 prefixmapping.put("$TNS", tns);
-            
+            }
             startPrefixMapping(InlineSchemaPlugin.PNS.getPrefix(), InlineSchemaPlugin.PNS.getNamespaceURI());
 
             String jaxbPrefix = getPrefixForUrl(JAXB.getNamespaceURI());
@@ -106,11 +106,11 @@ public class PluginFilter extends BaseFilter {
                 }
             }
             if (hasJaxbBindingPrefixes == false) {
-                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes", JAXB.getPrefix() + ":extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
+//                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes", JAXB.getPrefix() + ":extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
+//                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes", "extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
             }
             super.startElement(uri, localName, qName, impl);
             // </editor-fold> 
-
         } else if (name.equalsIgnoreCase("element")) {
             /**
              * change xml content for elements using a special type
@@ -160,14 +160,12 @@ public class PluginFilter extends BaseFilter {
 
             }
             // </editor-fold> 
-
         } else if (name.equalsIgnoreCase("complexType")) {
             String cname = atts.getValue("name");
             AttributesImpl impl = new AttributesImpl(atts);
             if (testManipulationRequired(new Pair("$TNS", cname)) && impl.getIndex("abstract") < 0) {
                 impl.addAttribute("", "abstract", "abstract", "CDATA", "true");
             }
-
             super.startElement(uri, localName, qName, atts);
         } else {
             super.startElement(uri, localName, qName, atts);

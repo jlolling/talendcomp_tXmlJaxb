@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Transformer;
@@ -20,11 +21,14 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.log4j.Logger;
 import org.colllib.datastruct.Pair;
+import org.colllib.filter.Filter;
+import org.colllib.util.CollectionUtil;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 import com.sun.tools.xjc.Options;
 
+import de.cimt.talendcomp.xmldynamic.filter.AnnotationFilter;
 import de.cimt.talendcomp.xmldynamic.filter.ChecksumFilter;
 import de.cimt.talendcomp.xmldynamic.filter.DependencyFilter;
 import de.cimt.talendcomp.xmldynamic.filter.GraphFilter;
@@ -33,10 +37,6 @@ import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
 import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
 import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
-import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.colllib.filter.Filter;
-import org.colllib.util.CollectionUtil;
 
 /**
  *
@@ -48,6 +48,7 @@ public class XJCOptions extends Options {
     public boolean extendClasspath = true;
     public boolean compileSource = true;
     public boolean createGraph = false; // paints the structure
+    public boolean ignoreAnnotations = false;
     public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
     public boolean checksum = false;
     public boolean forceGenerate = false;
@@ -57,7 +58,7 @@ public class XJCOptions extends Options {
     public String  checksumValue = "";
     public String  targetName = "gen_" + Util.uniqueString() + ".jar";
     public String  grammarFilePath = null;
-    public long newestGrammar=0l;
+    public long newestGrammar = 0l;
     
 
 //    private TypeReadHandler typesHelper = new TypeReadHandler();
@@ -118,7 +119,7 @@ public class XJCOptions extends Options {
                     return _complexTypes.contains(t);
                 }
             },
-                    new Filter<AtomicInteger>() {
+            new Filter<AtomicInteger>() {
                 @Override
                 public boolean matches(AtomicInteger t) {
                     return t.get() > 1;
@@ -269,6 +270,9 @@ public class XJCOptions extends Options {
                 chain.add(new GraphFilter());
             }
             
+            if (ignoreAnnotations) {
+            	chain.add(new AnnotationFilter());
+            }
             chain.add(pluginFilter);
             ChecksumFilter csf = new ChecksumFilter();
             chain.add(csf);
@@ -278,7 +282,9 @@ public class XJCOptions extends Options {
             final Transformer transformer = TransformerFactory.newInstance().newTransformer();
             for (InputSource source : super.getGrammars()) {
                 File res = new File(tmproot, ((InMemorySource) source).alias);
-                
+                if (LOG.isDebugEnabled()) {
+                	LOG.debug("Use as temporary xsd result file: " + res.getAbsolutePath());
+                }
                 transformer.transform(
                     new SAXSource(reader, source),
                     new StreamResult(res)

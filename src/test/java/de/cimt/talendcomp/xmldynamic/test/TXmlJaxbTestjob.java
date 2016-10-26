@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.sun.codemodel.JCodeModel;
@@ -23,13 +27,17 @@ import de.cimt.talendcomp.xmldynamic.TXMLObject;
 import de.cimt.talendcomp.xmldynamic.Util;
 import de.cimt.talendcomp.xmldynamic.XJCOptions;
 
-public class TXmlJaxbTestjob   {
+public class TXmlJaxbTestjob {
+	
 	String currentComponent ;
 	Map<String, Object> globalMap = new HashMap<String, Object>();
-        private boolean classesLoaded = false;
+    private boolean classesLoaded = false;
 	
-//	@Before
+	@Before
 	public void testCreateModel() throws Exception {
+		BasicConfigurator.configure();
+		Logger rootLogger = Logger.getRootLogger();
+		rootLogger.setLevel(Level.DEBUG);
 		if (classesLoaded == false) {
 			String classRootPath = "./target/generated-sources/modelbuilder/";
 			File classRootPathFile = new File(classRootPath);
@@ -41,6 +49,8 @@ public class TXmlJaxbTestjob   {
 			opts.targetDir = new File(classRootPathFile, xsdFile.getName());
 			opts.targetDir.mkdirs();
 			opts.extendClasspath = true;
+			opts.ignoreAnnotations = true;
+			opts.forceGenerate = true;
 			opts.addGrammar(new File(xsdFile.getAbsolutePath()));
 			System.out.println("Generate model...");
 			
@@ -54,7 +64,7 @@ public class TXmlJaxbTestjob   {
 				buildJar.create();
 			} 
 			ModelBuilder.generate(opts, new JCodeModel());
-//			Util.printContexts();
+			Util.printContexts();
 		}
 		classesLoaded = true;
 	}

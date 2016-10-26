@@ -14,7 +14,9 @@
 	      </xsd:sequence>
 	   </xsd:complexType>
    </xsd:element>
-
+   <xsd:annotation>
+      <xsd:documentation source="ddex:Definition">A Territory to which the SoundRecording details apply. Either this Element or ExcludedTerritory shall be present, but not both. The use of ISO TerritoryCodes (or the term 'Worldwide”) is strongly encouraged; TIS TerritoryCodes should only be used if both MessageSender and MessageRecipient are familiar with this standard. </xsd:documentation>
+   </xsd:annotation>
    <xsd:complexType name="address">
       <xsd:sequence>
          <xsd:element name="id" type="xsd:int" minOccurs="1" maxOccurs="1"/>

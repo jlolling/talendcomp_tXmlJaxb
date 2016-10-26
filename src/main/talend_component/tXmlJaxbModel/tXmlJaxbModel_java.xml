@@ -94,6 +94,24 @@
             <DEFAULT>false</DEFAULT>
         </PARAMETER>
         
+        <PARAMETER 
+            NAME="IGNORE_ANNOTATIONS" 
+            FIELD="CHECK" 
+            NUM_ROW="60" 
+            REQUIRED="true" 
+        >
+            <DEFAULT>false</DEFAULT>
+        </PARAMETER>
+
+        <PARAMETER 
+            NAME="FORCE_GENERATE" 
+            FIELD="CHECK" 
+            NUM_ROW="70" 
+            REQUIRED="true" 
+        >
+            <DEFAULT>false</DEFAULT>
+        </PARAMETER>
+
     </ADVANCED_PARAMETERS>
 
     <CODEGENERATION>
