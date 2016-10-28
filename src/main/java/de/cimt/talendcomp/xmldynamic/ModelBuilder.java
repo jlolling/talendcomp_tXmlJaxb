@@ -5,11 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -126,33 +121,30 @@ public final class ModelBuilder {
     }
     
     private boolean testUpdateRequired(){
-        
-        if(opt.forceGenerate || opt.targetDir == null || !opt.targetDir.exists() ){
+        if (opt.forceGenerate || opt.targetDir == null || !opt.targetDir.exists() ) {
             return true;
         }
-         
-        if(opt.createJar){
-            if( opt.jarFilePath==null)
+        if (opt.createJar) {
+            if ( opt.jarFilePath==null) {
                 return true;
-            
+            }
             final File jar=new File(opt.jarFilePath);
             
-            if(!jar.exists() || jar.lastModified()<opt.newestGrammar){
+            if (!jar.exists() || jar.lastModified() < opt.newestGrammar) {
                 return true;
             }
         } else {
             final List<File> listFiles = listFiles(opt.targetDir, true, "TXMLBinding");    
-            if(listFiles.isEmpty()){
+            if (listFiles.isEmpty()) {
                 return true;
             }
-            for(File f : listFiles){
-                if(f.lastModified()<opt.newestGrammar){
+            for (File f : listFiles) {
+                if (f.lastModified()<opt.newestGrammar) {
                     return true;
                 }
             }
         }
         return false;
-        
     }
     
     /**
@@ -163,9 +155,9 @@ public final class ModelBuilder {
      */
     public void generate() throws Exception {
                 
-        if(!models.contains(opt.grammarFilePath)){
+        if (!models.contains(opt.grammarFilePath)) {
 
-            if (testUpdateRequired()){ 
+            if (testUpdateRequired()) { 
                 setupModelDir(opt.targetDir);
                 Model model = ModelLoader.load(opt, codeModel, ERR);
                 Outline ouln = model.generateCode(opt, ERR);
@@ -270,32 +262,25 @@ public final class ModelBuilder {
         return tf;
     }
 
+	private static void delete(File f) throws IOException {
+		if (f.isDirectory()) {
+			for (File c : f.listFiles()) {
+				delete(c);
+			}
+		}
+		if (f.delete() == false) {
+			throw new IOException("Failed to delete file: " + f.getAbsolutePath());
+		}
+	}
+
     private static File setupModelDir(File modelDir) throws Exception {
-//        File modelDir = new File(dirPath);
         if (modelDir.exists()) {
             if (modelDir.isFile() && !modelDir.delete()) {
                 throw new Exception("At the location of the model dir a file already exists: " + modelDir.getAbsolutePath() + " and this cannot be deleted!");
             }
-            final Path directory = modelDir.toPath();
-//            Paths.get(modelDir.getAbsolutePath());
-            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    if (dir.equals(directory) == false) {
-                        Files.delete(dir);
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } else {
-            modelDir.mkdirs();
+            delete(modelDir); // more simple approach to delete a filled directory
         }
+        modelDir.mkdirs();
         if (modelDir.exists() == false) {
             throw new Exception("Cannot create model base dir: " + modelDir.getAbsolutePath());
         }

@@ -20,6 +20,8 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -37,6 +39,8 @@ import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
  * It will be used in the Talend components to set or add the values from the flows.
  * @author daniel.koch@cimt-ag.de, jan.lolling@cimt-ag.de
  */
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlTransient
 public abstract class TXMLObject implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1L;

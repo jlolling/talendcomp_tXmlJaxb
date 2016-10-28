@@ -1,7 +1,19 @@
 package de.cimt.talendcomp.xmldynamic;
 
-import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
-import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.xml.namespace.QName;
+
+import org.apache.log4j.Logger;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+
 import com.sun.codemodel.JAnnotationArrayMember;
 import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JArray;
@@ -13,15 +25,6 @@ import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.fmt.JTextFile;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.xml.namespace.QName;
-
-import org.apache.log4j.Logger;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.model.Aspect;
@@ -37,12 +40,9 @@ import com.sun.xml.xsom.XSComponent;
 import com.sun.xml.xsom.XSElementDecl;
 import com.sun.xml.xsom.XSParticle;
 import com.sun.xml.xsom.XSTerm;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+
+import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
+import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
 
 /**
  *
@@ -142,6 +142,9 @@ public class InlineSchemaPlugin extends Plugin {
      * @param ref list of possible elements
      */
     private void annotateType(XSComponent component, JAnnotationArrayMember parent, Outline outline, List<? extends CTypeInfo> ref) {
+    	if (ref.size() == 0) {
+    		return; // get value does not support type annotations
+    	}
         if ( XSAttributeUse.class.isAssignableFrom(component.getClass()) ) {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
             annotate.param("uri", ((XSAttributeUse) component).getDecl().getTargetNamespace());
@@ -165,13 +168,12 @@ public class InlineSchemaPlugin extends Plugin {
             }
             
             if (term.isModelGroupDecl()) {
-                term=term.asModelGroupDecl(); //.getModelGroup()
+                term = term.asModelGroupDecl();
             }
             if ( term.isModelGroup() ) {
-                int i=0;
+                int i = 0;
                 for (XSParticle child : term.asModelGroup().getChildren()) {
                     annotateType(child, parent, outline, ref.subList(i++, ref.size()));
-//                    i++;
                 }
             }
         }

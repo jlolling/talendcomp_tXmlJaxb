@@ -104,7 +104,6 @@ public class XJCOptions extends Options {
         tmproot.mkdirs();
         tmproot.deleteOnExit();
         pluginURIs.add(InlineSchemaPlugin.PNS.getNamespaceURI());
-//        activePlugins.add( new InlineSchemaPlugin() );
         strictCheck = false;
         noFileHeader = true;
         compatibilityMode = 2;
@@ -124,7 +123,6 @@ public class XJCOptions extends Options {
                 public boolean matches(AtomicInteger t) {
                     return t.get() > 1;
                 }
-
             }).keySet();
     }
     
@@ -142,9 +140,9 @@ public class XJCOptions extends Options {
         /**
          * Changed behavior as this method never send the original inputsource 
          * to the superclass. 
-         * It uses a set of filters to preprocess the original input and to parse 
-         * it as one or multiple expandes sources to a inmemorysource instance.
-         * this one will be transferd to the superclass.
+         * It uses a set of filters to pre-process the original input and to parse 
+         * it as one or multiple expands sources to a in-memory-source instance.
+         * this one will be transferred to the superclass.
          */
         try {
 
