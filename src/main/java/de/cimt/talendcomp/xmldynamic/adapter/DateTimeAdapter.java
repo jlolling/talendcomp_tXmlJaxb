@@ -19,7 +19,7 @@ public class DateTimeAdapter extends XmlAdapter<String, Date>{
         Date d;
         v=v.trim();
         if(!v.toUpperCase().contains("T")){
-            // date without time 
+            // date without time but timezone available
             if(v.indexOf("+")>0 || v.indexOf("-")>0 ){
                 int p=Math.max(v.indexOf("+"), v.indexOf("-"));
                 v=v.substring(0, p) + "T00:00:00" + v.substring(p);

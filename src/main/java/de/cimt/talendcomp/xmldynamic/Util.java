@@ -116,7 +116,7 @@ public final class Util {
             }catch(ClassCastException cce){
                 // regular classloaders normally don't cause this exception
                 final String clName=Util.class.getClassLoader().getClass().getName().toLowerCase();
-                BundleLoader bundleLoader=null;
+                BundleLoader bundleLoader;
                 try{
                      bundleLoader =  ((ModuleClassLoader) Util.class.getClassLoader()).getBundleLoader();
                      isOSGI=true;
@@ -167,11 +167,11 @@ public final class Util {
     }
 
     static void register(URI uri, boolean jar) throws Exception{
-        URI serviceuri=null;
+        URI serviceuri;
         if(jar){
             serviceuri= new URI( "jar:" + uri.toASCIIString() +"!/META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding" );
         } else {
-             serviceuri=uri.resolve((jar ? "!/" : "./")+"META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding");
+            serviceuri=uri.resolve((jar ? "!/" : "./")+"META-INF/services/de.cimt.talendcomp.xmldynamic.TXMLBinding");
         }
         
         try{
@@ -257,7 +257,7 @@ public final class Util {
         builder.append("\n");
         List<ExtPropertyAccessor> listProperties = ReflectUtil.introspect(clazz, TXMLObject.class);
         for (ExtPropertyAccessor prop : listProperties) {
-            builder.append("    " + prop.getName() + " type: " + prop.getPropertyType().getName());
+            builder.append("    ").append(prop.getName()).append(" type: ").append(prop.getPropertyType().getName());
             builder.append("\n");
         }
         builder.append("\n----------------------------\n");
@@ -277,7 +277,7 @@ public final class Util {
     }
 
     public static void printElements() {
-        final Iterator<TXMLBinding> iterator = load();;
+        final Iterator<TXMLBinding> iterator = load();
         StringBuilder builder = new StringBuilder();
         while (iterator.hasNext()) {
             for (Class<TXMLObject> clazz : iterator.next().getElements()) {
@@ -288,7 +288,7 @@ public final class Util {
     }
 
     public static JAXBContext createJAXBContext() throws JAXBException {
-        final Iterator<TXMLBinding> iterator = load();;
+        final Iterator<TXMLBinding> iterator = load();
         List<Class<TXMLObject>> classes = new ArrayList<Class<TXMLObject>>();
         while (iterator.hasNext()) {
             classes.addAll(iterator.next().getClasses());
@@ -297,7 +297,7 @@ public final class Util {
     }
 
     public static Class<TXMLObject> findClassFor(QName qn) throws JAXBException {
-        final Iterator<TXMLBinding> iterator = load();;
+        final Iterator<TXMLBinding> iterator = load();
         while (iterator.hasNext()) 
         {
             TXMLBinding bind=iterator.next();
