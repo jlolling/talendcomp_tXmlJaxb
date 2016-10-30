@@ -44,7 +44,7 @@
 <%	if (createObjectAtBegin == false && isRoot == false) { %>
 	try {
 		// now create the new object
-		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) Class.forName(<%=className%>).newInstance();
+		de.cimt.talendcomp.xmldynamic.TXMLObject currentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) de.cimt.talendcomp.xmldynamic.Util.createTXMLObject(<%=className%>);
 		globalMap.put("<%=cid%>_CURRENT_OBJECT", currentObject);
 	} catch (Exception e) {
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Instantiation of object " + <%=className%> + " failed: " + e.getMessage());

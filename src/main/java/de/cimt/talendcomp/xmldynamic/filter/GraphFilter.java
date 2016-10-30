@@ -81,9 +81,7 @@ public class GraphFilter extends BaseFilter {
     @Override
     public void endDocument() throws SAXException {
         super.endDocument();
-        if (ReflectUtil.isPrintDebugInfo()) {
-            System.err.println(buffer.toString());
-        }
+        System.err.println(buffer.toString());
     }
 
 }

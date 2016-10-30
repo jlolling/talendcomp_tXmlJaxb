@@ -24,6 +24,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPackage;
 import com.sun.codemodel.fmt.JTextFile;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.Plugin;
@@ -43,6 +44,8 @@ import com.sun.xml.xsom.XSTerm;
 
 import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
 import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
+import org.colllib.datastruct.AutoInitMap;
+import org.colllib.factories.Factory;
 
 /**
  *
@@ -50,8 +53,59 @@ import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
  */
 public class InlineSchemaPlugin extends Plugin {
 
+    private static final String CODEFRAGMENT=           
+        "    @Override\n" +
+        "    public java.util.List<Class<TXMLObject>> getClasses(){\n" +
+        "        java.util.List<Class<TXMLObject>> classes=new java.util.ArrayList<Class<TXMLObject>>();\n" +
+        "        classes.addAll( java.util.Arrays.asList(this.getElements()) );\n" +
+        "        classes.addAll( java.util.Arrays.asList(this.getTypes()) );\n" +
+        "        return  classes;\n" +
+        "    }\n" +
+        "    \n" +
+        "    public boolean matchesNamespace(javax.xml.namespace.QName qn){\n" +
+        "        for(String ns : getNamespaces()){\n" +
+        "            if(qn.getNamespaceURI().equalsIgnoreCase(ns))\n" +
+        "                return true;\n" +
+        "        }\n" +
+        "        \n" +
+        "        return false;\n" +
+        "    }\n" +
+        "    \n" +
+        "    @Override\n" +
+        "    public Class<TXMLObject> find(javax.xml.namespace.QName qn){\n" +
+        "        final String nsuri= (qn.getNamespaceURI()!=null) ? qn.getNamespaceURI() : ANYNAMESPACE;\n" +
+        "        \n" +
+        "        if(matchesNamespace(qn)){\n" +
+        "            for(Class<TXMLObject> c : getElements()){\n" +
+        "                // only perform namespacecheck when required\n" +
+        "                if(!ANYNAMESPACE.equals(nsuri)){\n" +
+        "                    javax.xml.bind.annotation.XmlSchema schema=(javax.xml.bind.annotation.XmlSchema) c.getPackage().getAnnotation(javax.xml.bind.annotation.XmlSchema.class);\n" +
+        "                    if(schema==null || !schema.namespace().equals( nsuri ))\n" +
+        "                        continue;\n" +
+        "                }\n" +
+        "                \n" +
+        "                javax.xml.bind.annotation.XmlElement elem=c.getAnnotation(javax.xml.bind.annotation.XmlElement.class);\n" +
+        "                if(elem!=null && qn.getLocalPart().equals(elem.name()))\n" +
+        "                    return c;\n" +
+        "                javax.xml.bind.annotation.XmlRootElement rootElem=c.getAnnotation(javax.xml.bind.annotation.XmlRootElement.class);\n" +
+        "                if(rootElem!=null && qn.getLocalPart().equals(rootElem.name()))\n" +
+        "                    return c;\n" +
+        "                \n" +
+        "            }\n" +
+        "        }\n" +
+        "        return null;\n" +
+        "        \n" +
+        "    }\n" +
+        "    \n" +
+        "    @Override\n" +
+        "    public boolean isMember(javax.xml.namespace.QName qn){\n" +
+        "        return find(qn)!=null;\n" +
+        "    }\n" ;
+    
+    
     public static final QName PNS = new QName("http://xsd.cimt.de/plugins/inline", "_cisp", "_cisp");
     private static final Logger LOG = Logger.getLogger(InlineSchemaPlugin.class);
+    StringBuilder clazzes=new StringBuilder();
     
     @Override
     public String getOptionName() {
@@ -67,60 +121,94 @@ public class InlineSchemaPlugin extends Plugin {
     public void postProcessModel(Model model, ErrorHandler errorHandler) {
         try {
             super.postProcessModel(model, errorHandler);
+//            model.codeModel.
 
             final JClass refClass = model.codeModel.ref(Class.class);
             final JClass refObject = model.codeModel.ref(TXMLObject.class);
             final JClass refString = model.codeModel.ref(String.class);
 
             model.rootClass = refObject;
-            final String ctx = "GenXS" + UUID.randomUUID().toString().replaceAll("[:\\.-]+", "");
 
-            JDefinedClass clazz = model.codeModel._class("de.cimt.talendcomp.xmldynamic." + ctx);
-            clazz._implements(model.codeModel.ref(TXMLBinding.class));
-            clazz._extends(model.codeModel.ref(InternalTXMLBindingHelper.class));
-            
-            // override getTimespamp
-            JMethod meth = clazz.method(JMod.PUBLIC, model.codeModel.LONG, "getTimestamp");
-            meth.annotate(java.lang.Override.class);
-            meth.body()._return(JExpr.lit(System.currentTimeMillis()));
-
-            JArray e = JExpr.newArray(refClass.narrow(refObject));
-            JArray t = JExpr.newArray(refClass.narrow(refObject));
-            JArray n = JExpr.newArray(refString);
-
-            Set<String> namespaces = new HashSet<String>();
+            Map<JPackage, JArray> e = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
+                @Override
+                public JArray create() {
+                    return JExpr.newArray(refClass.narrow(refObject));
+                }
+            }  );
+            Map<JPackage, JArray> t = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
+                @Override
+                public JArray create() {
+                    return JExpr.newArray(refClass.narrow(refObject));
+                }
+            }  );
+            Map<JPackage, JArray> n = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
+                @Override
+                public JArray create() {
+                    return JExpr.newArray(refString);
+                }
+            }  );            
+            Map<JPackage, Set<String>> namespaces = new AutoInitMap<JPackage, Set<String>>( new Factory<Set<String>>(){
+                @Override
+                public Set<String> create() {
+                    return new HashSet<String>();
+                }
+            }  );
+            Set<JPackage> packages = new HashSet<JPackage>();
             for (Map.Entry<NClass, CClassInfo> beanset : model.beans().entrySet()) {
+                
                 CClassInfo bean = beanset.getValue();
+                final JPackage ownerPackage = bean.getOwnerPackage();
+                packages.add(ownerPackage);
                 if (bean.getElementName() != null) {
-                    e.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
+                    e.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                     final String ns = bean.getElementName().getNamespaceURI();
-                    if (!namespaces.contains(ns)) {
-                        namespaces.add(bean.getElementName().getNamespaceURI());
-                        n.add(JExpr.lit(ns));
+                    if (!namespaces.containsValue(ns)) {
+                        namespaces.get(ownerPackage).add(bean.getElementName().getNamespaceURI());
+                        n.get(ownerPackage).add(JExpr.lit(ns));
                     }
                 } else {
-                    t.add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
+                    t.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                 }
             }
+            
+            StringBuilder sbuild=new StringBuilder(); 
+            for(JPackage pack : packages){
+                model.rootClass = refObject;
 
-            meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getElements");
-            meth.annotate(java.lang.Override.class);
-            meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), e));
-            JAnnotationUse annotate = meth.annotate(java.lang.SuppressWarnings.class);
-            annotate.param("value", "unchecked");
-//@SuppressWarnings("unchecked")
-            meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getTypes");
-            annotate = meth.annotate(java.lang.Override.class);
-            annotate = meth.annotate(java.lang.SuppressWarnings.class);
-            annotate.param("value", "unchecked");
-            meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), t));
+                final String ctx = "GenXS" + UUID.randomUUID().toString().replaceAll("[:\\.-]+", "");
 
-            meth = clazz.method(JMod.PUBLIC, refString.array(), "getNamespaces");
-            meth.annotate(java.lang.Override.class);
-            meth.body()._return(n);
+                JDefinedClass clazz = pack._class(ctx);
+                clazz._implements(model.codeModel.ref(TXMLBinding.class));
+
+                // override getTimespamp
+                JMethod meth = clazz.method(JMod.PUBLIC, model.codeModel.LONG, "getTimestamp");
+                meth.annotate(java.lang.Override.class);
+                meth.body()._return(JExpr.lit(System.currentTimeMillis()));
+
+                meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getElements");
+                meth.annotate(java.lang.Override.class);
+                meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), e.get(pack)));
+                JAnnotationUse annotate = meth.annotate(java.lang.SuppressWarnings.class);
+                annotate.param("value", "unchecked");
+
+                meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getTypes");
+                meth.annotate(java.lang.Override.class);
+                annotate = meth.annotate(java.lang.SuppressWarnings.class);
+                annotate.param("value", "unchecked");
+                meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), t.get(pack)));
+
+                meth = clazz.method(JMod.PUBLIC, refString.array(), "getNamespaces");
+                meth.annotate(java.lang.Override.class);
+                meth.body()._return(n.get(pack));
+                
+                clazz.direct( CODEFRAGMENT );
+                sbuild.append( clazz.fullName() ).append("\n");
+               
+            }
+
 
             JTextFile jrf = (JTextFile) model.codeModel._package("META-INF.services").addResourceFile(new JTextFile("de.cimt.talendcomp.xmldynamic.TXMLBinding"));
-            jrf.setContents(clazz.fullName());
+            jrf.setContents( sbuild.toString() );//clazz.fullName());
 
         } catch (JClassAlreadyExistsException ex) {
         	LOG.error(ex);
@@ -181,6 +269,7 @@ public class InlineSchemaPlugin extends Plugin {
     
     @Override
     public boolean run(Outline otln, Options optns, ErrorHandler eh) throws SAXException {
+        
         for (ClassOutline co : otln.getClasses()) {
             for (CPropertyInfo property : co.target.getProperties()) {
                 JFieldVar field = co.implClass.fields().get(property.getName(false));

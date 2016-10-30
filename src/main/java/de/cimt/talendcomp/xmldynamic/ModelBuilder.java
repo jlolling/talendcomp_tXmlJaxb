@@ -28,6 +28,7 @@ import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.util.ErrorReceiverFilter;
+import java.net.URI;
 
 /**
  * Builds a {@link Model} object.
@@ -46,14 +47,16 @@ public final class ModelBuilder {
     
     public static boolean isModelAlreadyBuild(String grammarFilePath) {
     	if (grammarFilePath == null) {
-            throw new IllegalArgumentException("grammarFilePath must not be null!");
+            // when grammarFilePath is null then the model should be empty and is available, or? so reture true must be ok
+            return true;
     	}
     	return models.contains(new File(grammarFilePath).getAbsolutePath());
     }
     
     public static boolean isModelAlreadyBuild(File grammarFile) {
     	if (grammarFile == null) {
-    		throw new IllegalArgumentException("grammarFile must not be null!");
+            // when grammarFilePath is null then the model should be empty and is available, or? so reture true must be ok
+            return true;
     	}
     	return models.contains(grammarFile.getAbsolutePath());
     }
@@ -153,7 +156,7 @@ public final class ModelBuilder {
      *
      * @throws Exception
      */
-    public void generate() throws Exception {
+    public synchronized void generate() throws Exception {
                 
         if (!models.contains(opt.grammarFilePath)) {
 
@@ -207,6 +210,7 @@ public final class ModelBuilder {
                     throw new Exception(Messages.COMPILATION_FAILED);
                 }
                 if(opt.createJar){
+                    // TODO: there is no check if option jarFilePath is set an valid
                     JarUtil jarBuilder = new JarUtil();
                     jarBuilder.setJarFilePath( opt.jarFilePath );
                     jarBuilder.setGrammarFilePath( opt.grammarFilePath );
@@ -216,25 +220,28 @@ public final class ModelBuilder {
             }
             
             models.add(opt.grammarFilePath);
-            if(!opt.createJar){
-                if (!opt.extendClasspath) {
-                    return;
-                }
-                LOG.debug("extend Classpath using classes");
-                Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-                method.setAccessible(true);
-                method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{opt.targetDir.toURI().toURL()});
-            } else {
-                
-                if (!opt.extendClasspath) {
-                    return;
-                }
-                LOG.debug("extend Classpath using jar file");
-                Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-                method.setAccessible(true);
-                method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{ new File(opt.jarFilePath).toURI().toURL()});
-
+            if (!opt.extendClasspath) {
+                return;
             }
+            URI uri= (opt.createJar && opt.jarFilePath!=null) ? new File(opt.jarFilePath).toURI() : opt.targetDir.toURI();
+            
+            
+            LOG.warn("extend Classpath using " + ( (opt.createJar && opt.jarFilePath!=null) ? opt.jarFilePath : opt.targetDir) );
+            Util.register(uri, (opt.createJar && opt.jarFilePath!=null) );
+//            
+//            Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+//            
+//            method.setAccessible(true);
+//            try{
+//                method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{uri.toURL()});
+//            }catch(ClassCastException cce){
+//                final String name = ClassLoader.getSystemClassLoader().getClass().getName();
+//                if(name.contains("osgi") || name.contains("ModuleClassLoader") ){
+////                    ((ModuleClassLoader) ClassLoader.getSystemClassLoader())
+//                }
+////                if("osgi")
+//            }
+//            URLClassLoader.newInstance(urls, parent)
     	} else {
             LOG.debug("Model for schema file: " + opt.grammarFilePath + " already generated, skip generate step.");
     	}
