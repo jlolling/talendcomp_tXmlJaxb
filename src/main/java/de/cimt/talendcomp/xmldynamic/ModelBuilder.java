@@ -2,9 +2,6 @@ package de.cimt.talendcomp.xmldynamic;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -161,6 +158,7 @@ public final class ModelBuilder {
         if (!models.contains(opt.grammarFilePath)) {
 
             if (testUpdateRequired()) { 
+                LOG.info("Generate Model using Plugin Version "+ opt.VERSION + "("+opt.LASTUPDATE+")" );
                 setupModelDir(opt.targetDir);
                 Model model = ModelLoader.load(opt, codeModel, ERR);
                 Outline ouln = model.generateCode(opt, ERR);
@@ -186,7 +184,6 @@ public final class ModelBuilder {
                 if (opt.targetDir.exists() == false) {
                     throw new Exception("Cannot create/use target folder: " + opt.targetDir);
                 }
-                LOG.debug("Generate classes:");
                 model.codeModel.build( new FileCodeWriter(opt.targetDir) );
                 if (!opt.compileSource) {
                     return;

@@ -407,7 +407,7 @@ public class ReflectUtil {
          */
         Map<String, ExtPropertyAccessor> res = new HashMap<String, ExtPropertyAccessor>();
         for (ExtPropertyAccessor pa : all) {
-            final String name = pa.getName();
+            final String name = pa.getName().toUpperCase();
             if (!res.containsKey(name)) {
                 res.put(name, pa);
             } else {
@@ -446,7 +446,7 @@ public class ReflectUtil {
                         continue;
                     }
 
-                    propName = propName.substring(0, 1).toLowerCase() + propName.substring(1);
+                    propName = propName.toUpperCase();//.substring(0, 1).toLowerCase() + propName.substring(1);
                     if (beanInfoProps.contains(propName)) {
                         continue;
                     }
@@ -477,7 +477,7 @@ public class ReflectUtil {
                 continue;
             }
             int modifier = f.getModifiers();
-            String name = f.getName();
+            String name = f.getName().toUpperCase();
             Class<?> type = f.getType();
             if (Modifier.isPublic(modifier)) {
                 ExtPropertyAccessor property = mcoll.get(name);

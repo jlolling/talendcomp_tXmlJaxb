@@ -18,6 +18,13 @@ public class PluginFilter extends BaseFilter {
 
     public static final QName JAXB = new QName("http://java.sun.com/xml/ns/jaxb", "jaxb", "jaxb");
     public static final QName XJC  = new QName("http://java.sun.com/xml/ns/jaxb/xjc", "xjc", "xjc");
+    private class ElementStored{
+        String uri;
+        String prefix;
+        AttributesImpl attributes;
+        
+    }
+    ElementStored elementBlock   =null;
 
     public boolean testManipulationRequired(Pair<String, String> fqtype){
         return false;
@@ -148,16 +155,15 @@ public class PluginFilter extends BaseFilter {
             super.startElement(uri, localName, qName, impl);
 
             if (type != null) {
+                elementBlock = new ElementStored();
+                
                 impl = new AttributesImpl();
                 impl.addAttribute("", "base", "base", "string", type);
+                elementBlock.uri=uri;
+                elementBlock.prefix=prefix;
+                elementBlock.attributes=impl;
                 
-                super.startElement(uri, "complexType", prefix + "complexType", new AttributesImpl());
-                super.startElement(uri, "complexContent", prefix + "complexContent", new AttributesImpl());
-                super.startElement(uri, "extension", prefix + "extension", impl);
-                super.endElement(uri, "extension", prefix + "extension");
-                super.endElement(uri, "complexContent", prefix + "complexContent");
-                super.endElement(uri, "complexType", prefix + "complexType");
-
+             
             }
             // </editor-fold> 
         } else if (name.equalsIgnoreCase("complexType")) {
@@ -170,6 +176,37 @@ public class PluginFilter extends BaseFilter {
         } else {
             super.startElement(uri, localName, qName, atts);
         }
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {    
+        final boolean schemaUri = equalUris(XMLConstants.W3C_XML_SCHEMA_NS_URI, uri);
+        String name = toLocalName(localName, qName);
+        if (!schemaUri) {
+            super.endElement(uri, localName, qName);
+            return;
+        }
+        
+        if ( (name.equalsIgnoreCase("annotation") || name.equalsIgnoreCase("element")) && elementBlock!=null) {
+            
+            if(name.equalsIgnoreCase("annotation"))
+                super.endElement(uri, localName, qName);
+            
+            super.startElement(elementBlock.uri, "complexType", elementBlock.prefix + "complexType", new AttributesImpl());
+            super.startElement(elementBlock.uri, "complexContent", elementBlock.prefix + "complexContent", new AttributesImpl());
+            super.startElement(elementBlock.uri, "extension", elementBlock.prefix + "extension", elementBlock.attributes);
+            super.endElement(elementBlock.uri, "extension", elementBlock.prefix + "extension");
+            super.endElement(elementBlock.uri, "complexContent", elementBlock.prefix + "complexContent");
+            super.endElement(elementBlock.uri, "complexType", elementBlock.prefix + "complexType");
+            elementBlock=null;
+            
+            if(name.equalsIgnoreCase("annotation"))
+                return;
+        } 
+        
+        super.endElement(uri, localName, qName);
+        
+    
     }
 
 }

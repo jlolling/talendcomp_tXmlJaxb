@@ -37,6 +37,10 @@ import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
 import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
 import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 /**
  *
@@ -59,9 +63,23 @@ public class XJCOptions extends Options {
     public String  targetName = "gen_" + Util.uniqueString() + ".jar";
     public String  grammarFilePath = null;
     public long newestGrammar = 0l;
+    public static final String VERSION;
+    public static final String LASTUPDATE;
     
-
-//    private TypeReadHandler typesHelper = new TypeReadHandler();
+    static {
+        String versionString="unknown";
+        String d="";
+        try {
+            JarInputStream jis=new JarInputStream(XJCOptions.class.getProtectionDomain().getCodeSource().getLocation().openStream());
+            final Manifest manifest = jis.getManifest();
+            try {
+//                d=new SimpleDateFormat("yyyy").parse( manifest.getMainAttributes().getValue("Implementation-Timestamp") );
+            } catch (Throwable t) {}
+            versionString=manifest.getMainAttributes().getValue("Implementation-Version");
+        } catch (Throwable t) {}
+        VERSION   =versionString;
+        LASTUPDATE=d;
+    }
     
     // stores relations between source and alias
     private final Map<String, String> grammarCache = new HashMap<String, String>();
@@ -84,7 +102,6 @@ public class XJCOptions extends Options {
         }
     };
     
-//    private Set<Pair<String, String>> complexTypes=new TreeSet<Pair<String, String>>(); 
     /**
      * used to activate printing of manipulated grammars before generating code model
      */
@@ -146,7 +163,7 @@ public class XJCOptions extends Options {
          */
         try {
 
-            URI rootURI = null;
+            URI rootURI;
             try {
                 rootURI = new URI(source.getSystemId());
             } catch (java.net.URISyntaxException use) {
