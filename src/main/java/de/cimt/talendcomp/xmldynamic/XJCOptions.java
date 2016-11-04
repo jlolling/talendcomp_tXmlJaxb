@@ -37,8 +37,10 @@ import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
 import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
 import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
@@ -51,6 +53,7 @@ public class XJCOptions extends Options {
     private static final Logger LOG = Logger.getLogger(XJCOptions.class.getName());
     public boolean extendClasspath = true;
     public boolean compileSource = true;
+    public boolean casesensitive = false;
     public boolean createGraph = false; // paints the structure
     public boolean ignoreAnnotations = false;
     public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
@@ -73,7 +76,8 @@ public class XJCOptions extends Options {
             JarInputStream jis=new JarInputStream(XJCOptions.class.getProtectionDomain().getCodeSource().getLocation().openStream());
             final Manifest manifest = jis.getManifest();
             try {
-//                d=new SimpleDateFormat("yyyy").parse( manifest.getMainAttributes().getValue("Implementation-Timestamp") );
+                Date date=new SimpleDateFormat("yyyyMMdd-HHmm").parse( manifest.getMainAttributes().getValue("Implementation-Timestamp") );
+                d=DateFormat.getDateInstance(2, Locale.getDefault()).format(date);
             } catch (Throwable t) {}
             versionString=manifest.getMainAttributes().getValue("Implementation-Version");
         } catch (Throwable t) {}
