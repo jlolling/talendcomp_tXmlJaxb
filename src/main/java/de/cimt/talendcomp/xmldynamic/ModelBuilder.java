@@ -156,9 +156,8 @@ public final class ModelBuilder {
     public synchronized void generate() throws Exception {
                 
         if (!models.contains(opt.grammarFilePath)) {
-
+            LOG.info("Generate Model using Plugin Version "+ opt.VERSION + "("+opt.LASTUPDATE+")" );
             if (testUpdateRequired()) { 
-                LOG.info("Generate Model using Plugin Version "+ opt.VERSION + "("+opt.LASTUPDATE+")" );
                 setupModelDir(opt.targetDir);
                 Model model = ModelLoader.load(opt, codeModel, ERR);
                 Outline ouln = model.generateCode(opt, ERR);

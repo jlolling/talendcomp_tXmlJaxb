@@ -138,8 +138,8 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-    	attr = ReflectUtil.camelizeName(attr);
-        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+    	//attr = ReflectUtil.camelizeName(attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr.toUpperCase());
         if (pa == null) {
             return false;
         }
@@ -174,8 +174,8 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-    	attr = ReflectUtil.camelizeName(attr);
-        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+//    	attr = ReflectUtil.camelizeName(attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr.toUpperCase());
         if (pa == null) {
             return new MissingAttribute(attr);
         }
@@ -190,8 +190,8 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-    	attr = ReflectUtil.camelizeName(attr);
-        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+//    	attr = ReflectUtil.camelizeName(attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr.toUpperCase());
         Object value = null;
         if (pa == null) {
         	if (ignoreMissing == false) {
@@ -210,9 +210,9 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-        attr = ReflectUtil.camelizeName(attr);
+//        attr = ReflectUtil.camelizeName(attr);
         int size = 0;
-        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr.toUpperCase());
         if (Collection.class.isAssignableFrom(pa.getPropertyType())) {
             Object currentValue = pa.getPropertyValue(this);
             size = ((Collection<?>) currentValue).size();
@@ -226,8 +226,8 @@ public abstract class TXMLObject implements Serializable, Cloneable {
         if (attr == null || attr.trim().isEmpty()) {
             throw new IllegalArgumentException("attribute name cannot be null or empty!");
         }
-    	attr = ReflectUtil.camelizeName(attr);
-        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr);
+    	//attr = ReflectUtil.camelizeName(attr);
+        ExtPropertyAccessor pa = CACHE.get(this.getClass()).get(attr.toUpperCase());
         if (pa == null) {
             if (attr.indexOf("/") > 0) {
                 try {
