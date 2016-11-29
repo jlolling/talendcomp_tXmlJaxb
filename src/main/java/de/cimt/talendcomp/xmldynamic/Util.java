@@ -1,6 +1,8 @@
 package de.cimt.talendcomp.xmldynamic;
 
 import de.cimt.talendcomp.xmldynamic.annotations.Jetcode;
+import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
+import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -258,6 +260,22 @@ public final class Util {
         List<ExtPropertyAccessor> listProperties = ReflectUtil.introspect(clazz, TXMLObject.class);
         for (ExtPropertyAccessor prop : listProperties) {
             builder.append("    ").append(prop.getName()).append(" type: ").append(prop.getPropertyType().getName());
+            if(Collection.class.isAssignableFrom(prop.getPropertyType()) ){
+                final TXMLTypeHelper helper = prop.findAnnotation(TXMLTypeHelper.class);
+                if(helper!=null){
+                    builder.append("<");
+                    boolean first=true;
+                    for(QNameRef ref : helper.refs()){
+                        if(!first){
+                            builder.append(" or ");
+                        }
+                        builder.append(ref.type().getName());
+                        first=false;
+                    }
+                    builder.append(">"); 
+                }
+            }
+            
             builder.append("\n");
         }
         builder.append("\n----------------------------\n");

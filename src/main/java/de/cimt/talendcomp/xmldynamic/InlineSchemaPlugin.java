@@ -162,7 +162,7 @@ public class InlineSchemaPlugin extends Plugin {
                 if (bean.getElementName() != null) {
                     e.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                     final String ns = bean.getElementName().getNamespaceURI();
-                    if (!namespaces.containsValue(ns)) {
+                    if (!namespaces.get(ownerPackage).contains(ns)) {
                         namespaces.get(ownerPackage).add(bean.getElementName().getNamespaceURI());
                         n.get(ownerPackage).add(JExpr.lit(ns));
                     }

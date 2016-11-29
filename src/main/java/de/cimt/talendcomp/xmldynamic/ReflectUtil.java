@@ -15,6 +15,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,12 +91,38 @@ public class ReflectUtil {
             }
         }
 
-        boolean fp = numb.longValue() != numb.doubleValue();
-        // konvertierung zu Ganzzahl obwohl Fliesskommazahl gegeben
-        if (fp && !(type.equals(BigDecimal.class) || type.equals(Double.class) || type.equals(Float.class))) {
-            return (Number) convert(Math.round(numb.doubleValue()), type);
+        if (type.equals(AtomicInteger.class)) {
+            return new AtomicInteger(numb.intValue());
         }
-        return (Number) convert(numb, type);
+        if (type.equals(AtomicLong.class)) {
+            return new AtomicLong(numb.longValue());
+        }
+        if (type.equals(BigDecimal.class)) {
+            return new BigDecimal(numb.doubleValue());
+        }
+        if (type.equals(BigInteger.class)) {
+            return new BigInteger(numb.toString());
+        }
+        if (type.equals(Byte.class)) {
+            return numb.byteValue();
+        }
+        if (type.equals(Double.class)) {
+            return numb.doubleValue();
+        }
+        if (type.equals(Float.class)) {
+            return numb.floatValue();
+        }
+        if (type.equals(Integer.class)) {
+            return numb.intValue();
+        }
+        if (type.equals(Long.class)) {
+            return numb.longValue();
+        }
+        if (type.equals(Short.class)) {
+            return numb.shortValue();
+        }
+
+        throw new UnsupportedOperationException("Cannot convert type " + type + " to class " + Number.class);
     }
 
     @SuppressWarnings("unchecked")
