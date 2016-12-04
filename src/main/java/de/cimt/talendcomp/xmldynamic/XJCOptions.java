@@ -55,6 +55,8 @@ public class XJCOptions extends Options {
     public boolean compileSource = true;
     public boolean casesensitive = false;
     public boolean createGraph = false; // paints the structure
+    public boolean addJavadocs = true;  // add javadoc of newly generated model
+    
     public boolean ignoreAnnotations = false;
     public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
     public boolean checksum = false;
@@ -65,7 +67,7 @@ public class XJCOptions extends Options {
     public String  checksumValue = "";
     public String  targetName = "gen_" + Util.uniqueString() + ".jar";
     public String  grammarFilePath = null;
-    public long newestGrammar = 0l;
+    public long    newestGrammar = 0l;
     public static final String VERSION;
     public static final String LASTUPDATE;
     

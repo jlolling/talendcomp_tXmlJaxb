@@ -25,7 +25,11 @@ import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.util.ErrorReceiverFilter;
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Builds a {@link Model} object.
@@ -39,15 +43,15 @@ import java.net.URI;
 public final class ModelBuilder {
 
     private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
-    private static final Set<String> models = new HashSet<String>();
-    public static final Object lock = new Object(); 
+    private static final Set<String> MODELS = new HashSet<String>();
+    public static final Object LOCK = new Object(); 
     
     public static boolean isModelAlreadyBuild(String grammarFilePath) {
     	if (grammarFilePath == null) {
             // when grammarFilePath is null then the model should be empty and is available, or? so reture true must be ok
             return true;
     	}
-    	return models.contains(new File(grammarFilePath).getAbsolutePath());
+    	return MODELS.contains(new File(grammarFilePath).getAbsolutePath());
     }
     
     public static boolean isModelAlreadyBuild(File grammarFile) {
@@ -55,7 +59,7 @@ public final class ModelBuilder {
             // when grammarFilePath is null then the model should be empty and is available, or? so reture true must be ok
             return true;
     	}
-    	return models.contains(grammarFile.getAbsolutePath());
+    	return MODELS.contains(grammarFile.getAbsolutePath());
     }
 
     private static final ErrorReceiver ERR = new ErrorReceiver() {
@@ -81,8 +85,10 @@ public final class ModelBuilder {
     };
 
     private final XJCOptions opt;
+    
     @SuppressWarnings("unused")
-	private final ErrorReceiverFilter errorReceiver;
+    private final ErrorReceiverFilter errorReceiver;
+    
     private final JCodeModel codeModel;
  
     public ModelBuilder(XJCOptions _opt) {
@@ -98,11 +104,11 @@ public final class ModelBuilder {
             LOG.warn(Messages.format(Messages.COMPATIBILITY_REQUIRED, ""));
             opt.compatibilityMode = 2;
         }
-        // @FIXME:aufräumen
+        // @FIXME:cleanup?
         opt.strictCheck = false;
         opt.noFileHeader = true;
         opt.enableIntrospection = true;
-        opt.debugMode = true;
+//        opt.debugMode = true;
         this.errorReceiver = new ErrorReceiverFilter(ERR);
     }
 
@@ -155,7 +161,7 @@ public final class ModelBuilder {
      */
     public synchronized void generate() throws Exception {
                 
-        if (!models.contains(opt.grammarFilePath)) {
+        if (!MODELS.contains(opt.grammarFilePath)) {
             LOG.info("Generate Model using Plugin Version "+ opt.VERSION + "("+opt.LASTUPDATE+")" );
             if (testUpdateRequired()) { 
                 setupModelDir(opt.targetDir);
@@ -201,9 +207,33 @@ public final class ModelBuilder {
                     LOG.error(message);
                     throw new IllegalStateException( message );
                 }
+                
                 StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
                 if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
                     throw new Exception(Messages.COMPILATION_FAILED);
+                }
+                if(opt.addJavadocs){
+                    try{
+                        Class<?> javadoc= Class.forName("com.sun.tools.javadoc.Main");
+                        List<String> docparams=new ArrayList<String>();
+                        docparams.add("-d");
+                        File target=new File(opt.targetDir, "/META-INF/API-DOC/");
+                        docparams.add( target.getCanonicalPath() );
+                        docparams.add( "-sourcepath" );
+                        docparams.add( opt.targetDir.getCanonicalPath() );
+    //                    
+                        for( Iterator<? extends PackageOutline> iterator = ouln.getAllPackageContexts().iterator();iterator.hasNext();){
+                            PackageOutline po=iterator.next();
+                            docparams.add( po._package().name());
+                            System.err.println("add package "+po._package().name());
+                        }
+
+                        Method execute=javadoc.getMethod("main",  new String[2].getClass() );
+                        execute.invoke(null, new Object[]{ docparams.toArray( new String[docparams.size()])} );
+                    }catch(Throwable t){
+                        opt.addJavadocs=false;
+                        t.printStackTrace();
+                    }
                 }
                 if(opt.createJar){
                     // TODO: there is no check if option jarFilePath is set an valid
@@ -215,14 +245,14 @@ public final class ModelBuilder {
                 }
             }
             
-            models.add(opt.grammarFilePath);
+            MODELS.add(opt.grammarFilePath);
             if (!opt.extendClasspath) {
                 return;
             }
             URI uri= (opt.createJar && opt.jarFilePath!=null) ? new File(opt.jarFilePath).toURI() : opt.targetDir.toURI();
             
             
-            LOG.warn("extend Classpath using " + ( (opt.createJar && opt.jarFilePath!=null) ? opt.jarFilePath : opt.targetDir) );
+            LOG.debug("extend Classpath using " + ( (opt.createJar && opt.jarFilePath!=null) ? opt.jarFilePath : opt.targetDir) );
             Util.register(uri, (opt.createJar && opt.jarFilePath!=null) );
 //            
 //            Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
@@ -265,23 +295,23 @@ public final class ModelBuilder {
         return tf;
     }
 
-	private static void delete(File f) throws IOException {
-		if (f.isDirectory()) {
-			for (File c : f.listFiles()) {
-				delete(c);
-			}
-		}
-		if (f.delete() == false) {
-			throw new IOException("Failed to delete file: " + f.getAbsolutePath());
-		}
-	}
+    private static void delete(File f) throws IOException {
+        if (f.isDirectory()) {
+            for (File c : f.listFiles()) {
+                delete(c);
+            }
+        }
+        if (f.delete() == false) {
+            throw new IOException("Failed to delete file: " + f.getAbsolutePath());
+        }
+    }
 
     private static File setupModelDir(File modelDir) throws Exception {
         if (modelDir.exists()) {
             if (modelDir.isFile() && !modelDir.delete()) {
                 throw new Exception("At the location of the model dir a file already exists: " + modelDir.getAbsolutePath() + " and this cannot be deleted!");
             }
-            delete(modelDir); // more simple approach to delete a filled directory
+            delete(modelDir); 
         }
         modelDir.mkdirs();
         if (modelDir.exists() == false) {
