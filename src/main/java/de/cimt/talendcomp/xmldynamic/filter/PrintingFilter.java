@@ -5,7 +5,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 /**
- *
+ * Used for debug. Allows to output the documents after filtering and preprocessing to ensure 
+ * generated content will generate exactly the same dom as expected from definitions.
  * @author dkoch
  */
 public class PrintingFilter extends XMLFilterImpl {
