@@ -1,10 +1,13 @@
 package de.cimt.talendcomp.xmldynamic.filter;
 
+import de.cimt.talendcomp.xmldynamic.InlineSchemaPlugin;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import javax.xml.XMLConstants;
 
 import org.apache.log4j.Logger;
+import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLFilterImpl;
 
@@ -48,7 +51,18 @@ public class BaseFilter extends XMLFilterImpl {
         }
         return null;
     }
-
+    
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
+        if (equalUris(XMLConstants.W3C_XML_SCHEMA_NS_URI, uri) && toLocalName(localName, qName).equalsIgnoreCase("schema")) {
+            String tns = atts.getValue("targetNamespace");
+            if (tns!=null && !prefixmapping.containsKey("$TNS")) {
+                prefixmapping.put("$TNS", tns);
+            }
+        }    
+        super.startElement(uri, localName, qName, atts);
+    }
+    
     @Override
     public void endPrefixMapping(String prefix) throws SAXException {
         prefixmapping.remove(prefix);
@@ -60,10 +74,14 @@ public class BaseFilter extends XMLFilterImpl {
         prefixmapping.put(prefix, uri);
         super.startPrefixMapping(prefix, uri);
     }
+
+    public String getTargetNamespaceURI() {
+        return prefixmapping.containsKey("$TNS")  ? prefixmapping.get("$TNS") : (prefixmapping.containsKey("") ? prefixmapping.get("") : "");
+    }
     
     boolean equalUris(String uri1, String uri2) {
-    	return ( (uri1 != null && uri1.isEmpty() == false) ? uri1 : (prefixmapping.containsKey("") ? prefixmapping.get("") : "") )
-    			.equals( (uri2 != null && uri2.isEmpty() == false) ? uri2 : prefixmapping.get("") );
+    	return (                 (uri1 != null && uri1.isEmpty() == false) ? uri1 : (prefixmapping.containsKey("") ? prefixmapping.get("") : "") )
+    			.equals( (uri2 != null && uri2.isEmpty() == false) ? uri2 : (prefixmapping.containsKey("") ? prefixmapping.get("") : "") );
     }
     
 }
