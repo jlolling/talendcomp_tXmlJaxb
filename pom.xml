@@ -35,7 +35,7 @@
                 <executions>
                     <execution>
                         <id>process-talend-source</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -48,11 +48,10 @@
                                 </resource>
                             </resources>                        
                         </configuration>
-                        
                     </execution>
                     <execution>
                         <id>process-java-resources</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -64,7 +63,6 @@
                                 </resource>
                             </resources>                        
                         </configuration>
-                        
                     </execution>
                 </executions>
             </plugin>
@@ -82,33 +80,61 @@
                           <Implementation-Timestamp>${maven.build.timestamp}</Implementation-Timestamp>
                         </manifestEntries>
                     </archive>
-                    <outputDirectory>target/talend_component/tXmlJaxbModel/</outputDirectory>
-                    <overWriteReleases>true</overWriteReleases>
-                    <overWriteSnapshots>true</overWriteSnapshots>
-                    <overWriteIfNewer>true</overWriteIfNewer>
-                    <includeScope>runtime</includeScope>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/talend_component/tXmlJaxbModel/</outputDirectory>
-                            <overWriteReleases>true</overWriteReleases>
-                            <overWriteSnapshots>true</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                            <includeScope>runtime</includeScope>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+			<plugin>
+				<groupId>de.cimt.talendcomp</groupId>
+				<artifactId>cimt-talendcomp-maven-plugin</artifactId>
+				<version>1.2</version>
+				<configuration>
+					<componentBaseDir>${basedir}/target/talend_component/</componentBaseDir>
+				</configuration>
+				<executions>
+					<execution>
+						<id>tXmlJaxbModel</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tXmlJaxbModel</componentName>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tXmlJaxbObjectInput</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tXmlJaxbObjectInput</componentName>
+							<noJars>true</noJars>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tXmlJaxbObjectOutput</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tXmlJaxbObjectOutput</componentName>
+							<noJars>true</noJars>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tXmlJaxbSave</id>
+						<phase>install</phase>
+						<goals>
+							<goal>component</goal>
+						</goals>
+						<configuration>
+							<componentName>tXmlJaxbSave</componentName>
+							<noJars>true</noJars>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
         </plugins>
     </build>
     <dependencies>

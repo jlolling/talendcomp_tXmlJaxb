@@ -115,16 +115,7 @@
     </ADVANCED_PARAMETERS>
 
     <CODEGENERATION>
-        <IMPORTS>
-            <IMPORT NAME="cimt-talendcomp-xmldynamic" MODULE="${build.finalName}.jar" REQUIRED="true" />
-            <IMPORT NAME="colllib" MODULE="colllib-1.6.jar" REQUIRED="true" />
-            <IMPORT NAME="commons-beanutils-core" MODULE="commons-beanutils-core-1.8.3.jar" REQUIRED="true" />
-            <IMPORT NAME="commons-logging" MODULE="commons-logging-1.1.1.jar" REQUIRED="true" />
-            <IMPORT NAME="jaxb-core" MODULE="jaxb-core-2.2.11.jar" REQUIRED="true" />
-            <IMPORT NAME="jaxb-xjc" MODULE="jaxb-xjc-2.2.11.jar" REQUIRED="true" />
-            <IMPORT NAME="juel-api" MODULE="juel-api-2.2.2.jar" REQUIRED="true" />
-            <IMPORT NAME="juel-impl" MODULE="juel-impl-2.2.2.jar" REQUIRED="true" />
-        </IMPORTS>
+
     </CODEGENERATION>
 
     <RETURNS>
