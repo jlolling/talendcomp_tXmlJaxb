@@ -12,11 +12,11 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 public class DateTimeAdapter extends XmlAdapter<String, Date>{
 
     @Override
-    public Date unmarshal(String v) throws Exception {
+    public Date unmarshal(String v) {
         if(v==null)
             return null;
         
-        Date d;
+            Date d;
         v=v.trim();
         if(!v.toUpperCase().contains("T")){
             // date without time but timezone available
@@ -33,12 +33,12 @@ public class DateTimeAdapter extends XmlAdapter<String, Date>{
     }
 
     @Override
-    public String marshal(Date v) throws Exception {
+    public String marshal(Date v) {
         if(v==null)
             return null;
         Calendar cal=Calendar.getInstance();
         cal.setTime(v);
-        return DatatypeConverter.printDate(cal);
+        return DatatypeConverter.printDateTime(cal);
     }
     
 }
