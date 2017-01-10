@@ -1,5 +1,6 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import de.cimt.talendcomp.xmldynamic.plugins.InlineSchemaPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,12 +29,13 @@ import org.xml.sax.XMLReader;
 
 import com.sun.tools.xjc.Options;
 
-import de.cimt.talendcomp.xmldynamic.filter.AnnotationFilter;
+import de.cimt.talendcomp.xmldynamic.filter.RemoveAnnotationsFilter;
 import de.cimt.talendcomp.xmldynamic.filter.ChecksumFilter;
 import de.cimt.talendcomp.xmldynamic.filter.DependencyFilter;
 import de.cimt.talendcomp.xmldynamic.filter.GraphFilter;
 import de.cimt.talendcomp.xmldynamic.filter.PluginFilter;
 import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
+import de.cimt.talendcomp.xmldynamic.filter.RootElementFilter;
 import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
 import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
@@ -43,6 +45,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import javax.xml.namespace.QName;
 
 /**
  *
@@ -70,6 +73,7 @@ public class XJCOptions extends Options {
     public long    newestGrammar = 0l;
     public static final String VERSION;
     public static final String LASTUPDATE;
+    private List<QName> rootElements=new ArrayList<QName>();
     
     static {
         String versionString="unknown";
@@ -127,6 +131,7 @@ public class XJCOptions extends Options {
         tmproot.mkdirs();
         tmproot.deleteOnExit();
         pluginURIs.add(InlineSchemaPlugin.PNS.getNamespaceURI());
+//        pluginURIs.add(VisualisationPlugin.PNS.getNamespaceURI());
         strictCheck = false;
         noFileHeader = true;
         compatibilityMode = 2;
@@ -168,7 +173,7 @@ public class XJCOptions extends Options {
          * this one will be transferred to the superclass.
          */
         try {
-
+            
             URI rootURI;
             try {
                 rootURI = new URI(source.getSystemId());
@@ -176,7 +181,6 @@ public class XJCOptions extends Options {
                 rootURI = new File(source.getSystemId()).toURI();
             }
             String alias = Util.uniqueString() + ".xsd";
-
             XMLFilterChain chain = new XMLFilterChain();
 //            boolean isMemorySource = source.getClass().equals(InMemorySource.class);
 //            boolean wsdlSource = (source.getSystemId().toLowerCase().endsWith(".wsdl"));
@@ -208,6 +212,8 @@ public class XJCOptions extends Options {
                 }
             });
             
+            RootElementFilter rif=new RootElementFilter();
+            chain.add( rif );
             DependencyFilter df = new DependencyFilter(rootURI) {
                 
                 @Override
@@ -259,9 +265,10 @@ public class XJCOptions extends Options {
             }
             grammarCache.put(rootURI.toString(), alias);
 
+            rootElements.addAll( rif.getRootElements() );
             super.addGrammar( new InMemorySource(w.toString(), alias) );
         } catch (Throwable ex) {
-        	LOG.error(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
+            LOG.error(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
             throw new RuntimeException(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
         }
     }
@@ -283,20 +290,27 @@ public class XJCOptions extends Options {
                 public boolean testManipulationRequired(Pair<String, String> fqtype) {
                     return typeBindings.contains(fqtype);
                 }
+
+                @Override
+                public boolean isRootelement(Pair<String, String> fqtype) {
+                    System.err.println("test rootelement {"+fqtype.x+"}:"+ fqtype.y);
+                    return rootElements.contains( new QName(fqtype.x, fqtype.y) );
+                }
+                
             };
-            if (printGrammar) {
-                chain.add(new PrintingFilter());
-            }
             if (createGraph) {
                 chain.add(new GraphFilter());
             }
             
             if (ignoreAnnotations) {
-            	chain.add(new AnnotationFilter());
+            	chain.add(new RemoveAnnotationsFilter());
             }
             chain.add(pluginFilter);
             ChecksumFilter csf = new ChecksumFilter();
             chain.add(csf);
+            if (printGrammar) {
+                chain.add(new PrintingFilter());
+            }
 
             List<InputSource> ng = new ArrayList<InputSource>();
             XMLFilteredReader reader = new XMLFilteredReader(spf.newSAXParser().getXMLReader(), chain);

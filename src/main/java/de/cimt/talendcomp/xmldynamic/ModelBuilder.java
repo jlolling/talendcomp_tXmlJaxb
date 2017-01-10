@@ -1,5 +1,6 @@
 package de.cimt.talendcomp.xmldynamic;
 
+import de.cimt.talendcomp.xmldynamic.plugins.InlineSchemaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,11 +26,10 @@ import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.util.ErrorReceiverFilter;
+import de.cimt.talendcomp.xmldynamic.plugins.VisualisationPlugin;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Builds a {@link Model} object.
@@ -166,6 +166,7 @@ public final class ModelBuilder {
             if (testUpdateRequired()) { 
                 setupModelDir(opt.targetDir);
                 Model model = ModelLoader.load(opt, codeModel, ERR);
+                
                 Outline ouln = model.generateCode(opt, ERR);
                 if (ouln == null) {
                     throw new Exception("failed to compile a schema");
@@ -208,11 +209,17 @@ public final class ModelBuilder {
                     throw new IllegalStateException( message );
                 }
                 
+                
+                
                 StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
                 if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
                     throw new Exception(Messages.COMPILATION_FAILED);
                 }
+                
                 if(opt.addJavadocs){
+                    /**
+                     * try to generate javadoc for the model
+                     */
                     try{
                         Class<?> javadoc= Class.forName("com.sun.tools.javadoc.Main");
                         List<String> docparams=new ArrayList<String>();
@@ -225,14 +232,13 @@ public final class ModelBuilder {
                         for( Iterator<? extends PackageOutline> iterator = ouln.getAllPackageContexts().iterator();iterator.hasNext();){
                             PackageOutline po=iterator.next();
                             docparams.add( po._package().name());
-                            System.err.println("add package "+po._package().name());
                         }
 
                         Method execute=javadoc.getMethod("main",  new String[2].getClass() );
                         execute.invoke(null, new Object[]{ docparams.toArray( new String[docparams.size()])} );
                     }catch(Throwable t){
-                        opt.addJavadocs=false;
-                        t.printStackTrace();
+                        opt.addJavadocs=false; // to avoid adding link later
+                        t.printStackTrace(); // TODO: remove or send to log
                     }
                 }
                 if(opt.createJar){
@@ -254,20 +260,6 @@ public final class ModelBuilder {
             
             LOG.debug("extend Classpath using " + ( (opt.createJar && opt.jarFilePath!=null) ? opt.jarFilePath : opt.targetDir) );
             Util.register(uri, (opt.createJar && opt.jarFilePath!=null) );
-//            
-//            Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-//            
-//            method.setAccessible(true);
-//            try{
-//                method.invoke((URLClassLoader) ClassLoader.getSystemClassLoader(), new Object[]{uri.toURL()});
-//            }catch(ClassCastException cce){
-//                final String name = ClassLoader.getSystemClassLoader().getClass().getName();
-//                if(name.contains("osgi") || name.contains("ModuleClassLoader") ){
-////                    ((ModuleClassLoader) ClassLoader.getSystemClassLoader())
-//                }
-////                if("osgi")
-//            }
-//            URLClassLoader.newInstance(urls, parent)
     	} else {
             LOG.debug("Model for schema file: " + opt.grammarFilePath + " already generated, skip generate step.");
     	}
