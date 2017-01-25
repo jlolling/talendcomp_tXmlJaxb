@@ -5,8 +5,8 @@ import org.xml.sax.XMLFilter;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 /**
- * a chain of filters used while handling sax events. only kkep head and tail of 
- * the chain, no removal is planed yet
+ * a chain of filters used while handling sax events. only keeps the head and tail 
+ * of the chain, no removal of elements is planned yet
  * @author dkoch
  */
 public class XMLFilterChain {
