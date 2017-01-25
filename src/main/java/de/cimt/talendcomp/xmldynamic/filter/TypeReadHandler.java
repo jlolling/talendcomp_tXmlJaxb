@@ -1,15 +1,7 @@
 package de.cimt.talendcomp.xmldynamic.filter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.XMLConstants;
 import org.colllib.datastruct.Pair;
-import org.colllib.filter.Filter;
-import org.colllib.util.CollectionUtil;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
