@@ -8,7 +8,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import de.cimt.talendcomp.xmldynamic.InlineSchemaPlugin;
+import de.cimt.talendcomp.xmldynamic.plugins.InlineSchemaPlugin;
 
 /**
  *
@@ -18,6 +18,8 @@ public class PluginFilter extends BaseFilter {
 
     public static final QName JAXB = new QName("http://java.sun.com/xml/ns/jaxb", "jaxb", "jaxb");
     public static final QName XJC  = new QName("http://java.sun.com/xml/ns/jaxb/xjc", "xjc", "xjc");
+    
+    // helperclass to be able to remove annotations
     private class ElementStored{
         String uri;
         String prefix;
@@ -27,6 +29,10 @@ public class PluginFilter extends BaseFilter {
     ElementStored elementBlock   =null;
 
     public boolean testManipulationRequired(Pair<String, String> fqtype){
+        return false;
+    };
+
+    public boolean isRootelement(Pair<String, String> fqtype){
         return false;
     };
 
@@ -113,6 +119,7 @@ public class PluginFilter extends BaseFilter {
                 }
             }
             if (hasJaxbBindingPrefixes == false) {
+                // TODO: discuss weather this should be present to allow customizations!
 //                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes", JAXB.getPrefix() + ":extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
 //                impl.addAttribute(JAXB.getNamespaceURI(), "extensionBindingPrefixes", "extensionBindingPrefixes", "CDATA", InlineSchemaPlugin.PNS.getPrefix());
             }
@@ -127,24 +134,33 @@ public class PluginFilter extends BaseFilter {
             String prefix = getPrefixForUrl(uri);
             prefix = (prefix == null || prefix.length()==0) ? "" : (prefix + ":");
             String type = null;
+            String elemName = null;
+            boolean isAbstract = false;
             AttributesImpl impl = new AttributesImpl();
 
             /**
              * copy each attribute without changes but type when testManipulationRequired returns true.
              * in that case skip this attribute and create annonymous complex type extending found type
              */
-            
             for (int i = 0, max = atts.getLength(); i < max; i++) {
                 String cname = atts.getLocalName(i);
                 if (cname == null) {
                     cname = atts.getQName(i);
                 }
 
-                if (cname.equalsIgnoreCase("type") && testManipulationRequired(solve(atts.getValue(i)))) {
+                if (cname.equalsIgnoreCase("name") ) {
+                    elemName= atts.getValue(i);
+                }
+                
+                if (cname.equalsIgnoreCase("abstract") ) {
+                    isAbstract = Boolean.valueOf( atts.getValue(i) );
+                }
+                
+                if (cname.equalsIgnoreCase("type") ) {
                     type = atts.getValue(i);
                     continue;
                 }
-                
+
                 impl.addAttribute(
                         atts.getURI(i),
                         atts.getLocalName(i),
@@ -152,8 +168,17 @@ public class PluginFilter extends BaseFilter {
                         atts.getType(i),
                         atts.getValue(i));
             }
+            
+            /**
+             * ensure element has a nested complex type when 
+             * - the used type is used more than once and the element is not abstract
+             * - its a root element registered while reading source but nor redefinition is done
+             */ 
+            if( type!=null && !isAbstract && !testManipulationRequired( solve(type) ) && !isRootelement( new Pair<String, String>( getTargetNamespaceURI(), elemName) ) ){
+                impl.addAttribute("" , "type", "type", "CDATA", type);
+                type=null;
+            }
             super.startElement(uri, localName, qName, impl);
-
             if (type != null) {
                 elementBlock = new ElementStored();
                 
