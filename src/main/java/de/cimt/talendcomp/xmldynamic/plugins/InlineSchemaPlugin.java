@@ -30,10 +30,12 @@ import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.model.Aspect;
 import com.sun.tools.xjc.model.CClassInfo;
+import com.sun.tools.xjc.model.CElementInfo;
 import com.sun.tools.xjc.model.CPropertyInfo;
 import com.sun.tools.xjc.model.CTypeInfo;
 import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.model.nav.NClass;
+import com.sun.tools.xjc.model.nav.NType;
 import com.sun.tools.xjc.outline.ClassOutline;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.xml.xsom.XSAttributeUse;
@@ -46,6 +48,7 @@ import de.cimt.talendcomp.xmldynamic.TXMLObject;
 
 import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
 import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
+import java.util.Iterator;
 import org.colllib.datastruct.AutoInitMap;
 import org.colllib.factories.Factory;
 
@@ -123,33 +126,32 @@ public class InlineSchemaPlugin extends Plugin {
     public void postProcessModel(Model model, ErrorHandler errorHandler) {
         try {
             super.postProcessModel(model, errorHandler);
-//            model.codeModel.
 
-            final JClass refClass = model.codeModel.ref(Class.class);
+            final JClass refClass  = model.codeModel.ref(Class.class);
             final JClass refObject = model.codeModel.ref(TXMLObject.class);
             final JClass refString = model.codeModel.ref(String.class);
 
             model.rootClass = refObject;
 
-            Map<JPackage, JArray> e = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
+            Map<JPackage, JArray> elements = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
                 @Override
                 public JArray create() {
                     return JExpr.newArray(refClass.narrow(refObject));
                 }
             }  );
-            Map<JPackage, JArray> t = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
+            Map<JPackage, JArray> types = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
                 @Override
                 public JArray create() {
                     return JExpr.newArray(refClass.narrow(refObject));
                 }
             }  );
-            Map<JPackage, JArray> n = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
+            Map<JPackage, JArray> namespaces = new AutoInitMap<JPackage, JArray>( new Factory<JArray>(){
                 @Override
                 public JArray create() {
                     return JExpr.newArray(refString);
                 }
-            }  );            
-            Map<JPackage, Set<String>> namespaces = new AutoInitMap<JPackage, Set<String>>( new Factory<Set<String>>(){
+            }  );         
+            Map<JPackage, Set<String>> knownNamespaces = new AutoInitMap<JPackage, Set<String>>( new Factory<Set<String>>(){
                 @Override
                 public Set<String> create() {
                     return new HashSet<String>();
@@ -158,23 +160,26 @@ public class InlineSchemaPlugin extends Plugin {
             
             Set<JPackage> packages = new HashSet<JPackage>();
             for (Map.Entry<NClass, CClassInfo> beanset : model.beans().entrySet()) {
-                
+                System.err.println("beanset ");
                 CClassInfo bean = beanset.getValue();
                 final JPackage ownerPackage = bean.getOwnerPackage();
                 packages.add(ownerPackage);
                 if (bean.getElementName() != null) {
-                    e.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
+                    elements.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                     final String ns = bean.getElementName().getNamespaceURI();
-                    if (!namespaces.get(ownerPackage).contains(ns)) {
-                        namespaces.get(ownerPackage).add(bean.getElementName().getNamespaceURI());
-                        n.get(ownerPackage).add(JExpr.lit(ns));
+                    if (!knownNamespaces.get(ownerPackage).contains(ns)) {
+                        knownNamespaces.get(ownerPackage).add(ns);
+                        namespaces.get(ownerPackage).add(JExpr.lit(ns));
                     }
                 } else {
-                    t.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
+                    types.get(ownerPackage).add(JExpr.dotclass(model.codeModel.ref(bean.fullName())));
                 }
             }
             
+            // StringBuilder to store service provider classes
             StringBuilder sbuild=new StringBuilder(); 
+            
+            // generate Implementation of Service provider for each package
             for(JPackage pack : packages){
                 model.rootClass = refObject;
 
@@ -190,7 +195,7 @@ public class InlineSchemaPlugin extends Plugin {
 
                 meth = clazz.method(JMod.PUBLIC, refClass.narrow(refObject).array(), "getElements");
                 meth.annotate(java.lang.Override.class);
-                meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), e.get(pack)));
+                meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), elements.get(pack)));
                 JAnnotationUse annotate = meth.annotate(java.lang.SuppressWarnings.class);
                 annotate.param("value", "unchecked");
 
@@ -198,18 +203,18 @@ public class InlineSchemaPlugin extends Plugin {
                 meth.annotate(java.lang.Override.class);
                 annotate = meth.annotate(java.lang.SuppressWarnings.class);
                 annotate.param("value", "unchecked");
-                meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), t.get(pack)));
+                meth.body()._return(JExpr.cast(refClass.narrow(refObject).array(), types.get(pack)));
 
                 meth = clazz.method(JMod.PUBLIC, refString.array(), "getNamespaces");
                 meth.annotate(java.lang.Override.class);
-                meth.body()._return(n.get(pack));
+                meth.body()._return(namespaces.get(pack));
                 
                 clazz.direct( CODEFRAGMENT );
                 sbuild.append( clazz.fullName() ).append("\n");
                
             }
 
-
+            // create service registration
             JTextFile jrf = (JTextFile) model.codeModel._package("META-INF.services").addResourceFile(new JTextFile("de.cimt.talendcomp.xmldynamic.TXMLBinding"));
             jrf.setContents( sbuild.toString() );
 
