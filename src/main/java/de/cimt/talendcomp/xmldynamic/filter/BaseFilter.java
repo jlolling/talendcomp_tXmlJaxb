@@ -1,6 +1,5 @@
 package de.cimt.talendcomp.xmldynamic.filter;
 
-import de.cimt.talendcomp.xmldynamic.InlineSchemaPlugin;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
