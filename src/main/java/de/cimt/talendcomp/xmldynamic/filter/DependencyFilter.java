@@ -22,7 +22,7 @@ public class DependencyFilter extends BaseFilter {
         return getRelocatedSchemaLocation(root, location);
     }
  
-    protected String getRelocatedSchemaLocation(URI root, String location) throws IllegalArgumentException{
+    protected String getRelocatedSchemaLocation(URI nestedroot, String location) throws IllegalArgumentException{
         if (location == null || location.length() == 0) {
             return null;
         }
@@ -30,7 +30,7 @@ public class DependencyFilter extends BaseFilter {
             URI nestedUri = new URI(location);
 
             if (!nestedUri.isAbsolute()) {
-                nestedUri = root.resolve(nestedUri);
+                nestedUri = nestedroot.resolve(nestedUri);
             }
 
             return nestedUri.toString();
