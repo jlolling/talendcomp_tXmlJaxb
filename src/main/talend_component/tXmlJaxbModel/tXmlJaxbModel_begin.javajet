@@ -40,7 +40,7 @@
 			 throw new Exception("No xsd file path given!");
 		}
 		if (de.cimt.talendcomp.xmldynamic.ModelBuilder.isModelAlreadyBuild(xsdFile) == false) {
-			synchronized(de.cimt.talendcomp.xmldynamic.ModelBuilder.lock) {
+			synchronized(de.cimt.talendcomp.xmldynamic.ModelBuilder.LOCK) {
 				// ask again to prevent multiple generate process caused by short coming requests
 				if (de.cimt.talendcomp.xmldynamic.ModelBuilder.isModelAlreadyBuild(xsdFile) == false) {
 					de.cimt.talendcomp.xmldynamic.XJCOptions options = new de.cimt.talendcomp.xmldynamic.XJCOptions();
