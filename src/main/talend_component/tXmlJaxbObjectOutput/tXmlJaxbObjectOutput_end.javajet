@@ -50,13 +50,14 @@
 	// we do this here because the parent is not a root
 	// now let us assign the collected children to the parents
 	try {
+	    @SuppressWarnings("unchecked")
 		java.util.Map<Object, de.cimt.talendcomp.xmldynamic.TXMLObject> parentKeyMap_<%=cid%> = (java.util.Map<Object, de.cimt.talendcomp.xmldynamic.TXMLObject>) globalMap.get("keyMap_<%=parentObject%>");
 		if (parentKeyMap_<%=cid%> != null) {
 			for (java.util.Map.Entry<Object, java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>> entry : foreignKeyMap_<%=cid%>.entrySet()) {
 				// now get the parent object and add the listed child objects to it
 				Object parentKey = entry.getKey();
 				java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listChildren = entry.getValue();
-				de.cimt.talendcomp.xmldynamic.TXMLObject parent = parentKeyMap_<%=cid%>.get(parentKey);
+				de.cimt.talendcomp.xmldynamic.TXMLObject parent = parentKeyMap_<%=cid%>.get((parentKey instanceof String) ? ((String) parentKey).toUpperCase() : parentKey);
 				if (parent != null) {
 					for (de.cimt.talendcomp.xmldynamic.TXMLObject child : listChildren) {
 						if (parent.addOrSet(child) == false) {

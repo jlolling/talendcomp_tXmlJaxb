@@ -60,11 +60,15 @@
 		}
 		globalMap.put("<%=cid%>_NB_LINE", <%=cid%>_numberObjects + 1);
 		// fill the attributes
-<% String keyFieldName = null;
+<%	String keyFieldName = null;
+	boolean keyFieldIsString = false;
 	for (int i = 0; i < listColumns.size(); i++) {
 		IMetadataColumn mc = listColumns.get(i);
 		if (mc.isKey()) {
 			keyFieldName = mc.getLabel();
+			if ("id_String".equals(mc.getTalendType())) {
+				keyFieldIsString = true;
+			}
 		}
 		Map<String, String> config = configList.get(i);
 		boolean use = "true".equals(config.get("USE"));
@@ -86,9 +90,14 @@
 <%	} // for (int i = 0; i < listColumns.size(); i++)
 	if (keyFieldName == null) { %>
 		// No key field defined !
-<%	} else { %>
+<%	} else { 
+		if (keyFieldIsString) { %>
+		// memorize key with current object - put String values upper case in the map
+		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>.toUpperCase(), currentObject);
+<%      } else { %>
 		// memorize key with current object
-		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>.toUpperCase(), currentObject); //uiuiui
+		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
+<%		} %>
 <%	}
 	if (isRoot == false) {
    		INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);

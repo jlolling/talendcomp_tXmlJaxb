@@ -39,8 +39,8 @@
 			throw new Exception("Parent object: " + parentObjectCompentName + " does not exist!");
 		}
 		String packageName = object_<%=cid%>.getClass().getPackage().getName();
-		javax.xml.bind.JAXBContext context = de.cimt.talendcomp.xmldynamic.Util.createJAXBContext();
-		<%=cid%> = context.createMarshaller();
+		javax.xml.bind.JAXBContext jaxbContext = de.cimt.talendcomp.xmldynamic.Util.createJAXBContext();
+		<%=cid%> = jaxbContext.createMarshaller();
 <%	if (prettyPrint) { %>
 		<%=cid%>.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, true);
 <%	} %>

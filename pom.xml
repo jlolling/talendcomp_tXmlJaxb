@@ -4,6 +4,7 @@
     <groupId>de.cimt.talendcomp</groupId>
     <artifactId>cimt-talendcomp-xmldynamic</artifactId>
     <name>de.cimt.talendcomp.xmldynamic [${project.version}]</name>
+    <version>2.16</version>
     
     <issueManagement>
         <system>GitHub</system>
@@ -44,7 +45,7 @@
 			<plugin>
 				<groupId>de.cimt.talendcomp</groupId>
 				<artifactId>cimt-talendcomp-maven-plugin</artifactId>
-				<version>1.4</version>
+				<version>1.7</version>
 				<configuration>
 					<componentBaseDir>target/talend_component/</componentBaseDir>
 					<copyFromSourceBaseDir>src/main/talend_component</copyFromSourceBaseDir>
@@ -146,5 +147,4 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.componentProjectDirectory>talend_component/tXmlJaxbModel/</project.build.componentProjectDirectory>
     </properties>
-    <version>2.15</version>
 </project>
