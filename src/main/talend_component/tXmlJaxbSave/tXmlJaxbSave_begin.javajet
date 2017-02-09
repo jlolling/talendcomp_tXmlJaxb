@@ -17,6 +17,7 @@
 	String file = ElementParameterParser.getValue(node, "__OUTPUT_FILE_PATH__");
 	boolean outputAsfile = "true".equals(ElementParameterParser.getValue(node, "__OUTPUT_AS_FILE__"));
 	boolean prettyPrint = "true".equals(ElementParameterParser.getValue(node, "__PRETTY_PRINT__"));
+	boolean validateContent = "true".equals(ElementParameterParser.getValue(node, "__VALIDATE_CONTENT__"));
 	boolean fragmented = "true".equals(ElementParameterParser.getValue(node, "__FRAGMENTED__"));
 	boolean debugOutput = "true".equals(ElementParameterParser.getValue(node, "__STD_OUTPUT__"));
 	String outputColumn = ElementParameterParser.getValue(node, "__XML_OUTPUT_COLUMN__"); 
@@ -50,6 +51,11 @@
 <%	if (encoding != null && encoding.trim().isEmpty() == false) { %>
 		<%=cid%>.setProperty(javax.xml.bind.Marshaller.JAXB_ENCODING, <%=encoding%>);
 <%	} %>
+
+<%      if (validateContent) { %>
+		de.cimt.talendcomp.xmldynamic.Util.validate(object_<%=cid%>);
+<%	} %>
+
 <%	if (outputAsfile) { %>
 		String filePath = <%=file%>;
 		java.io.File file = new java.io.File(filePath);
@@ -74,6 +80,7 @@
 <%	if (debugOutput || (outgoingConnName != null && outputColumn != null)) { %>
 	String xmlString_<%=cid%> = null;
 	try {
+		
 		java.io.StringWriter sw = new java.io.StringWriter();
 		<%=cid%>.marshal(object_<%=cid%>, sw);
 		xmlString_<%=cid%> = sw.toString();

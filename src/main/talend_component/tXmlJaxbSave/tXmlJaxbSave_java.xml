@@ -84,6 +84,14 @@
 		> 
 			<DEFAULT>true</DEFAULT>
 		</PARAMETER>
+		<PARAMETER
+			NUM_ROW="61"
+			FIELD="CHECK" 
+			NAME="VALIDATE_CONTENT" 
+			REQUIRED="true" 
+		> 
+			<DEFAULT>false</DEFAULT>
+		</PARAMETER>
 
 		<PARAMETER
 			NUM_ROW="70"
