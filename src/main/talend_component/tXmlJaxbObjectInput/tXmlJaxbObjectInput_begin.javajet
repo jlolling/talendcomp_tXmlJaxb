@@ -71,7 +71,7 @@
     boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
    							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
 	boolean iterateOverValueList = "true".equals(ElementParameterParser.getValue(node, "__ITERATE_OVER_VALUE_LIST__"));
-	boolean validateContent = "true".equals(ElementParameterParser.getValue(node, "__VALIDATE_INPUT__"));
+	boolean validateContent = "true".equals(ElementParameterParser.getValue(node, "__VALIDATE_CONTENT__"));
 	String valueListColumn = "";
 	if (iterateOverValueList) {
 		valueListColumn = ElementParameterParser.getValue(node, "__VALUE_LIST_COLUMN__");
