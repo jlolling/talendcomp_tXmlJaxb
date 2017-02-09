@@ -71,6 +71,7 @@
     boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
    							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
 	boolean iterateOverValueList = "true".equals(ElementParameterParser.getValue(node, "__ITERATE_OVER_VALUE_LIST__"));
+	boolean validateContent = "true".equals(ElementParameterParser.getValue(node, "__VALIDATE_INPUT__"));
 	String valueListColumn = "";
 	if (iterateOverValueList) {
 		valueListColumn = ElementParameterParser.getValue(node, "__VALUE_LIST_COLUMN__");
@@ -88,6 +89,9 @@
 		globalMap.put("<%=cid%>_FILENAME", file.getAbsolutePath());
 		de.cimt.talendcomp.xmldynamic.TXMLObject root = de.cimt.talendcomp.xmldynamic.Util.unmarshall(file);
 <% 	} %>
+		<%if(validateContent){%>
+		    Util.validate(<%=cid%>_currentObject);
+		<%}%>    
 		<%=cid%>_loopList = new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>();
 		<%=cid%>_loopList.add(root);
 		globalMap.put("<%=cid%>_CURRENT_OBJECT", root);
@@ -121,6 +125,9 @@
 	// looping of the returned objects
 	for (de.cimt.talendcomp.xmldynamic.TXMLObject <%=cid%>_currentObject : <%=cid%>_loopList) {
 	    // make the object available for other components in iterations
+		<%if(validateContent){%>
+		    Util.validate(<%=cid%>_currentObject);
+		<%}%>    
 		globalMap.put("<%=cid%>_CURRENT_OBJECT", <%=cid%>_currentObject);
 		// increment the counter
 		Integer <%=cid%>_numberObjects = (Integer) globalMap.get("<%=cid%>_NB_LINE_OBJECTS");
