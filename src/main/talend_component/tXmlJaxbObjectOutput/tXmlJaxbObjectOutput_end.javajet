@@ -57,7 +57,7 @@
 				// now get the parent object and add the listed child objects to it
 				Object parentKey = entry.getKey();
 				java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listChildren = entry.getValue();
-				de.cimt.talendcomp.xmldynamic.TXMLObject parent = parentKeyMap_<%=cid%>.get((parentKey instanceof String) ? ((String) parentKey).toUpperCase() : parentKey);
+				de.cimt.talendcomp.xmldynamic.TXMLObject parent = parentKeyMap_<%=cid%>.get(parentKey);
 				if (parent != null) {
 					for (de.cimt.talendcomp.xmldynamic.TXMLObject child : listChildren) {
 						if (parent.addOrSet(child) == false) {

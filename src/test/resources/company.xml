@@ -3,7 +3,7 @@
     <name>cimt</name>
     <customer>
         <id>A</id>
-        <name>Heinz</name>
+        <name>Jan</name>
         <address>
             <id>3</id>
             <city>Düsseldorf</city>
@@ -12,13 +12,28 @@
             <id>2</id>
             <city>Tegel</city>
         </poaddress>
-        <age>2017-02-08+01:00</age>
+        <age>2017-02-17+01:00</age>
+        <title>Dr.</title>
     </customer>
     <customer>
         <id>B</id>
-        <name>Jan</name>
-        <age>2017-02-08+01:00</age>
-        <title>Dr.</title>
+        <name>Sigi</name>
+        <poaddress>
+            <id>2</id>
+            <city>Tegel</city>
+        </poaddress>
+        <age>2017-02-17+01:00</age>
+        <title>Mr.</title>
+    </customer>
+    <customer>
+        <id>C</id>
+        <name>Fred</name>
+        <age>2017-02-17+01:00</age>
+        <title>Mr.</title>
+    </customer>
+    <customer>
+        <name>Lydia</name>
+        <age>2017-02-17+01:00</age>
         <title>Mr.</title>
     </customer>
 </company>

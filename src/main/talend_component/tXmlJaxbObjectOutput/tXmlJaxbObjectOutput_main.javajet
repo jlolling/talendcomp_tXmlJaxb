@@ -90,14 +90,8 @@
 <%	} // for (int i = 0; i < listColumns.size(); i++)
 	if (keyFieldName == null) { %>
 		// No key field defined !
-<%	} else { 
-		if (keyFieldIsString) { %>
-		// memorize key with current object - put String values upper case in the map
-		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>.toUpperCase(), currentObject);
-<%      } else { %>
-		// memorize key with current object
+<%	} else { %> 
 		keyMap_<%=cid%>.put(<%=conn.getName()%>.<%=keyFieldName%>, currentObject);
-<%		} %>
 <%	}
 	if (isRoot == false) {
    		INode parentNode = NodeUtil.getNodeByUniqueName(node.getProcess(), parentObject);
@@ -118,11 +112,10 @@
 <%			} // if (createObjectAtBegin == false)
 	 	} else { // if (autoRelations == false || parentIsRoot) %>
 	 	// if we create per flow record a new current object, we have to collect the objects per parent object
-                String keyfildname=<%=conn.getName()%>.<%=parentKeyField%>.toUpperCase(); //uiuiui
-		if (!foreignKeyMap_<%=cid%>.containsKey(keyfildname)) {
-			foreignKeyMap_<%=cid%>.put(keyfildname, new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>());
+		if (foreignKeyMap_<%=cid%>.containsKey(<%=conn.getName()%>.<%=parentKeyField%>) == false) {
+			foreignKeyMap_<%=cid%>.put(<%=conn.getName()%>.<%=parentKeyField%>, new java.util.ArrayList<de.cimt.talendcomp.xmldynamic.TXMLObject>());
 		}
-		java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listObjectsForParent = (java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>) foreignKeyMap_<%=cid%>.get(keyfildname);
+		java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject> listObjectsForParent = (java.util.List<de.cimt.talendcomp.xmldynamic.TXMLObject>) foreignKeyMap_<%=cid%>.get(<%=conn.getName()%>.<%=parentKeyField%>);
 		listObjectsForParent.add(currentObject);
 <% 		} // if (autoRelations == false || parentIsRoot)
  	} // if (isRoot == false) %>
