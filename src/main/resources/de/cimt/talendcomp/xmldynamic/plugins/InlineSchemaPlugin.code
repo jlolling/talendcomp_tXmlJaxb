@@ -1,0 +1,151 @@
+
+    @Override
+    public javax.xml.validation.Schema createValidationSchema() {
+	final Language schemaLanguage = this.getSchemaLanguage();
+	if(schemaLanguage==Language.DTD){
+	    throw new UnsupportedOperationException("validation is not supported for DTD");
+	    
+	}
+	try {
+	    javax.xml.validation.SchemaFactory fac = javax.xml.validation.SchemaFactory.newInstance(
+			    (schemaLanguage==Language.XMLSCHEMA || schemaLanguage==Language.WSDL)
+			    ? javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI : javax.xml.XMLConstants.RELAXNG_NS_URI
+		    );
+	    return fac.newSchema(getGrammars());
+	} catch (Exception ex) {
+	    throw new UnsupportedOperationException(ex);
+	}
+    }
+
+    static Object getLocalRegistry() {
+	return new ObjectFactory();
+    }
+
+    @Override
+    public java.util.List<Class<TXMLObject>> getClasses() {
+	java.util.List<Class<TXMLObject>> classes = new java.util.ArrayList<Class<TXMLObject>>();
+	classes.addAll(java.util.Arrays.asList(this.getElements()));
+	classes.addAll(java.util.Arrays.asList(this.getTypes()));
+	return classes;
+    }
+
+    @Override
+    public boolean matchesNamespace(javax.xml.namespace.QName qn) {
+	return (qn != null && getNamespace().equals(qn.getNamespaceURI()));
+    }
+
+    @Override
+    public Class<TXMLObject> find(javax.xml.namespace.QName qn) {
+	final String nsuri = (qn.getNamespaceURI() != null) ? qn.getNamespaceURI() : "";
+	if (!ELEMENTMAPPING.containsKey(qn)) {
+	    return null;
+	}
+
+	if (ELEMENTMAPPING.get(qn) != null) {
+	    return (Class<TXMLObject>) ELEMENTMAPPING.get(qn);
+	}
+
+	final java.lang.reflect.Method findCreator = findCreator(qn);
+
+	if (matchesNamespace(qn)) {
+	    for (Class<TXMLObject> c : getElements()) {
+		// only perform namespacecheck when required
+		if (!ANYNAMESPACE.equals(nsuri)) {
+		    javax.xml.bind.annotation.XmlSchema schema = (javax.xml.bind.annotation.XmlSchema) c.getPackage().getAnnotation(javax.xml.bind.annotation.XmlSchema.class);
+		    if (schema == null || !schema.namespace().equals(nsuri)) {
+			continue;
+		    }
+		}
+
+		javax.xml.bind.annotation.XmlElement elem = c.getAnnotation(javax.xml.bind.annotation.XmlElement.class);
+		if (elem != null && qn.getLocalPart().equals(elem.name())) {
+		    return c;
+		}
+		javax.xml.bind.annotation.XmlRootElement rootElem = c.getAnnotation(javax.xml.bind.annotation.XmlRootElement.class);
+		if (rootElem != null && qn.getLocalPart().equals(rootElem.name())) {
+		    return c;
+		}
+
+	    }
+	}
+	return null;
+
+    }
+
+    @Override
+    public boolean isMember(javax.xml.namespace.QName qn) {
+	return ELEMENTMAPPING.containsKey(qn);
+    }
+
+    @Override
+    public javax.xml.transform.Source[] getGrammars() throws java.net.URISyntaxException {
+	java.io.File f = new java.io.File(getClass().getResource("/META-INF/grammar/").toURI());
+	java.util.List<javax.xml.transform.Source> sources = new java.util.ArrayList<javax.xml.transform.Source>();
+	for (java.io.File s : f.listFiles()) {
+	    sources.add(new javax.xml.transform.stream.StreamSource(s));
+	}
+	return sources.toArray(new javax.xml.transform.Source[sources.size()]);
+    }
+
+    private java.lang.reflect.Method findCreator(Class<?> resultType) {
+	java.lang.reflect.Method[] methods = ObjectFactory.class.getMethods();
+	for (java.lang.reflect.Method m : methods) {
+	    if (m.getName().startsWith("create") && m.getReturnType().equals(resultType)) {
+		return m;
+	    }
+	}
+	return null;
+    }
+
+    private java.lang.reflect.Method findCreator(QName fullyQuallifiedName) {
+	java.lang.reflect.Method[] methods = ObjectFactory.class.getMethods();
+	for (java.lang.reflect.Method m : methods) {
+	    javax.xml.bind.annotation.XmlElementDecl decl = (javax.xml.bind.annotation.XmlElementDecl) m.getAnnotation(javax.xml.bind.annotation.XmlElementDecl.class);
+	    if (decl != null && decl.name().equals(fullyQuallifiedName.getLocalPart()) && decl.namespace().equals(fullyQuallifiedName.getNamespaceURI())) {
+		return m;
+	    }
+	}
+	return null;
+    }
+
+    @Override
+    public TXMLObject createElement(QName fqn) throws IllegalArgumentException, Exception {
+	if (fqn == null && !ELEMENTMAPPING.containsKey(fqn)) {
+	    throw new IllegalArgumentException(fqn + " is no valid argument for this context.");
+	}
+	Class clazz = ELEMENTMAPPING.get(fqn);
+	if (clazz != null) {
+	    return (TXMLObject) clazz.newInstance();
+	}
+
+	// annonymous and wrapped elements may have no class
+	final java.lang.reflect.Method create = findCreator(fqn);
+
+	if (create.getParameterCount() == 0) {
+	    // this must be a type
+	    Object o = create.invoke( new ObjectFactory(), new Object[]{});
+	    if (o.getClass().isAssignableFrom(javax.xml.bind.JAXBElement.class)) {
+		final Class declaredType = ((javax.xml.bind.JAXBElement) o).getDeclaredType();
+		if (declaredType.isAssignableFrom(TXMLObject.class)) {
+		    return new de.cimt.talendcomp.xmldynamic.TXMLJAXBElement((javax.xml.bind.JAXBElement<? extends TXMLObject>) o);
+		}
+		return new de.cimt.talendcomp.xmldynamic.TXMLSimpleTypeWrapped((javax.xml.bind.JAXBElement<?>) o);
+	    }
+	    return (TXMLObject) o;
+	} else if (create.getParameterCount() == 1) {
+	    final ObjectFactory factory = new ObjectFactory();
+	    final Class paramType = create.getParameterTypes()[0];
+	    final java.lang.reflect.Method paramCreator = findCreator(paramType);
+
+	    Object o = create.invoke(new ObjectFactory(), new Object[]{paramCreator.invoke(factory, new Object[]{})});
+
+	    if (paramType.isAssignableFrom(TXMLObject.class)) {
+		return new de.cimt.talendcomp.xmldynamic.TXMLJAXBElement((javax.xml.bind.JAXBElement<? extends TXMLObject>) o);
+	    }
+	    return new de.cimt.talendcomp.xmldynamic.TXMLSimpleTypeWrapped((javax.xml.bind.JAXBElement<?>) o);
+	}
+
+	throw new IllegalArgumentException();
+    }
+
+

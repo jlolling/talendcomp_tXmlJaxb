@@ -1,0 +1,56 @@
+
+	    body{
+		font-family: sans-serif;
+	    }
+            .attribute{
+                color: green;
+            }
+            .element{
+                color: blue;
+            }
+           .sensitive{
+
+            }
+            .optional{
+                font-style: italic;
+            }
+            div{
+                /*border: solid black;*/
+            }
+            div > div {
+                padding-left: 30px;
+            }
+            div.group {
+                padding-left: 0px;
+                border: black;
+		float: none;
+            }
+            div.icon {
+                position: absolute;
+                break-after: avoid;
+                background-color: ivory;
+                color: black;
+                padding-left: 0px;
+                float: left;
+            }
+            div > span {
+                position: absolute;
+                break-after: avoid;
+
+            }
+            div.modeltype div:first-child {
+                position: absolute;
+                break-after: avoid;
+		background-color: #ffccff;
+		padding-left: 0px;
+
+            }
+            .sequence {
+                background-color: #ffccff;
+            }
+            .all {
+                background-color: #ffffdd;
+            }
+            .choice {
+                background-color: #ffddff;
+            }
