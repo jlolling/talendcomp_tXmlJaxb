@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" 
-          xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+          xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
           version="2.0">
         
     <jaxb:globalBindings
@@ -8,13 +8,14 @@
         typesafeEnumBase="xsd:string"
     >
        
-        <xjc:simple />
-        <xjc:javaType name="java.util.Date" xmlType="xsd:date"     adapter="de.cimt.talendcomp.xmldynamic.adapter.DateAdapter" />
+        <!-- 
+	    nice feature but may be problematic for some users, because names may no longer match the value from xml 
+	    <xjc:simple />
+	    when active nnamespacedeclaration for xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" must be readded
+	--> 
+        <xjc:javaType name="java.util.Date" xmlType="xsd:date"       adapter="de.cimt.talendcomp.xmldynamic.adapter.DateAdapter" />
         <xjc:javaType name="java.util.Date" xmlType="xsd:gYearMonth" adapter="de.cimt.talendcomp.xmldynamic.adapter.DateAdapter" />
-        
-        <xjc:javaType name="java.util.Date" xmlType="xsd:dateTime" adapter="de.cimt.talendcomp.xmldynamic.adapter.DateTimeAdapter" />
-        
+        <xjc:javaType name="java.util.Date" xmlType="xsd:dateTime"   adapter="de.cimt.talendcomp.xmldynamic.adapter.DateTimeAdapter" />
     </jaxb:globalBindings>
-       
         
 </jaxb:bindings> 
