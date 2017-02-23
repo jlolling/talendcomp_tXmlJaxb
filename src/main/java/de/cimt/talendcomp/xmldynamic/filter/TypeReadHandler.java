@@ -46,6 +46,7 @@ public abstract class TypeReadHandler extends BaseFilter {
     }*/ 
     public abstract int incrementUsageCount(Pair<String, String> type);
     public abstract void registerComplexType(Pair<String, String> complexType);
+    public abstract void registerSimpleType(Pair<String, String>  simpleType);
   
     
     @Override
@@ -58,7 +59,7 @@ public abstract class TypeReadHandler extends BaseFilter {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         localName = toLocalName(localName, qName);
         if (XMLConstants.W3C_XML_SCHEMA_NS_URI.equals((uri.length() == 0) ? prefixmapping.get(uri) : uri)) {
-
+	    
             if (localName.equalsIgnoreCase("element")) {
                 String type = attributes.getValue("type");
                 if (type != null) {

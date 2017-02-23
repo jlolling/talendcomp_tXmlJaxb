@@ -34,7 +34,6 @@ public class RootElementFilter extends BaseFilter{
                 final String name = attributes.getValue("name");
                 if(name!=null) {
                     rootElements.add( new QName( getTargetNamespaceURI(), name) );
-                    System.err.println("register rootelement "+new QName( getTargetNamespaceURI(), name));
                 }
             }
             
