@@ -375,6 +375,24 @@ public class ReflectUtil {
         }
         return findAnnotatedMethod(type.getSuperclass(), anno);
     }
+    
+    public static <T extends Annotation> List<Method> findAnnotatedMethods(Class<?> type, Class<T> anno) {
+	List<Method> methods=new ArrayList<Method>();
+        if (type == null || anno == null) {
+            return methods;
+        }
+        for (Method m : type.getDeclaredMethods()) {
+            if (!Modifier.isPublic(m.getModifiers()) || m.getAnnotation(anno) == null) {
+                continue;
+            }
+            methods.add(m);
+        }
+        if (type.getSuperclass() == null) {
+            return null;
+        }
+	methods.addAll( findAnnotatedMethods(type.getSuperclass(), anno) );
+        return methods;
+    }
 
     public static List< Pair<PropertyAccessor, Field>> introspectJoinField(Class<?> type) {
         final Map<String, Field> fieldByName = CollectionUtil.generateLookupMap(
