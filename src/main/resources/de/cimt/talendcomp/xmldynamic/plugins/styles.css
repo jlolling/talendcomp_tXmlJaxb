@@ -1,6 +1,16 @@
 
 	    body{
 		font-family: sans-serif;
+		background-color: ghostwhite;
+	    }
+	    td{
+		vertical-align: top;
+		min-height: 20px;
+	    }
+	    .code{
+		font-family: Courier New, Verdana, sans-serif;
+		background-color: white;
+		margin: 5px;
 	    }
             .attribute{
                 color: green;
@@ -8,49 +18,26 @@
             .element{
                 color: blue;
             }
-           .sensitive{
-
+            a.refelem{
+		font-weight: bold;
             }
+	    
             .optional{
                 font-style: italic;
             }
-            div{
-                /*border: solid black;*/
-            }
-            div > div {
+            div > div, div > a {
                 padding-left: 30px;
             }
-            div.group {
-                padding-left: 0px;
-                border: black;
-		float: none;
-            }
-            div.icon {
-                position: absolute;
-                break-after: avoid;
-                background-color: ivory;
-                color: black;
-                padding-left: 0px;
-                float: left;
-            }
-            div > span {
-                position: absolute;
-                break-after: avoid;
-
-            }
-            div.modeltype div:first-child {
-                position: absolute;
-                break-after: avoid;
-		background-color: #ffccff;
-		padding-left: 0px;
-
+            table {
+                padding-left: 30px;
+		border:1px solid;
             }
             .sequence {
-                background-color: #ffccff;
+                background-color: #fff7ff;
             }
             .all {
                 background-color: #ffffdd;
             }
             .choice {
-                background-color: #ffddff;
+                background-color: #f4f4ff;
             }
