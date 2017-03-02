@@ -2,10 +2,7 @@ package de.cimt.talendcomp.xmldynamic;
 
 import de.cimt.talendcomp.xmldynamic.plugins.InlineSchemaPlugin;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
@@ -28,17 +24,20 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 import com.sun.tools.xjc.Options;
-
-import de.cimt.talendcomp.xmldynamic.filter.RemoveAnnotationsFilter;
 import de.cimt.talendcomp.xmldynamic.filter.ChecksumFilter;
+
 import de.cimt.talendcomp.xmldynamic.filter.DependencyFilter;
 import de.cimt.talendcomp.xmldynamic.filter.GraphFilter;
 import de.cimt.talendcomp.xmldynamic.filter.PluginFilter;
 import de.cimt.talendcomp.xmldynamic.filter.PrintingFilter;
+import de.cimt.talendcomp.xmldynamic.filter.RemoveAnnotationsFilter;
 import de.cimt.talendcomp.xmldynamic.filter.RootElementFilter;
 import de.cimt.talendcomp.xmldynamic.filter.TypeReadHandler;
 import de.cimt.talendcomp.xmldynamic.filter.WSDLSchemaFilter;
 import de.cimt.talendcomp.xmldynamic.filter.XMLFilterChain;
+import de.cimt.talendcomp.xmldynamic.plugins.VisualisationPlugin;
+import java.io.FileInputStream;
+import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,6 +45,7 @@ import java.util.Locale;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import javax.xml.namespace.QName;
+import javax.xml.transform.Transformer;
 
 /**
  *
@@ -58,17 +58,18 @@ public class XJCOptions extends Options {
     public boolean compileSource = true;
     public boolean casesensitive = false;
     public boolean createGraph = false; // paints the structure
-    public boolean addJavadocs = true;  // add javadoc of newly generated model
+    public boolean addJavadocs = true;  // add javadoc for newly generated model
+    public boolean addModeldocs = true;  // add element documentation for newly generated model - see VisualisationPlugin
+    private AtomicInteger grammarCount=new AtomicInteger(0);
     
     public boolean ignoreAnnotations = false;
-    public boolean enableBasicSubstitution = false; // replaces some data types with more usual data types
+    public boolean enableBasicSubstitution  = false; // replaces some data types with more usual data types, for example time, date etc
     public boolean checksum = false;
     public boolean forceGenerate = false;
     public boolean printGrammar = false;
     public boolean createJar = false;
     public String  jarFilePath = null;
     public String  checksumValue = "";
-    public String  targetName = "gen_" + Util.uniqueString() + ".jar";
     public String  grammarFilePath = null;
     public long    newestGrammar = 0l;
     public static final String VERSION;
@@ -76,6 +77,10 @@ public class XJCOptions extends Options {
     private List<QName> rootElements=new ArrayList<QName>();
     
     static {
+	/**
+	 * compute version numnber and date of component from manifest to be 
+	 * displaed while generating model
+	 */
         String versionString="unknown";
         String d="";
         try {
@@ -95,8 +100,8 @@ public class XJCOptions extends Options {
     private final Map<String, String> grammarCache = new HashMap<String, String>();
     
     // temporary directory used to store modified grammars
-    private final File tmproot;
     private final List<Pair<String, String>> _complexTypes = new ArrayList<Pair<String, String>>();
+    private final List<Pair<String, String>> _simpleTypes = new ArrayList<Pair<String, String>>();
     private final Map<Pair<String, String>, AtomicInteger> _usageCount = new HashMap<Pair<String, String>, AtomicInteger>() {
         private static final long serialVersionUID = 1L;
 
@@ -117,21 +122,12 @@ public class XJCOptions extends Options {
      */
     public XJCOptions() {
         super();
-        File tmpfile = null;
-        try {
-            tmpfile = File.createTempFile("2890374092", "092830198");
-        } catch (IOException ex) {
-            LOG.error(ex);
-            throw new RuntimeException("temp not available");
-        }
-        tmproot = new File(tmpfile.getParentFile(), Util.uniqueString());
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Set tmp-root to: "+tmproot.getAbsolutePath());
-        }
-        tmproot.mkdirs();
-        tmproot.deleteOnExit();
         pluginURIs.add(InlineSchemaPlugin.PNS.getNamespaceURI());
-//        pluginURIs.add(VisualisationPlugin.PNS.getNamespaceURI());
+        this.activePlugins.add( new InlineSchemaPlugin() );
+	
+        pluginURIs.add(VisualisationPlugin.PNS.getNamespaceURI());
+        this.activePlugins.add( new VisualisationPlugin() );
+	
         strictCheck = false;
         noFileHeader = true;
         compatibilityMode = 2;
@@ -140,10 +136,11 @@ public class XJCOptions extends Options {
     }
     
     private Set<Pair<String, String>> getComplexTypes() {
+	
         return CollectionUtil.filterMap(_usageCount, new Filter<Pair<String, String>>() {
                 @Override
                 public boolean matches(Pair<String, String> t) {
-                    return _complexTypes.contains(t);
+                    return _complexTypes.contains(t) && !_simpleTypes.contains(t);
                 }
             },
             new Filter<AtomicInteger>() {
@@ -156,10 +153,6 @@ public class XJCOptions extends Options {
     
     @Override
     protected void finalize() throws Throwable {
-        for (File f : tmproot.listFiles()) {
-            f.delete();
-        }
-        tmproot.delete();
         super.finalize();
     }
 
@@ -180,10 +173,12 @@ public class XJCOptions extends Options {
             } catch (java.net.URISyntaxException use) {
                 rootURI = new File(source.getSystemId()).toURI();
             }
-            String alias = Util.uniqueString() + ".xsd";
+	    if(grammarCache.containsKey(rootURI.toString())){
+		return;
+	    }
+	    
+            String alias = "grammar" + String.format("%04d", grammarCount.incrementAndGet() ) + ".xsd";
             XMLFilterChain chain = new XMLFilterChain();
-//            boolean isMemorySource = source.getClass().equals(InMemorySource.class);
-//            boolean wsdlSource = (source.getSystemId().toLowerCase().endsWith(".wsdl"));
             if (source.getSystemId().toLowerCase().endsWith(".wsdl")) {
                 WSDLSchemaFilter wsdlfilter = new WSDLSchemaFilter() {
                     @Override
@@ -209,6 +204,11 @@ public class XJCOptions extends Options {
                 @Override
                 public void registerComplexType(Pair<String, String> complexType) {
                     _complexTypes.add(complexType);
+                }
+		
+                @Override
+                public void registerSimpleType(Pair<String, String> complexType) {
+                    _simpleTypes.add(complexType);
                 }
             });
             
@@ -272,7 +272,7 @@ public class XJCOptions extends Options {
             throw new RuntimeException(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
         }
     }
-
+    
     /**
      * Input schema files.
      */
@@ -293,7 +293,7 @@ public class XJCOptions extends Options {
 
                 @Override
                 public boolean isRootelement(Pair<String, String> fqtype) {
-                    System.err.println("test rootelement {"+fqtype.x+"}:"+ fqtype.y);
+//                    LOG.trace("test rootelement {"+fqtype.x+"}:"+ fqtype.y);
                     return rootElements.contains( new QName(fqtype.x, fqtype.y) );
                 }
                 
@@ -315,8 +315,19 @@ public class XJCOptions extends Options {
             List<InputSource> ng = new ArrayList<InputSource>();
             XMLFilteredReader reader = new XMLFilteredReader(spf.newSAXParser().getXMLReader(), chain);
             final Transformer transformer = TransformerFactory.newInstance().newTransformer();
+	    
+	    /**
+	     * generate grammar to targetDir to be shipped with jar. so it's more 
+	     * easy to create a common schema validator and to find any problem
+	     * with the model
+	     */
+	    File schemaExportDir=new File(targetDir + "/META-INF/grammar"  );
+	    schemaExportDir.mkdirs();
+	    
             for (InputSource source : super.getGrammars()) {
-                File res = new File(tmproot, ((InMemorySource) source).alias);
+		File res = new File( schemaExportDir , ((InMemorySource) source).alias);
+		
+	
                 if (LOG.isDebugEnabled()) {
                 	LOG.debug("Use as temporary xsd result file: " + res.getAbsolutePath());
                 }
@@ -324,7 +335,6 @@ public class XJCOptions extends Options {
                     new SAXSource(reader, source),
                     new StreamResult(res)
                 );
-                
                 InputSource exportedGrammar = new InputSource(new FileInputStream(res));
                 exportedGrammar.setSystemId( res.toURI().toString() );
                 ng.add( exportedGrammar );
@@ -353,7 +363,7 @@ public class XJCOptions extends Options {
         }
         for (File f : dir.listFiles()) {
             if (f.isDirectory()) {
-                addGrammar(f);
+                addGrammarRecursive(f);
             } else if (f.getName().toLowerCase().endsWith(".xsd") || f.getName().toLowerCase().endsWith(".xsd")) {
                 addGrammar(f);
             }
