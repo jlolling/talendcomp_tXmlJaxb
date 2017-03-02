@@ -279,7 +279,11 @@ public class VisualisationPlugin extends Plugin {
     @Override
     public boolean run(Outline outline, Options opt, ErrorHandler errorHandler) throws SAXException {
 
-        final XSSchemaSet schemas = outline.getModel().schemaComponent;
+	if( !(opt instanceof XJCOptions) || !((XJCOptions) opt).addModeldocs){
+	    return true;
+	}
+
+	final XSSchemaSet schemas = outline.getModel().schemaComponent;
 	final JCodeModel codeModel = outline.getModel().codeModel;
 
 	Iterator<? extends XSElementDecl> iterateXSElDeclaration = schemas.iterateElementDecls();
