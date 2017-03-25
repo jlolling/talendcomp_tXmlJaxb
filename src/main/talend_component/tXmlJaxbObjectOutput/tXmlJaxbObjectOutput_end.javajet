@@ -26,7 +26,7 @@
 	try {
    		// add current object to parent
 		// only here if the current object was created at the beginning
-		// otherweise the assigment to the parent will be done in the main part
+		// otherwise the assigment to the parent will be done in the main part
 		String parentObjectCompentName = "<%=parentObject%>";
 		de.cimt.talendcomp.xmldynamic.TXMLObject parentObject = (de.cimt.talendcomp.xmldynamic.TXMLObject) globalMap.get(parentObjectCompentName + "_CURRENT_OBJECT");
 		if (parentObject == null) {
