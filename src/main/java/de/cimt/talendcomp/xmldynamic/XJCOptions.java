@@ -338,7 +338,7 @@ public class XJCOptions extends Options {
         for (File f : dir.listFiles()) {
             if (f.isDirectory()) {
                 addGrammar(f);
-            } else if (f.getName().toLowerCase().endsWith(".xsd") || f.getName().toLowerCase().endsWith(".xsd")) {
+            } else if (f.getName().toLowerCase().endsWith(".xsd") || f.getName().toLowerCase().endsWith(".wsdl")) {
                 addGrammar(f);
             }
         }

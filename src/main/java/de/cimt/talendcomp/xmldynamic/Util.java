@@ -57,17 +57,11 @@ public final class Util {
             Throwable ex=null;
             try{
                 return super.loadClass(name, true);
-            }catch(ClassNotFoundException cnfe){
+            }catch(ClassNotFoundException | java.lang.NoClassDefFoundError cnfe){
                 try{
                     return performBundleLookup(name);
                 }catch(Throwable t){
                     throw cnfe;
-                }
-            }catch(java.lang.NoClassDefFoundError cndef){
-               try{
-                    return performBundleLookup(name);
-                }catch(Throwable t){
-                    throw cndef;
                 }
             }
         }
@@ -248,7 +242,7 @@ public final class Util {
     }
 
     private static void extractClassInfo(boolean includeAbstract, StringBuilder builder, Class<TXMLObject> clazz) {
-        if (includeAbstract == false && ((clazz.getModifiers() | Modifier.ABSTRACT) == 1)) {
+        if (includeAbstract == false && ((clazz.getModifiers() & Modifier.ABSTRACT) == Modifier.ABSTRACT)) {
             return;
         }
         builder.append("class ");
