@@ -160,7 +160,7 @@ public final class ModelBuilder {
     public synchronized void generate() throws Exception {
                 
         if (!MODELS.contains(opt.grammarFilePath)) {
-            LOG.info("Generate Model using Plugin Version "+ opt.VERSION + "("+opt.LASTUPDATE+")" );
+            LOG.info("Generate Model using Plugin Version "+ XJCOptions.VERSION + "("+XJCOptions.LASTUPDATE+")" );
             if (testUpdateRequired()) { 
                 setupModelDir(opt.targetDir);
                 Model model = ModelLoader.load(opt, codeModel, ERR);
@@ -253,7 +253,7 @@ public final class ModelBuilder {
         for (File f : root.listFiles()) {
             if (f.isDirectory() && recursive) {
                 files.addAll(listFiles(f, recursive, extension));
-            } else if (extension == null || (extension != null && f.getName().toLowerCase().endsWith(extension.toLowerCase()))) {
+            } else if (extension == null ||  f.getName().toLowerCase().endsWith(extension.toLowerCase())) {
                 files.add(f);
             }
         }
