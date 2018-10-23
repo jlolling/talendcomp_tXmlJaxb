@@ -39,15 +39,15 @@ import java.net.URI;
 public final class ModelBuilder {
 
     private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
-    private static final Set<String> models = new HashSet<String>();
-    public static final Object lock = new Object(); 
+    private static final Set<String> MODELS = new HashSet<String>();
+    public static final Object LOCK = new Object(); 
     
     public static boolean isModelAlreadyBuild(String grammarFilePath) {
     	if (grammarFilePath == null) {
             // when grammarFilePath is null then the model should be empty and is available, or? so reture true must be ok
             return true;
     	}
-    	return models.contains(new File(grammarFilePath).getAbsolutePath());
+    	return MODELS.contains(new File(grammarFilePath).getAbsolutePath());
     }
     
     public static boolean isModelAlreadyBuild(File grammarFile) {
@@ -55,7 +55,7 @@ public final class ModelBuilder {
             // when grammarFilePath is null then the model should be empty and is available, or? so reture true must be ok
             return true;
     	}
-    	return models.contains(grammarFile.getAbsolutePath());
+    	return MODELS.contains(grammarFile.getAbsolutePath());
     }
 
     private static final ErrorReceiver ERR = new ErrorReceiver() {
@@ -126,20 +126,24 @@ public final class ModelBuilder {
         }
         if (opt.createJar) {
             if ( opt.jarFilePath==null) {
+                LOG.debug("No Model found, build is required.");
                 return true;
             }
             final File jar=new File(opt.jarFilePath);
             
             if (!jar.exists() || jar.lastModified() < opt.newestGrammar) {
+                LOG.debug("Grammar is newer than generated Model, build is required.");
                 return true;
             }
         } else {
             final List<File> listFiles = listFiles(opt.targetDir, true, "TXMLBinding");    
             if (listFiles.isEmpty()) {
+                LOG.debug("No Model found, build is required.");
                 return true;
             }
             for (File f : listFiles) {
                 if (f.lastModified()<opt.newestGrammar) {
+                    LOG.debug("Grammar is newer than generated Model, build is required.");
                     return true;
                 }
             }
@@ -155,7 +159,7 @@ public final class ModelBuilder {
      */
     public synchronized void generate() throws Exception {
                 
-        if (!models.contains(opt.grammarFilePath)) {
+        if (!MODELS.contains(opt.grammarFilePath)) {
             LOG.info("Generate Model using Plugin Version "+ opt.VERSION + "("+opt.LASTUPDATE+")" );
             if (testUpdateRequired()) { 
                 setupModelDir(opt.targetDir);
@@ -215,7 +219,7 @@ public final class ModelBuilder {
                 }
             }
             
-            models.add(opt.grammarFilePath);
+            MODELS.add(opt.grammarFilePath);
             if (!opt.extendClasspath) {
                 return;
             }

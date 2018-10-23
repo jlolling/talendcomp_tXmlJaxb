@@ -230,7 +230,7 @@ public class InlineSchemaPlugin extends Plugin {
      * @param ref list of possible elements
      */
     private void annotateType(XSComponent component, JAnnotationArrayMember parent, Outline outline, List<? extends CTypeInfo> ref) {
-    	if (ref.size() == 0) {
+    	if (ref.isEmpty()) {
     		return; // get value does not support type annotations
     	}
         if ( XSAttributeUse.class.isAssignableFrom(component.getClass()) ) {

@@ -93,6 +93,7 @@ public class ExtPropertyAccessor extends PropertyAccessor {
         }
 
     }
+    @Override
     public String toString(){
         return  "accessor: "+this.getName() +
                 "\n\tfield="+this.getRelatedField() +
