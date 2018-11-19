@@ -30,7 +30,7 @@
     boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
    							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
 %>
-	javax.xml.bind.Marshaller <%=cid%> = null;
+	javax.xml.bind.Marshaller <%=cid%>_marshaller = null;
 	Object object_<%=cid%> = null;
 	try {
 		String parentObjectCompentName = "<%=parentObject%>";
@@ -40,15 +40,15 @@
 		}
 		String packageName = object_<%=cid%>.getClass().getPackage().getName();
 		javax.xml.bind.JAXBContext jaxbContext = de.cimt.talendcomp.xmldynamic.Util.createJAXBContext();
-		<%=cid%> = jaxbContext.createMarshaller();
+		<%=cid%>_marshaller = jaxbContext.createMarshaller();
 <%	if (prettyPrint) { %>
-		<%=cid%>.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, true);
+		<%=cid%>_marshaller.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, true);
 <%	} %>
 <%	if (fragmented) { %>
-		<%=cid%>.setProperty(javax.xml.bind.Marshaller.JAXB_FRAGMENT, true);
+		<%=cid%>_marshaller.setProperty(javax.xml.bind.Marshaller.JAXB_FRAGMENT, true);
 <%	} %>
 <%	if (encoding != null && encoding.trim().isEmpty() == false) { %>
-		<%=cid%>.setProperty(javax.xml.bind.Marshaller.JAXB_ENCODING, <%=encoding%>);
+		<%=cid%>_marshaller.setProperty(javax.xml.bind.Marshaller.JAXB_ENCODING, <%=encoding%>);
 <%	} %>
 <%	if (outputAsfile) { %>
 		String filePath = <%=file%>;
@@ -60,7 +60,7 @@
 		if (dir.exists() == false) {
 			throw new Exception("Cannot create dir: " + dir.getAbsolutePath());
 		}
-		<%=cid%>.marshal(object_<%=cid%>, file);
+		<%=cid%>_marshaller.marshal(object_<%=cid%>, file);
 		globalMap.put("<%=cid%>_OUTPUT_FILE_PATH", filePath);
 <%	} %>
 	} catch (Throwable e) {
@@ -75,7 +75,7 @@
 	String xmlString_<%=cid%> = null;
 	try {
 		java.io.StringWriter sw = new java.io.StringWriter();
-		<%=cid%>.marshal(object_<%=cid%>, sw);
+		<%=cid%>_marshaller.marshal(object_<%=cid%>, sw);
 		xmlString_<%=cid%> = sw.toString();
 <% 		if (debugOutput) { %>
    		System.out.println(xmlString_<%=cid%>);
