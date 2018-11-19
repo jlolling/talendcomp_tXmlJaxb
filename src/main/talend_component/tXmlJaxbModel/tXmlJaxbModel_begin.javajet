@@ -19,6 +19,7 @@
     if (jarFilePath == null || jarFilePath.trim().isEmpty()) {
     	 jarFilePath = "null";
     }
+    boolean loadExistingModel = "true".equals(ElementParameterParser.getValue(node, "__ASSUME_MODEL_PRESENT__"));
     boolean printAbstractClasses = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_ABSTRACT_CLASSES__"));
     boolean createGraph = "true".equals(ElementParameterParser.getValue(node, "__PRINTOUT_DOCUMENT_GRAPH__"));
     boolean enableBasicSubstitution = "true".equals(ElementParameterParser.getValue(node, "__PERFORM_TYPE_SUBSTITUTE__"));
@@ -26,6 +27,9 @@
     boolean forceGenerate = "true".equals(ElementParameterParser.getValue(node, "__FORCE_GENERATE__"));
     boolean log4jEnabled = "true".equals(org.talend.core.model.process.ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__")) && 
    							"JOBLET".equals(node.getComponent().getComponentType().toString()) == false;
+    
+
+    if(!loadExistingModel){
 %>
 	try {
 		String xsdFilePath = <%=xsdFile%>;
@@ -78,3 +82,7 @@
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", "Build model failed: " + e.getMessage());
    		throw e;
 	}
+<%} else if (log4jEnabled) { //loadExistingModel %>
+    log.error("loadExistingModel using preloaded exiting Model ");
+
+<%} %>
