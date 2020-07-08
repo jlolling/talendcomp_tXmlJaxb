@@ -26,6 +26,13 @@ import com.sun.tools.xjc.outline.Outline;
 import com.sun.tools.xjc.outline.PackageOutline;
 import com.sun.tools.xjc.util.ErrorReceiverFilter;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.StringTokenizer;
+import java.util.jar.JarFile;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
+import javax.tools.StandardLocation;
 
 /**
  * Builds a {@link Model} object.
@@ -57,7 +64,7 @@ public final class ModelBuilder {
     	}
     	return MODELS.contains(grammarFile.getAbsolutePath());
     }
-
+ 
     private static final ErrorReceiver ERR = new ErrorReceiver() {
         @Override
         public void error(SAXParseException saxpe) throws AbortException {
@@ -151,6 +158,91 @@ public final class ModelBuilder {
         return false;
     }
     
+    public synchronized boolean compile(boolean extendClasspath) {
+//        final String classNotFound = "package de.cimt.talendcomp.xmldynamic does not exist";
+        JavaCompiler jc;
+        try {
+            jc = ToolProvider.getSystemJavaCompiler();
+        } catch (Throwable t) { // may throw an exception when jre is used
+            jc = null;
+        }
+
+        if (jc == null) {
+            String message = "Cannot access the javac compiler. Take care you use a JDK instead of a JRE.\n"
+                    + "java.home: " + System.getProperty("java.home") + "\n"
+                    + "java.class.path: " + System.getProperty("java.class.path");
+            LOG.error(message);
+            throw new IllegalStateException(message);
+        }
+
+        DiagnosticListener dl = new DiagnosticListener() {
+            @Override
+            public void report(Diagnostic diagnostic) {
+                String msg = diagnostic.getMessage(Locale.getDefault()) + "(" + diagnostic.getSource()
+                        + ((diagnostic.getPosition() != Diagnostic.NOPOS) ? ("[Line " + diagnostic.getLineNumber() + ", Col " + diagnostic.getColumnNumber() + "]") : "");
+
+                switch (diagnostic.getKind()) {
+                    case ERROR:
+                        LOG.error(msg);
+                        break;
+                    case WARNING:
+                        LOG.warn(msg);
+                        break;
+                    default:
+                        LOG.info(msg);
+                }
+            }
+        };
+        StandardJavaFileManager sjfm = jc.getStandardFileManager(dl, null, null);
+        if(extendClasspath){
+            final ArrayList<File> files = new ArrayList<File>();
+
+            Arrays.stream(System.getProperty("java.class.path").split(System.getProperty("os.name").toUpperCase().startsWith("WINDOWS ") ? ";" : ":")).forEach(f -> {
+                try {
+                    files.add(new File(f));
+                    if (f.toUpperCase().endsWith(".JAR")) {
+                        String cp = new JarFile(f).getManifest().getMainAttributes().getValue("Class-Path").replaceAll("\n\\s", "");
+
+                        StringTokenizer stok = new StringTokenizer(cp, " \'\"", true);
+                        while (stok.hasMoreTokens()) {
+                            final String starttok = stok.nextToken();
+                            if (starttok.equals(" ")) {
+                                continue;
+                            }
+
+                            if (starttok.equals("\'") || starttok.equals("\"")) {
+                                StringBuilder value = new StringBuilder();
+                                String curTok;
+                                while (!(curTok = stok.nextToken()).equals(starttok)) {
+                                    value.append(curTok);
+                                }
+
+                                files.add(new File(value.toString()));
+                            } else {
+                                files.add(new File(starttok));
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+            
+            try {
+                sjfm.setLocation(StandardLocation.CLASS_PATH, files);
+            } catch (IOException ex) {
+                LOG.error("error extending classpath");
+                return false;
+            }
+        }
+//                }
+        return jc.getTask(null, sjfm, dl, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call();
+//        {
+//            return boolean;
+//            throw new Exception(Messages.COMPILATION_FAILED);
+//        }
+
+    }
     /**
      * generates code model to java sources, compiles classes and extends current
      * system classloader
@@ -191,24 +283,22 @@ public final class ModelBuilder {
                 if (!opt.compileSource) {
                     return;
                 }
-                JavaCompiler jc;
-                try{
-                    jc = ToolProvider.getSystemJavaCompiler();
-                } catch(Throwable t){ // may throw an exception when jre is used
-                    jc = null;
-                }
-
-                if (jc == null) {
-                    String message = "Cannot access the javac compiler. Take care you use a JDK instead of a JRE.\n"
-                            + "java.home: " + System.getProperty("java.home") + "\n"
-                            + "java.class.path: " + System.getProperty("java.class.path");
-                    LOG.error(message);
-                    throw new IllegalStateException( message );
-                }
-                StandardJavaFileManager sjfm = jc.getStandardFileManager(null, null, null);
-                if (!jc.getTask(null, sjfm, null, null, null, sjfm.getJavaFileObjectsFromFiles(listFiles(opt.targetDir, true, ".java"))).call()) {
-                    throw new Exception(Messages.COMPILATION_FAILED);
-                }
+                
+//                // fix missing classpath in azul jdk
+//                LOG.fatal( System.getProperty( "java.class.path" ) );
+//                List<JarFile> classpathentries= Arrays.stream(System.getProperty("java.class.path").split(System.getProperty("os.name").toUpperCase().startsWith("WINDOWS ") ? ";" : ":")).map(f -> {
+//                    try {
+//                        return new JarFile(f);
+//                    } catch (IOException ex) {
+//                        throw new RuntimeException(ex);
+//                    }
+//                } ).collect(Collectors.toList());
+//                
+                if(!compile(false))
+                    if(!compile(true))
+                        throw new Exception(Messages.COMPILATION_FAILED);                        
+                    
+                
                 if(opt.createJar){
                     // TODO: there is no check if option jarFilePath is set an valid
                     JarUtil jarBuilder = new JarUtil();
@@ -226,7 +316,7 @@ public final class ModelBuilder {
             URI uri= (opt.createJar && opt.jarFilePath!=null) ? new File(opt.jarFilePath).toURI() : opt.targetDir.toURI();
             
             
-            LOG.warn("extend Classpath using " + ( (opt.createJar && opt.jarFilePath!=null) ? opt.jarFilePath : opt.targetDir) );
+            LOG.info("extend Classpath using " + ( (opt.createJar && opt.jarFilePath!=null) ? opt.jarFilePath : opt.targetDir) );
             Util.register(uri, (opt.createJar && opt.jarFilePath!=null) );
 //            
 //            Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
