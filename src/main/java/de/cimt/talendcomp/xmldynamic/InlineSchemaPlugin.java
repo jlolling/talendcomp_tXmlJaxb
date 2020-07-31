@@ -9,8 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.namespace.QName;
-
-import org.apache.log4j.Logger;
+ 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
@@ -44,6 +43,8 @@ import com.sun.xml.xsom.XSTerm;
 
 import de.cimt.talendcomp.xmldynamic.annotations.QNameRef;
 import de.cimt.talendcomp.xmldynamic.annotations.TXMLTypeHelper;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.colllib.datastruct.AutoInitMap;
 import org.colllib.factories.Factory;
 
@@ -102,9 +103,8 @@ public class InlineSchemaPlugin extends Plugin {
         "        return find(qn)!=null;\n" +
         "    }\n" ;
     
-    
     public static final QName PNS = new QName("http://xsd.cimt.de/plugins/inline", "_cisp", "_cisp");
-    private static final Logger LOG = Logger.getLogger(InlineSchemaPlugin.class);
+    private static final Logger LOG =  Logger.getLogger( "de.cimt.talendcomp.xmldynamic" );
     StringBuilder clazzes=new StringBuilder();
     
     @Override
@@ -211,7 +211,7 @@ public class InlineSchemaPlugin extends Plugin {
             jrf.setContents( sbuild.toString() );//clazz.fullName());
 
         } catch (JClassAlreadyExistsException ex) {
-        	LOG.error(ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex );
         }
 
     }

@@ -25,6 +25,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import de.cimt.talendcomp.xmldynamic.Util;
+import java.util.logging.Level;
 
 /**
  * extracts schemainformations from wsdl
@@ -69,7 +70,7 @@ public class WSDLSchemaFilter extends BaseFilter {
                     transform.startPrefixMapping(mapping.getKey(), mapping.getValue());
                 }
             } catch (TransformerConfigurationException ex) {
-                LOG.error(ex.getLocalizedMessage(), ex);
+                LOG.log( Level.SEVERE, ex.getLocalizedMessage(), ex);
             }
         }
         super.startElement(uri, localName, qName, atts);

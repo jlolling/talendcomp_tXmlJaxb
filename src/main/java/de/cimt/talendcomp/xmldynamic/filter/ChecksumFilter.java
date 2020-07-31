@@ -2,8 +2,8 @@ package de.cimt.talendcomp.xmldynamic.filter;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
-import org.apache.log4j.Level;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -20,7 +20,7 @@ public class ChecksumFilter extends BaseFilter {
         try {
             nmd = MessageDigest.getInstance("SHA");
         } catch (NoSuchAlgorithmException ex) {
-            LOG.log(Level.ERROR, null, ex);
+            LOG.log( Level.SEVERE, ex.getMessage(), ex);
         }
         digest = nmd;
     }

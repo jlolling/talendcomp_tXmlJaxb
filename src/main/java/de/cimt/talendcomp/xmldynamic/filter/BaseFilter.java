@@ -3,8 +3,8 @@ package de.cimt.talendcomp.xmldynamic.filter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLFilterImpl;
 

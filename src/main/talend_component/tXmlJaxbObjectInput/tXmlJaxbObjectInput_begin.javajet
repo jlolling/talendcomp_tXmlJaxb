@@ -94,7 +94,7 @@
 	} catch (Throwable e) {
 		String message = "Initialize root document failed: " + e.getMessage();
 <%		if (log4jEnabled) { %>
-		log.error(currentComponent + ": " + message, e);
+		LOG.log( Level.SEVERE, currentComponent + ": " + message, e);
 <%		} %>
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;
@@ -111,7 +111,7 @@
 	} catch (Throwable e) {
 		String message = "Get loop object failed: " + e.getMessage();
 <%		if (log4jEnabled) { %>
-		log.error(currentComponent + ": " + message, e);
+		LOG.log( Level.SEVERE, currentComponent + ": " + message, e);
 <%		} %>
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;
@@ -161,7 +161,7 @@
 		} catch (Throwable e) {
 			String message = "Get attribute value: " + <%=fieldName%> + " failed: " + e.getMessage();
 <%			if (log4jEnabled) { %>
-			log.error(currentComponent + ": " + message, e);
+			LOG.log( Level.SEVERE, currentComponent + ": " + message, e);
 <%			} %>
 			globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 			throw e;
@@ -175,7 +175,7 @@
 		} catch (Throwable e) {
 			String message = "Get attribute value: " + <%=valueListColumnName%> + " failed: " + e.getMessage();
 <%			if (log4jEnabled) { %>
-			log.error(currentComponent + ": " + message, e);
+			LOG.log( Level.SEVERE, currentComponent + ": " + message, e);
 <%			} %>
 			globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 			throw e;

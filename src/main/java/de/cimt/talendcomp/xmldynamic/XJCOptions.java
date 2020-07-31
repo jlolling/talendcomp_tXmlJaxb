@@ -19,7 +19,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.log4j.Logger;
 import org.colllib.datastruct.Pair;
 import org.colllib.filter.Filter;
 import org.colllib.util.CollectionUtil;
@@ -43,6 +42,9 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import sun.util.logging.PlatformLogger;
 
 /**
  *
@@ -50,7 +52,7 @@ import java.util.jar.Manifest;
  */
 public class XJCOptions extends Options {
 
-    private static final Logger LOG = Logger.getLogger(XJCOptions.class.getName());
+    private static final Logger LOG = Logger.getLogger( "de.cimt.talendcomp.xmldynamic" );
     public boolean extendClasspath = true;
     public boolean compileSource = true;
     public boolean casesensitive = false;
@@ -115,12 +117,12 @@ public class XJCOptions extends Options {
         try {
             tmpfile = File.createTempFile("2890374092", "092830198");
         } catch (IOException ex) {
-            LOG.error(ex);
+            LOG.log( Level.SEVERE , ex.getMessage(), ex );
             throw new RuntimeException("temp not available");
         }
         tmproot = new File(tmpfile.getParentFile(), Util.uniqueString());
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Set tmp-root to: "+tmproot.getAbsolutePath());
+        if (LOG.isLoggable(Level.CONFIG) ) {
+            LOG.config("Set tmp-root to: "+tmproot.getAbsolutePath());
         }
         tmproot.mkdirs();
         tmproot.deleteOnExit();
@@ -259,7 +261,7 @@ public class XJCOptions extends Options {
 
             super.addGrammar( new InMemorySource(w.toString(), alias) );
         } catch (Throwable ex) {
-        	LOG.error(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
+            LOG.log( Level.SEVERE , Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
             throw new RuntimeException(Messages.format("PRELOAD.ANALYSE.FAILED"), ex);
         }
     }
@@ -301,8 +303,8 @@ public class XJCOptions extends Options {
             final Transformer transformer = TransformerFactory.newInstance().newTransformer();
             for (InputSource source : super.getGrammars()) {
                 File res = new File(tmproot, ((InMemorySource) source).alias);
-                if (LOG.isDebugEnabled()) {
-                	LOG.debug("Use as temporary xsd result file: " + res.getAbsolutePath());
+                if (LOG.isLoggable(Level.CONFIG) ) {
+                	LOG.config("Use as temporary xsd result file: " + res.getAbsolutePath());
                 }
                 transformer.transform(
                     new SAXSource(reader, source),
@@ -317,7 +319,7 @@ public class XJCOptions extends Options {
             checksumValue = csf.toString();
             return ng.toArray( new InputSource[ng.size()] );
         } catch (Exception ex) {
-            LOG.error(ex);
+            LOG.log( Level.SEVERE, ex.getMessage(), ex );
             throw new RuntimeException(ex);
         }
     }

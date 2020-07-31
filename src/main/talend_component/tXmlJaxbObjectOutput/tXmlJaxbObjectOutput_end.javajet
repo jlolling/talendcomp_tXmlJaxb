@@ -39,7 +39,7 @@
 	} catch (Throwable e) {
 		String message = "Assignment to parent failed: " + e.getMessage();
 <%				if (log4jEnabled) { %>
-		log.error(currentComponent + ": " + message, e);
+		LOG.log( Level.SEVERE, currentComponent + ": " + message, e);
 <%				} %>
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;
@@ -78,7 +78,7 @@
 	} catch (Throwable e) {
 		String message = "Auto assignment failed: " + e.getMessage();
 <%		if (log4jEnabled) { %>
-		log.error(currentComponent + ": " + message, e);
+		LOG.log( Level.SEVERE, currentComponent + ": " + message, e);
 <%		} %>
 		globalMap.put("<%=cid%>_ERROR_MESSAGE", message);
 		throw e;

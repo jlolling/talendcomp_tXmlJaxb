@@ -22,12 +22,11 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
-import org.apache.log4j.Logger;
 import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 
 public final class Util {
-    private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
+    private static final Logger LOG =  LoggerFactory.getLogger("de.cimt.talendcomp.xmldynamic");
     private static final URLClassLoader LOADER;
     private static final Method METH;
     private static final List<TXMLBinding> BINDINGS;
@@ -83,7 +82,7 @@ public final class Util {
             return;
         }
         LOG.info("--------------------");
-        LOG.info(classLoader);
+        LOG.info( classLoader.toString() );
         if (classLoader instanceof URLClassLoader) {
             URLClassLoader ucl = (URLClassLoader) classLoader;
             int i = 0;
@@ -107,7 +106,6 @@ public final class Util {
             m.setAccessible(true);
             
             try{
-                
                 cl=(URLClassLoader) Util.class.getClassLoader();
             }catch(ClassCastException cce){
                 // regular classloaders normally don't cause this exception
@@ -125,7 +123,7 @@ public final class Util {
 
             
         }catch(Throwable t){
-            LOG.error("failed to init environment",t);
+            LOG.log( Level.SEVERE, "failed to init environment",t);
             m=null;
         }
         /**
@@ -153,7 +151,7 @@ public final class Util {
         try {
             return ((Class<TXMLObject>) findClass(name)).newInstance();
         } catch (Exception ex) {
-            LOG.error("Error instantiating class "+name, ex);
+            LOG.log( Level.SEVERE, "Error instantiating class "+name, ex);
             throw ex;
         }
     }
@@ -173,7 +171,7 @@ public final class Util {
         try{
             METH.invoke(LOADER, new Object[]{uri.toURL()});
         }catch(Throwable t){
-            LOG.error("adding class failed",t);
+            LOG.log( Level.SEVERE, "adding class failed",t);
         }
 
         InputStream in=null;
@@ -285,7 +283,7 @@ public final class Util {
             }
         }
         builder.append("\nJAX-B Contexts end ###################################\n");
-        System.out.println(builder.toString());
+        LOG.info(builder.toString());
     }
 
     public static void printElements() {
@@ -296,7 +294,7 @@ public final class Util {
                 extractClassInfo(true, builder, clazz);
             }
         }
-        System.out.println(builder.toString());
+        LOG.info(builder.toString());
     }
 
     public static JAXBContext createJAXBContext() throws JAXBException {
