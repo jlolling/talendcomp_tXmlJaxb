@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -26,7 +28,7 @@ import org.eclipse.osgi.internal.loader.BundleLoader;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 
 public final class Util {
-    private static final Logger LOG =  LoggerFactory.getLogger("de.cimt.talendcomp.xmldynamic");
+    private static final Logger LOG =  Logger.getLogger("de.cimt.talendcomp.xmldynamic");
     private static final URLClassLoader LOADER;
     private static final Method METH;
     private static final List<TXMLBinding> BINDINGS;
@@ -186,12 +188,12 @@ public final class Util {
             String[] names = buf.toString().split("\n");
             for (int i = 0, max = names.length; i < max; i++) {
                 final String value = (names[i].contains("#") ? names[i].substring(0, names[i].indexOf("#")) : names[i]).trim();
-                LOG.warn("lookup service "+value);
+                LOG.warning("lookup service "+value);
                 if(value.length()==0)
                     continue;
                 if(OSGI){
                     TXMLBinding bindingInstance=((Class<TXMLBinding>) findClass( value )).newInstance();
-                    LOG.warn("bindingInstance="+bindingInstance);
+                    LOG.warning("bindingInstance="+bindingInstance);
                     BINDINGS.add( bindingInstance );
                 }
             }
