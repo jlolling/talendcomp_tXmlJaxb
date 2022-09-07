@@ -36,8 +36,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.util.JAXBResult;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.util.JAXBResult;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
@@ -298,7 +298,7 @@ public class ReflectUtil {
     /**
      * Finds EnumConstant by String. This method allows customized enumconstants
      * by annotations with names ending with *EnumValue (like
-     * javax.xml.bind.annotation.XmlEnumValue)
+     * jakarta.xml.bind.annotation.XmlEnumValue)
      *
      * @param <T>
      * @param clazz

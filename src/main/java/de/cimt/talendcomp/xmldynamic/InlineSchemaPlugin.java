@@ -28,12 +28,12 @@ import com.sun.codemodel.JPackage;
 import com.sun.codemodel.fmt.JTextFile;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.Plugin;
-import com.sun.tools.xjc.model.Aspect;
 import com.sun.tools.xjc.model.CClassInfo;
 import com.sun.tools.xjc.model.CPropertyInfo;
 import com.sun.tools.xjc.model.CTypeInfo;
 import com.sun.tools.xjc.model.Model;
 import com.sun.tools.xjc.model.nav.NClass;
+import com.sun.tools.xjc.outline.Aspect;
 import com.sun.tools.xjc.outline.ClassOutline;
 import com.sun.tools.xjc.outline.Outline;
 import com.sun.xml.xsom.XSAttributeUse;
@@ -79,15 +79,15 @@ public class InlineSchemaPlugin extends Plugin {
         "            for(Class<TXMLObject> c : getElements()){\n" +
         "                // only perform namespacecheck when required\n" +
         "                if(!ANYNAMESPACE.equals(nsuri)){\n" +
-        "                    javax.xml.bind.annotation.XmlSchema schema=(javax.xml.bind.annotation.XmlSchema) c.getPackage().getAnnotation(javax.xml.bind.annotation.XmlSchema.class);\n" +
+        "                    jakarta.xml.bind.annotation.XmlSchema schema=(jakarta.xml.bind.annotation.XmlSchema) c.getPackage().getAnnotation(jakarta.xml.bind.annotation.XmlSchema.class);\n" +
         "                    if(schema==null || !schema.namespace().equals( nsuri ))\n" +
         "                        continue;\n" +
         "                }\n" +
         "                \n" +
-        "                javax.xml.bind.annotation.XmlElement elem=c.getAnnotation(javax.xml.bind.annotation.XmlElement.class);\n" +
+        "                jakarta.xml.bind.annotation.XmlElement elem=c.getAnnotation(jakarta.xml.bind.annotation.XmlElement.class);\n" +
         "                if(elem!=null && qn.getLocalPart().equals(elem.name()))\n" +
         "                    return c;\n" +
-        "                javax.xml.bind.annotation.XmlRootElement rootElem=c.getAnnotation(javax.xml.bind.annotation.XmlRootElement.class);\n" +
+        "                jakarta.xml.bind.annotation.XmlRootElement rootElem=c.getAnnotation(jakarta.xml.bind.annotation.XmlRootElement.class);\n" +
         "                if(rootElem!=null && qn.getLocalPart().equals(rootElem.name()))\n" +
         "                    return c;\n" +
         "                \n" +
@@ -237,6 +237,7 @@ public class InlineSchemaPlugin extends Plugin {
             JAnnotationUse annotate = parent.annotate(QNameRef.class);
             annotate.param("uri", ((XSAttributeUse) component).getDecl().getTargetNamespace());
             annotate.param("name", ((XSAttributeUse) component).getDecl().getName());
+             
             annotate.param("type", ref.get(0).toType(outline, Aspect.EXPOSED));
             annotate.param("attribute", true);
             return;

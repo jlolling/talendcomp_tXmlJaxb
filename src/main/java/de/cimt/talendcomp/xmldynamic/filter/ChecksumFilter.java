@@ -2,7 +2,7 @@ package de.cimt.talendcomp.xmldynamic.filter;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import jakarta.xml.bind.annotation.adapters.HexBinaryAdapter;
 import org.apache.log4j.Level;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
