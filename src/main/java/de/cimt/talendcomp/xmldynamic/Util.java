@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import org.apache.log4j.Logger;
 import org.eclipse.osgi.internal.loader.BundleLoader;
@@ -28,7 +28,7 @@ import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 
 public final class Util {
     private static final Logger LOG = Logger.getLogger("de.cimt.talendcomp.xmldynamic");
-    private static final URLClassLoader LOADER;
+    private static final ClassLoader LOADER;
     private static final Method METH;
     private static final List<TXMLBinding> BINDINGS;
     public static final boolean OSGI;
@@ -99,35 +99,32 @@ public final class Util {
 
     
     static{
-        Method m;
+        Method m=null;
         boolean isOSGI=false;
-        URLClassLoader cl=null;
-        try{
-            m = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
-            m.setAccessible(true);
-            
-            try{
-                
-                cl=(URLClassLoader) Util.class.getClassLoader();
-            }catch(ClassCastException cce){
-                // regular classloaders normally don't cause this exception
-                final String clName=Util.class.getClassLoader().getClass().getName().toLowerCase();
-                BundleLoader bundleLoader;
-                try{
-                     bundleLoader =  ((ModuleClassLoader) Util.class.getClassLoader()).getBundleLoader();
-                     isOSGI=true;
-                }catch(Throwable t){
-                     bundleLoader = null;
-                }
-                cl=new OSGIClassLoader( Util.class.getClassLoader(), bundleLoader );
-                Thread.currentThread().setContextClassLoader( cl );
+        ClassLoader cl=null;
+        try {
+            try {
+                BundleLoader bundleLoader = ((ModuleClassLoader) Util.class.getClassLoader()).getBundleLoader();
+                isOSGI = true;
+                cl = new OSGIClassLoader(Util.class.getClassLoader(), bundleLoader);
+                Thread.currentThread().setContextClassLoader(cl);
+            } catch (Throwable t) {
+                cl = Util.class.getClassLoader();
             }
-
-            
-        }catch(Throwable t){
-            LOG.error("failed to init environment",t);
-            m=null;
+//            }
+            cl=new URLClassLoader(new URL[]{}, cl){
+                        public void registerUrl(URL u){
+                            super.addURL(u);
+                        }
+                    };
+                     
+                    m = cl.getClass().getDeclaredMethod("registerUrl", new Class[]{URL.class});
+        } catch (Throwable t) {
+            LOG.error("failed to init environment", t);
+            m = null;
         }
+
+                    
         /**
          * when osgi class is of type moduleclassloader and nested classloader doesn't use parent classload for resolving
          * to avoid this problem a colcal classloader must be used 
